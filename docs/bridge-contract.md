@@ -1,59 +1,143 @@
-# Creator Bridge v1
+# Creator Bridge v2
 
-Creator Mode+ is a user preset plus one DSH plugin. It brings fixed DSHX operations into an ordinary DSH session without giving that session control of its Host process.
+Creator Mode+ is a user preset plus one DSH plugin. It brings six fixed DSHX
+operations into an ordinary DSH session without giving that session control of
+its Host process. DSHX `>=0.6.0 <0.7.0` supplies the external Guardian and durable
+recovery state.
 
 ## Roles
 
 | Role | Authority |
 |---|---|
-| Creator Mode+ session | Create files, check contracts, plan activation, perform the one bounded new-client operation, read status |
-| External DSHX supervisor | Isolated verification, lifecycle-specific restart, rollback, and evidence collection |
-| User | Approve impactful activation, restart, and rollback actions |
+| Creator Mode+ session | Claim one plugin, create files, check contracts, plan activation, perform bounded new-client activation, read status |
+| External DSHX Guardian | Monitor the Host, journal activation, quarantine a culprit, recover Host/official Loader failures, open a crash-loop fuse, persist incidents |
+| User | Approve normal impactful activation and decide what to do after a fused or ambiguous incident |
 
-The supervisor is the DSHX process outside DSH. It is not the model session and does not require the user to manually watch every command.
+The supervisor is outside DSH. It is not the model session and does not require
+the user to watch every command. No model-facing tool accepts a shell string,
+arbitrary argv/path/profile/port, or Host start/stop/restart operation.
 
-## Execution order
+The preset still inherits Standard's coding shell, but that shell is not the
+external supervisor. RC8 injects `DSH_SHELL=1` into every model shell call;
+DSHX 0.6 rejects raw mutation/process commands at its CLI boundary. This keeps
+an old or mistaken Creator session from bypassing the six fixed tools with
+`dshx start`, `restart`, `activate-new-client`, or profile shipping commands.
+
+## Trusted identity and concurrent ownership
+
+The bridge creates `DSHX_CREATOR_CONTEXT` from the tool execution object, never
+from model input:
 
 ```text
-official WebUI
-  -> user selects a new or blank Creator Mode+ session
-  -> Creator Mode+ skill chooses one lifecycle branch
-  -> one of five fixed bridge tools
-  -> compatible external DSHX CLI
-  -> file-backed plugin plus bounded evidence
-
-external supervisor
-  -> only the planned restart or rollback branch
-  -> optional browser reload
-  -> real behavior verification
+exec.agent.id + callId + rootCallId
+  + Host pid + Host parent pid + current Web port + bridge version
 ```
+
+At `agent/session-start`, the bridge arms Guardian and pulls recovery incidents
+for that exact persisted session. Once a plugin id is known, the session calls
+`dshx_claim_plugin`; every other named-plugin operation refreshes the claim.
+
+- One session owns at most one plugin at a time.
+- Different sessions can own different plugins concurrently without a fixed cap.
+- One plugin cannot have two session owners.
+- Build/check work remains concurrent. Only the watched live-activation section
+  uses a global inter-process lock.
+- Claim and incident registries use atomic locks and rename; `agent/disposed`
+  releases the lease, with a 24-hour expiry as the abnormal-exit fallback.
 
 ## New-client transaction
 
-`dshx_activate_new_client({ name })` is the only bridge operation that mutates live registration. Its sole model-controlled value is a lower-case kebab-case plugin id.
+`dshx_activate_new_client({ name })` is the only bridge operation that mutates
+live registration. Its sole model-controlled value is a lower-case kebab-case
+plugin id.
 
 ```text
 dshx check / SOURCE_BUILT
   -> add or confirm the official Web profile link
   -> prove package and lib/client.js resolution from that profile
+  -> journal session/call/Host identity and the exact patch preimage
   -> insert or semantically retrigger one watched-patch row
   -> poll the current Host manifest and served client.js
   -> HOST_TREE_ACTIVE + CLIENT_MANIFEST_PRESENT
   -> browser reload remains separate
 ```
 
-The order is invariant. A failed new row is rolled back by DSHX. A nonzero result stops the branch; the session does not compensate with package installation, manual profile edits, or a Host restart.
+The order is invariant. A failed new row is rolled back by DSHX. A nonzero
+result stops the branch; the session does not compensate with package
+installation, manual profile edits, or a Host restart.
 
-## Compatibility boundary
+## Guardian recovery
 
-Supported: the official DSH browser WebUI, public Cordis plugin forms, public client runtime, and public UI slots.
+Guardian runs as a detached Node process outside the DSH Host. It evaluates Host
+pid and loopback HTTP health and uses the same-port transaction journal for
+attribution:
 
-Outside acceptance: native menus, window chrome, App IPC, desktop bridges, and shell-specific refresh behavior. A wrapper may work when it embeds the same WebUI unchanged, but browser-WebUI reproduction is the defect gate.
+| Confidence | Evidence |
+|---|---|
+| `high` | An activation transaction is active when the Host fails |
+| `probable` | The most recent unrecovered transaction finished within 15 seconds |
+| `ambiguous` | No single short-window transaction can be named |
 
-Bridge v1 accepts DSHX `>=0.5.1 <0.6.0`. The runtime validates the package name and version before spawning the CLI and resolves the TypeScript loader from that DSHX package. A future incompatible DSHX release cannot be called accidentally.
+For high/probable attribution, Guardian restores an inserted row's exact
+preimage or disables an existing row while retaining that preimage for a checked
+retry. If another session has already changed the same patch, Guardian appends a
+transaction-unique disabled override instead of overwriting the whole file with
+an old snapshot; a retry removes only that marker. It never deletes plugin source.
 
-## Evidence
+```text
+Host failed
+  -> select active/recent same-port transaction
+  -> quarantine the causal live row when attribution exists
+  -> if another supervisor restored the port: do not open a duplicate listener
+  -> otherwise restart the same Web target once
+  -> a second failure inside 30 seconds opens the fuse
+  -> persist incident
+  -> steer incident to the owning session when it starts/resumes
+  -> acknowledge delivery
+```
 
-These layers are independent: `SOURCE_BUILT`, `ARTIFACT_SYNCED`, `NEXT_BOOT_REGISTERED`, `HOST_TREE_ACTIVE`, `CLIENT_MANIFEST_PRESENT`, `CLIENT_LOADED`, and `VISUAL_BEHAVIOR_VERIFIED`.
+An incident steering message interrupts normal work. The Agent inspects its
+confidence, plugin, rollback and log excerpt, repairs preserved source, runs
+`dshx_check`, and only then retries the original lifecycle branch.
 
-Artifact copying, dump-config, HTTP success, Host-tree activation, and a served client manifest are not substitutes for a page loading the package and its real behavior working.
+Creator+ does not register or wrap Host SIGINT/SIGTERM handlers. Explicit DSHX
+stop/restart disarms before signaling a DSHX-owned Host. An adopted Host records
+its launcher pid; when that launcher exits, Guardian neither resurrects the child
+nor leaves behind a Guardian replacement tied to that App lifetime. Manual DSHX
+stop or restart refuses adopted official/App Hosts.
+
+## Official client-Loader recovery
+
+The package also contributes an immediate, self-contained browser client. It
+listens to RC8 Loader status and the framework-free `Failed to load plugins` boot
+page. It sends only bounded failed entry ids and error text to one same-origin
+POST route. That Host route—not the browser or model—stamps Host pid, parent pid,
+and port and invokes fixed `dshx creator client-failure` argv.
+
+DSHX may quarantine only one exact candidate:
+
+- an active same-port transaction whose plugin appears in the failed ids;
+- one exact recent unrecovered transaction for a failed id; or
+- one uniquely claimed failed id already present in the watched patch.
+
+A stale Host identity, unknown id, or multiple candidates is ambiguous and
+changes no plugin row. After quarantine, the bridge waits for the current Host
+manifest to prove the id absent. Only then does the browser reload once. The
+incident remains durable and is steered to its owning session. A failed report
+gets one delayed retry to cover session-start/Guardian arm races; the browser
+fuse prevents an unbounded reload loop.
+
+## Compatibility and evidence boundary
+
+Supported: the official DSH browser WebUI, public Cordis plugin forms, public
+client runtime, and public UI slots.
+
+Outside acceptance: native menus, window chrome, App IPC, desktop bridges, and
+shell-specific refresh behavior. A wrapper may work when it embeds the same
+WebUI unchanged, but browser-WebUI reproduction is the defect gate.
+
+Guardian proves Host process/HTTP recovery and the narrow official Loader-failure
+recovery above. A component render exception, loaded package id, visual
+correctness, and functional behavior remain separate evidence. These layers are independent: `SOURCE_BUILT`,
+`ARTIFACT_SYNCED`, `NEXT_BOOT_REGISTERED`, `HOST_TREE_ACTIVE`,
+`CLIENT_MANIFEST_PRESENT`, `CLIENT_LOADED`, and `VISUAL_BEHAVIOR_VERIFIED`.

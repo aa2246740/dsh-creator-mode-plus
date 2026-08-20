@@ -20,7 +20,10 @@ const packageRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const CURRENT_PRESET_ID = 'creator-mode-plus'
 const LEGACY_PRESET_ID = 'creator-plus'
 const CURRENT_ROW = `- id: dsh-creator-mode-plus\n  name: dsh-creator-mode-plus`
-const LEGACY_ROW = `- id: dshx-creator-plus\n  name: dsh-external-plugin-devkit/creator-plus`
+const LEGACY_ROWS = [
+  `- id: dshx-creator-plus\n  name: dsh-external-plugin-devkit/creator-plus`,
+  `- id: dshx-creator-plus\n  name: dsh-external-plugin-devkit`,
+]
 
 function standardPresetAt(root) {
   const path = join(root, 'apps/cli/config/agent-presets/standard')
@@ -48,6 +51,19 @@ function tightenTree(path) {
   chmodSync(path, info.mode & 0o111 ? 0o700 : 0o600)
 }
 
+function exactRowCount(text, row) {
+  let count = 0
+  let offset = 0
+  while (offset <= text.length) {
+    const index = text.indexOf(row, offset)
+    if (index < 0) break
+    const next = text[index + row.length]
+    if (next === undefined || next === '\n' || next === '\r') count += 1
+    offset = index + row.length
+  }
+  return count
+}
+
 function creatorComposition(standard) {
   let text = replaceOnce(
     standard,
@@ -70,7 +86,7 @@ function creatorComposition(standard) {
   return replaceOnce(
     text,
     `- id: tool-skill\n  name: '@deepseek-ai/dsh-tool-skill'`,
-    `- id: tool-skill\n  name: '@deepseek-ai/dsh-tool-skill'\n\n# Bridge v1: fixed dshx operations only; no shell, arbitrary argv, or process control.\n${CURRENT_ROW}`,
+    `- id: tool-skill\n  name: '@deepseek-ai/dsh-tool-skill'\n\n# Bridge v2: six fixed dshx tools plus external Guardian lifecycle hooks; no shell, arbitrary argv, or model process control.\n${CURRENT_ROW}`,
     'tool skill',
   )
 }
@@ -78,13 +94,14 @@ function creatorComposition(standard) {
 function refreshManagedAssets(target, root, migrateLegacy) {
   const compositionPath = join(target, 'agent.cordis.yml')
   let composition = existsSync(compositionPath) ? readFileSync(compositionPath, 'utf8') : ''
-  const currentCount = composition.split(CURRENT_ROW).length - 1
-  const legacyCount = composition.split(LEGACY_ROW).length - 1
+  const currentCount = exactRowCount(composition, CURRENT_ROW)
+  const matchingLegacyRows = LEGACY_ROWS.filter(row => exactRowCount(composition, row) === 1)
+  const legacyCount = LEGACY_ROWS.reduce((count, row) => count + exactRowCount(composition, row), 0)
 
   if (currentCount === 1 && legacyCount === 0) {
     // Current composition remains user-owned; only managed assets are refreshed.
   } else if (currentCount === 0 && legacyCount === 1 && migrateLegacy) {
-    composition = composition.replace(LEGACY_ROW, CURRENT_ROW)
+    composition = composition.replace(matchingLegacyRows[0], CURRENT_ROW)
   } else if (legacyCount === 1 && !migrateLegacy) {
     throw new Error('legacy bundled Creator Mode+ found; rerun with --migrate-legacy after adding dsh-creator-mode-plus to the Web profile')
   } else {

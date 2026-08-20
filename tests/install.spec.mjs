@@ -16,6 +16,7 @@ import { installCreatorModePlus } from '../scripts/install.mjs'
 const temporaryRoots = []
 const CURRENT_ROW = `- id: dsh-creator-mode-plus\n  name: dsh-creator-mode-plus`
 const LEGACY_ROW = `- id: dshx-creator-plus\n  name: dsh-external-plugin-devkit/creator-plus`
+const ROOT_LEGACY_ROW = `- id: dshx-creator-plus\n  name: dsh-external-plugin-devkit`
 
 function temporaryDirectory(label) {
   const path = mkdtempSync(join(tmpdir(), label))
@@ -31,7 +32,7 @@ function harnessAt(root) {
   writeFileSync(join(root, 'tools/dshx/src/cli.ts'), '')
   writeFileSync(join(root, 'tools/dshx/package.json'), JSON.stringify({
     name: 'dsh-external-plugin-devkit',
-    version: '0.5.1',
+    version: '0.6.0',
   }))
   writeFileSync(join(root, 'apps/cli/config/agent-presets/standard/preset.yml'), 'name: Standard\n')
   writeFileSync(join(root, 'apps/cli/config/agent-presets/standard/agent.cordis.yml'), `# The \`standard\` agent preset: the full coding agent, mounted once per process.
@@ -111,6 +112,20 @@ describe('Creator Mode+ installer', () => {
     assert.match(composition, /# user-preserved/)
     assert.match(composition, /name: dsh-creator-mode-plus/)
     assert.doesNotMatch(composition, /dsh-external-plugin-devkit\/creator-plus/)
+  })
+
+  it('also migrates the DSHX 0.6 package-root bundled row', () => {
+    const harnessRoot = harnessAt(temporaryDirectory('creator-mode-plus-root-migrate-harness-'))
+    const dshHome = temporaryDirectory('creator-mode-plus-root-migrate-home-')
+    const installed = installCreatorModePlus({ harnessRoot, dshHome })
+    const legacyTarget = join(dshHome, '.agent-presets/creator-plus')
+    renameSync(installed.target, legacyTarget)
+    const compositionPath = join(legacyTarget, 'agent.cordis.yml')
+    writeFileSync(compositionPath, readFileSync(compositionPath, 'utf8').replace(CURRENT_ROW, ROOT_LEGACY_ROW))
+
+    const migrated = installCreatorModePlus({ harnessRoot, dshHome, migrateLegacy: true })
+    assert.equal(migrated.action, 'migrated')
+    assert.match(readFileSync(compositionPath, 'utf8'), /name: dsh-creator-mode-plus/)
   })
 
   it('refuses an unrecognized managed row instead of guessing', () => {
