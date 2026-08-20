@@ -1,0 +1,46 @@
+{
+  "name": "dsh-creator-mode-plus",
+  "version": "0.1.0",
+  "description": "A fail-closed DeepSeek Harness Creator Mode+ bridge backed by the external dshx supervisor.",
+  "type": "module",
+  "license": "MIT",
+  "private": false,
+  "main": "./src/index.js",
+  "exports": {
+    ".": "./src/index.js",
+    "./package.json": "./package.json"
+  },
+  "scripts": {
+    "install:preset": "node scripts/install.mjs",
+    "test": "node --test tests/*.spec.mjs",
+    "check": "node --check src/index.js && node --check src/runner.js && node --check scripts/install.mjs && npm test"
+  },
+  "engines": {
+    "node": "^22.19.0 || >=24.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/aa2246740/dsh-creator-mode-plus.git"
+  },
+  "homepage": "https://github.com/aa2246740/dsh-creator-mode-plus",
+  "bugs": {
+    "url": "https://github.com/aa2246740/dsh-creator-mode-plus/issues"
+  },
+  "keywords": [
+    "deepseek-harness",
+    "dsh",
+    "dshx",
+    "creator-mode",
+    "plugin"
+  ],
+  "files": [
+    "src",
+    "scripts/install.mjs",
+    "preset",
+    "docs",
+    "AGENTS.md",
+    "CHANGELOG.md",
+    "LICENSE",
+    "README.md"
+  ]
+}
