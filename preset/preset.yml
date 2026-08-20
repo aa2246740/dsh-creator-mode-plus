@@ -1,2 +1,2 @@
 name: Creator Mode+
-description: 以官方 DSH WebUI 为兼容面，通过固定 DSHX 桥安全创建、检查和挂载文件化插件。
+description: 以官方 DSH WebUI 为兼容面，通过会话认领、固定 DSHX 桥与外部 Guardian 安全创建和挂载插件。
