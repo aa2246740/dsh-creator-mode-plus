@@ -1,157 +1,72 @@
-# dsh-creator-mode-plus
+# Creator Mode+
 
-**Creator Mode+** is a standalone, fail-closed DeepSeek Harness plugin that lets a normal DSH WebUI session create and activate file-backed plugins through [DSHX](https://github.com/aa2246740/dsh-external-plugin-devkit).
+[English](README.en.md)
 
-It does not replace the official Creator Mode and does not modify Harness core. The DSH session receives six fixed tools. Bridge v2 identifies the exact session and plugin while the external DSHX Guardian owns deterministic quarantine, one bounded Host recovery, official client-Loader boot recovery, and incident delivery.
+在 DeepSeek Harness 的普通 Web 会话里选 Creator Mode+，就能用六个固定工具把一个文件化插件搭起来、检查完、挂上去。过不了的操作直接停。会话拿不到 Host 的开关，也拿不到一条随便写的命令。
 
-This project is unofficial and is not affiliated with DeepSeek.
+不替代官方创造模式。不改 Harness 核心。非官方。
 
-## Compatibility
+![在官方 WebUI 里打开 Creator Mode+](docs/screenshots/mode-picker.gif)
 
-| Component | Initial supported range |
-|---|---|
-| DeepSeek Harness | `dsh-v0.1.0-rc.8` |
-| DSHX | `>=0.6.2 <0.7.0` |
-| Creator Bridge | `v2` |
-| UI boundary | Official browser WebUI and public Cordis/client extension points |
+官方模式列表里，Creator Mode+ 排在创造模式下面。那段中文来自用户 preset。
 
-Creator Mode+ checks the installed DSHX version before every operation. An incompatible version stops with an explicit error before it mutates plugin or Host state.
+![模式列表里的 Creator Mode+](docs/screenshots/mode-picker.png)
 
-DSHX and Creator Mode+ have independent releases. A compatible DSHX bug fix or internal refactor does not require a Creator Mode+ release. Update Creator Mode+ only when the bridge contract, a DSH plugin contract, or Creator Mode+ itself changes.
+选中之后，新会话走这六个固定工具。
 
-## Install
+![已选中 Creator Mode+](docs/screenshots/mode-selected.png)
 
-Run installation outside a DSH agent session:
+## 安装
+
+在 Agent 会话外面做。进你的 Harness 仓库：
 
 ```sh
 cd /path/to/deepseek-harness
 git clone https://github.com/aa2246740/dsh-creator-mode-plus.git tools/dsh-creator-mode-plus
 
-# A profile dependency is a manifest change and applies on the next Host boot.
+# profile 依赖是 manifest 变更，下次 Host 启动才生效
 pnpm dsh plugin --profile web add link:./tools/dsh-creator-mode-plus
 
-# Creates a user preset; never edits the shipped Standard or Creator preset.
+# 只写用户 preset，不动随仓库带的 Standard / Creator
 node tools/dsh-creator-mode-plus/scripts/install.mjs --harness "$PWD"
 ```
 
-Restart the Web Host once from outside the DSH session because the first command changed the profile manifest. Then open or refresh the official WebUI, select **Creator Mode+**, and start a new or still-blank session. Preset discovery itself does not require another Host restart.
+因为加了 profile 依赖，先在会话外面把 Web Host 重启一次。然后打开官方 WebUI，选 Creator Mode+，开一个新会话，或者还是空白的那个。
 
-## Migrate from the bundled DSHX version
+要 DSH `dsh-v0.1.0-rc.8`，以及 [DSHX](https://github.com/aa2246740/dsh-external-plugin-devkit) `>=0.6.2 <0.7.0`。对不上，桥会在改任何东西之前停掉。
 
-Upgrade DSHX to v0.6.x first. Add the standalone package, then migrate the managed preset row:
+从旧的 bundled 版本迁过来、以后升级，看 [Bridge v2 合同](docs/bridge-contract.md)。
 
-```sh
-cd /path/to/deepseek-harness
-git clone https://github.com/aa2246740/dsh-creator-mode-plus.git tools/dsh-creator-mode-plus
-pnpm dsh plugin --profile web add link:./tools/dsh-creator-mode-plus
-node tools/dsh-creator-mode-plus/scripts/install.mjs --harness "$PWD" --migrate-legacy
-```
+![安装器把 preset 写进用户目录](docs/screenshots/install.png)
 
-Migration preserves the existing user composition and preset directory. It replaces only the recognized bundled plugin row (the historical `/creator-plus` form or DSHX 0.6 package-root form), managed skill, and preset metadata. Ambiguous or modified managed rows fail closed.
+## 六个工具
 
-Because the profile gained a new dependency, restart the Web Host once from outside the session and verify a new Creator Mode+ session. Remove the old profile dependency only after that verification; migration does not remove it automatically.
+| 工具 | 做什么 |
+|---|---|
+| `dshx_status` | 读 supervisor 和 Host，不动进程 |
+| `dshx_claim_plugin` | 这个会话独占一个插件 |
+| `dshx_scaffold` | 在会话工作区建项目，不覆盖已有的 |
+| `dshx_check` | 静态检查。过了只证明源码能建起来 |
+| `dshx_activation_plan` | 分类这次改动要不要重载或重启 |
+| `dshx_activate_new_client` | 按固定顺序挂新 client。不刷新浏览器，不重启 DSH |
 
-## Update
+![桥注册六个工具，并拒绝 start / restart](docs/screenshots/six-tools.png)
 
-```sh
-git -C tools/dsh-creator-mode-plus pull --ff-only
-node tools/dsh-creator-mode-plus/scripts/install.mjs --harness "$PWD" --upgrade
-```
+## 过不了就停
 
-- The installer preserves the exact `agent.cordis.yml` stamp when its contents are unchanged, so a managed skill or metadata-only upgrade does not create another preset generation. Use a new or blank session; no Host restart.
-- A real preset-composition change may leave old and new session generations alive together. Since 0.2.1, the fixed Host route is leased once per Web Host and is safe across those generations.
-- One legacy exception: if 0.2.0 or older is already mounted when it is upgraded, restart that Web Host once from outside DSH. The old generation registered an unshared route that new code cannot safely take over. Future upgrades do not need this compatibility restart.
-- `src/*.js` bridge code: classify as `server`; restart the Host externally unless exact server HMR was separately proved.
-- Compatible DSHX update inside the table above: no Creator Mode+ update is required.
-- DSHX outside the supported range: Creator Mode+ stops until a compatible release explicitly expands the range.
+已经装着再跑安装器，它不会覆盖。模型想 start、restart，或者把端口写成乱的，桥直接拒。
 
-## Fixed tool surface
+![重复安装被拒绝](docs/screenshots/already-installed.png)
 
-| Tool | Effect | Live mutation |
-|---|---|---|
-| `dshx_status` | Read external supervisor and Host status | No |
-| `dshx_claim_plugin` | Give this exact session exclusive ownership of one plugin and arm Guardian | Claim only |
-| `dshx_scaffold` | Create `my-plugins/<id>` without overwrite | Files only |
-| `dshx_check` | Static and built-client contract checks | No |
-| `dshx_activation_plan` | Classify one lifecycle branch | No |
-| `dshx_activate_new_client` | Ordered link, resolution, watched patch, current-Host manifest proof | Bounded new-client registration |
+Guardian 怎么隔离、怎么只重启一次、怎么把事故交回原来的会话，都写在合同里。这里不展开。
 
-The bridge accepts no arbitrary shell string, argv vector, path, profile, port, or process-control operation from the model. `dshx_activate_new_client` derives the active Web port from the Host process and never reloads the browser or restarts DSH.
-
-All six tool-to-CLI mappings are exercised in release tests. If a fixed tool says
-`outside bridge v2`, that is a bridge integrity defect—not a permission or
-supervisor decision. Creator+ stops at that tool instead of mounting the plugin
-manually or guessing that a later lifecycle stage succeeded.
-
-For a new project, scaffold uses the trusted DSH session workspace rather than a
-model-provided path. When that workspace is outside the Harness checkout, DSHX
-creates the source there and atomically links it into `my-plugins`; the Agent can
-edit within its normal sandbox and the user does not need to run `ln -s`.
-
-Creator+ still inherits Standard's coding shell, but it is not the external
-supervisor. DSHX 0.6 detects RC8's managed `DSH_SHELL=1` environment and rejects
-raw mutating/process commands from that shell, so a stale agent cannot bypass
-the fixed bridge with `dshx start`, `restart`, activation, or profile shipping.
-
-## Concurrent sessions and self-recovery
-
-Every Creator+ session-start arms a detached Guardian outside DSH. Once the plugin
-id is known, the session calls `dshx_claim_plugin` before editing; every named tool
-also refreshes that claim as a fail-safe.
-
-- Any number of sessions may work on different plugins concurrently.
-- The same plugin has one session owner; a second owner fails closed.
-- Scaffold, edit, build, and check remain concurrent. Only the short watched-patch
-  activation transaction uses a global lock.
-- Every activation records the trusted session/call chain, Host pid/port, and exact
-  patch preimage.
-
-If the Web Host exits or remains unhealthy, Guardian attributes an active
-transaction with high confidence or a same-port transaction from the last 15
-seconds as probable. It quarantines that plugin, restores the port once, and
-steers the incident to the owning persisted session when it resumes. A second
-failure inside 30 seconds opens a fuse. If the App shell already restored the
-port, Guardian does not create a duplicate listener.
-
-Creator+ never installs a Host signal handler. Explicit DSHX stop/restart disarms
-before signaling an owned Host; an adopted App launcher's exit disarms recovery
-and ends any Guardian replacement still tied to that App lifetime. If the Host remains healthy but the official Web boot
-page reports **Failed to load plugins**, the package's same-origin browser sentry
-sends failed Loader ids to a fixed Host route. The Host stamps its own identity;
-DSHX changes no row unless exactly one active/recent transaction or claimed
-watched-patch plugin matches. It reloads once only after the current manifest
-proves that entry absent.
-
-This does not turn arbitrary browser problems into self-healing: component render
-exceptions, visual defects, interaction defects, and wrong functional results
-still require page/client diagnosis. See [the Bridge v2 contract](docs/bridge-contract.md).
-
-## Evidence boundary
-
-Creator Mode+ reports only observed layers:
-
-```text
-SOURCE_BUILT
-ARTIFACT_SYNCED
-NEXT_BOOT_REGISTERED
-HOST_TREE_ACTIVE
-CLIENT_MANIFEST_PRESENT
-CLIENT_LOADED
-VISUAL_BEHAVIOR_VERIFIED
-```
-
-`CLIENT_MANIFEST_PRESENT` means the current Host serves the client bundle. It does not prove that an already-open page loaded it; a new client still needs a page reload and real UI verification.
-
-The complete safety contract is [docs/bridge-contract.md](docs/bridge-contract.md).
-
-## Development
+## 开发
 
 ```sh
 npm test
 npm run check
-npm pack --dry-run
 ```
 
 ## License
 
-MIT. DeepSeek Harness and DSHX are separate projects with their own licenses.
+MIT。DeepSeek Harness 和 DSHX 是别的项目，各有各的许可证。
