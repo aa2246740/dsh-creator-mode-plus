@@ -179,7 +179,7 @@ export function apply(ctx) {
 
   ctx.tools.register({
     name: 'dshx_scaffold',
-    description: 'Create one file-backed plugin under the configured Harness my-plugins directory. It never overwrites an existing project.',
+    description: 'Create one plugin inside the calling session workspace and mount it into Harness automatically when needed. It never overwrites an existing project.',
     parameters: {
       type: 'object',
       properties: {
@@ -194,7 +194,7 @@ export function apply(ctx) {
     execute(args, exec) {
       const id = pluginId(args.name)
       return runClaimedDshx(id, [
-        'init', id, '--kind', choice(args.kind, KINDS, 'plugin kind'),
+        'creator', 'scaffold', id, choice(args.kind, KINDS, 'plugin kind'),
       ], exec, { hostPort: currentWebPort() })
     },
     presentCall: args => ({ card: 'generic', title: `dshx scaffold ${args.name}`, kind: 'edit', rawInput: args }),

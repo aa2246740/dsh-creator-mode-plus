@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.2.2 - 2026-08-21
+
+- Fix the Bridge v2 allowlist so the registered `dshx_scaffold` and `dshx_activation_plan` tools can reach their exact four-argument CLI forms.
+- Execute every fixed tool argv and internal session lifecycle hook through the allowlist in release tests.
+- Treat a fixed-tool `outside bridge v2` rejection as a bridge integrity defect that stops the workflow without manual mounting or inferred downstream success.
+- Require DSHX 0.6.2 and scaffold new source in the trusted writable session workspace, with an automatic fail-closed `my-plugins` link when Harness lives elsewhere.
+- Scaffold before planning a new target, consult the DSHX knowledge bundle before broad source exploration, and stop speculative mutation when live behavior is already confirmed.
+
 ## 0.2.1 - 2026-08-21
 
 - Share the fixed client-failure route across concurrent preset generations instead of registering one exact Host route per generation.

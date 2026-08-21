@@ -26,7 +26,7 @@ function temporaryDirectory(label) {
   return path
 }
 
-function harnessAt(root, version = '0.6.0') {
+function harnessAt(root, version = '0.6.2') {
   mkdirSync(join(root, 'apps/cli/src'), { recursive: true })
   mkdirSync(join(root, 'tools/dshx/src'), { recursive: true })
   writeFileSync(join(root, 'apps/cli/src/bin.ts'), '')
@@ -71,6 +71,49 @@ describe('Creator Bridge v2', () => {
       () => runDshx(['activate-new-client', 'demo', '--profile', 'web', '--port', 'not-a-port']),
       /outside bridge v2/,
     )
+  })
+
+  it('allows the exact argv shape behind every fixed Creator tool and lifecycle hook', async () => {
+    const harness = harnessAt(temporaryDirectory('creator-mode-plus-allowlist-'))
+    const spawned = []
+    const spawnProcess = (_command, argv) => {
+      spawned.push(argv)
+      const child = new EventEmitter()
+      child.stdout = new PassThrough()
+      child.stderr = new PassThrough()
+      child.kill = () => true
+      queueMicrotask(() => child.emit('close', 0))
+      return child
+    }
+    const exec = {
+      agent: { id: 'session-a' },
+      callId: 'call-a',
+      rootCallId: 'root-a',
+      signal: new AbortController().signal,
+    }
+    const operations = [
+      ['status'],
+      ['creator', 'claim', 'demo'],
+      ['creator', 'scaffold', 'demo', 'client'],
+      ['check', 'demo'],
+      ['activation-plan', 'demo', '--change', 'new-client'],
+      ['activate-new-client', 'demo', '--profile', 'web', '--port', '43127'],
+      ['creator', 'watch', '--json'],
+      ['creator', 'release', '--json'],
+      ['creator', 'recovery', 'pull', '--json'],
+      ['creator', 'recovery', 'ack', '11111111-1111-4111-8111-111111111111', '--json'],
+    ]
+
+    for (const args of operations) {
+      const result = await runDshx(args, exec, {
+        harnessRoot: harness,
+        loaderPath: '/fake/tsx-loader.mjs',
+        hostPort: 43127,
+        spawnProcess,
+      })
+      assert.equal(result.exitCode, 0)
+    }
+    assert.deepEqual(spawned.map(argv => argv.slice(3)), operations)
   })
 
   it('forwards browser failures through fixed argv without a model context', async () => {
@@ -225,7 +268,9 @@ describe('Creator Bridge v2', () => {
   it('accepts only the declared DSHX compatibility range', () => {
     assert.equal(CREATOR_BRIDGE_VERSION, 2)
     assert.equal(supportsDshxVersion('0.5.99'), false)
-    assert.equal(supportsDshxVersion('0.6.0'), true)
+    assert.equal(supportsDshxVersion('0.6.0'), false)
+    assert.equal(supportsDshxVersion('0.6.1'), false)
+    assert.equal(supportsDshxVersion('0.6.2'), true)
     assert.equal(supportsDshxVersion('0.6.99'), true)
     assert.equal(supportsDshxVersion('0.7.0'), false)
     assert.equal(supportsDshxVersion('invalid'), false)
@@ -246,9 +291,9 @@ describe('Creator Bridge v2', () => {
   })
 
   it('resolves a compatible DSHX runtime and fails closed on drift', () => {
-    const compatible = harnessAt(temporaryDirectory('creator-mode-plus-compatible-'), '0.6.0')
+    const compatible = harnessAt(temporaryDirectory('creator-mode-plus-compatible-'), '0.6.2')
     const runtime = resolveDshxRuntime({ harnessRoot: compatible, loaderPath: '/fake/tsx-loader.mjs' })
-    assert.equal(runtime.dshxVersion, '0.6.0')
+    assert.equal(runtime.dshxVersion, '0.6.2')
     assert.equal(runtime.bridgeVersion, 2)
     assert.equal(runtime.loader, '/fake/tsx-loader.mjs')
 
@@ -272,7 +317,7 @@ describe('Creator Bridge v2', () => {
       return child
     }
     await runDshx(['status'], {
-      agent: { id: 'session-a' },
+      agent: { id: 'session-a', session: { header: { cwd: '/workspace/demo' } } },
       callId: 'call-a',
       rootCallId: 'root-a',
       signal: new AbortController().signal,
@@ -290,6 +335,7 @@ describe('Creator Bridge v2', () => {
       hostParentPid: process.ppid,
       hostPort: 43127,
       bridgeVersion: 2,
+      workspaceRoot: '/workspace/demo',
     })
   })
 

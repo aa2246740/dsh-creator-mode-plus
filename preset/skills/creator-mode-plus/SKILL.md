@@ -9,24 +9,27 @@ Build file-backed plugins for the official DeepSeek Harness browser WebUI. Publi
 
 ## Workflow
 
-1. Session-start automatically arms the external Guardian. Call `dshx_status`; completion means exit code `0`, one Harness checkout, DSHX `0.6.x`, and bridge version `2`. Status is inventory, not activation proof.
+1. Session-start automatically arms the external Guardian. Call `dshx_status`; completion means exit code `0`, one Harness checkout, DSHX `>=0.6.2 <0.7.0`, and bridge version `2`. Status is inventory, not activation proof.
 2. As soon as the plugin id is known, call `dshx_claim_plugin` before editing. Different sessions may claim different plugins concurrently; the same plugin has one owner. A nonzero conflict stops the branch.
-3. Classify the change as exactly one of `patch`, `manifest`, `preset`, `client`, `new-client`, `server`, or `artifact`; call `dshx_activation_plan`. Completion: the required new session, Host restart, and browser reload are explicit before implementation.
-4. Keep source under `my-plugins/<name>/`. Use `dshx_scaffold` for a new project. Edit only that project and user-owned preset files. Completion: no shipped DSH preset or Harness core file changed.
-5. Add focused tests and build, then call `dshx_check`. For an RC8 client package, use the generated DSHX `externalClientBundle`. Declare every direct `ctx.<service>` read in the client entry's Cordis `export const inject`; package metadata `dsh.client.inject` is unrelated. Completion: `exitCode` is `0`, including `client-cordis-inject`, and a client has a built lazy-CJS `lib/client.js`. This proves only `SOURCE_BUILT`.
-6. Before live mutation, show the source diff, selected lifecycle branch, impact, and rollback point. Completion: the user has approved that concrete mutation, or the current request already explicitly asks to activate or mount it.
-7. Execute only the selected branch:
+3. For a new project, call `dshx_scaffold` immediately after the claim. It creates source under the calling session's trusted writable workspace and, when that workspace is outside the Harness checkout, creates the required `my-plugins/<name>` link itself. Use the returned source path for every edit. Never create a substitute project or ask the user to add a symlink. Existing projects skip this step.
+4. Classify the change as exactly one of `patch`, `manifest`, `preset`, `client`, `new-client`, `server`, or `artifact`; call `dshx_activation_plan` after the project exists and before implementation. A new browser UI plugin is normally `new-client`. Do not implement until the plan returns exit code `0`. Completion: the required new session, Host restart, and browser reload are explicit.
+5. Before broad repository exploration, use the read-only DSHX knowledge bundle for the selected seam. A client starts with `dshx kb cat contracts/client-build` and `dshx kb cat maps/extension-points`; follow an official source pointer only when the contract lacks the needed detail.
+6. Edit only the scaffolded/claimed project and user-owned preset files. Add focused tests and build, then call `dshx_check`. For an RC8 client package, keep the generated DSHX `externalClientBundle`; it owns lazy-CJS, shared modules, CSS and HMR. Declare every direct `ctx.<service>` read in the client entry's Cordis `export const inject`; package metadata `dsh.client.inject` is unrelated. Completion: `exitCode` is `0`, including `client-cordis-inject`, and a client has a built lazy-CJS `lib/client.js`. This proves only `SOURCE_BUILT`.
+7. Before live mutation, show the source diff, selected lifecycle branch, impact, and rollback point. Completion: the user has approved that concrete mutation, or the current request already explicitly asks to activate or mount it.
+8. Execute only the selected branch:
    - `new-client`: call `dshx_activate_new_client` with only the plugin id. Completion: exit code `0` plus `HOST_TREE_ACTIVE` and `CLIENT_MANIFEST_PRESENT`. The bridge installs and resolves the profile link before touching the watched patch. It performs no Host restart or browser reload.
    - `client`: rebuild the already-rostered client and observe same-page HMR.
    - `preset`: write only a user preset and verify it in a new or blank session.
    - `manifest` or `server`: hand off the required restart to the external supervisor.
    - `patch` or `artifact`: follow the plan literally; neither alone proves browser activation.
-8. After successful `new-client`, reload or reopen the official WebUI only when the user authorized that interaction. Completion: the new page loads the package id and its real behavior works. Until then, report “registered,” not “usable” or “complete.”
-9. Report only observed layers: `SOURCE_BUILT`, `ARTIFACT_SYNCED`, `NEXT_BOOT_REGISTERED`, `HOST_TREE_ACTIVE`, `CLIENT_MANIFEST_PRESENT`, `CLIENT_LOADED`, `VISUAL_BEHAVIOR_VERIFIED`.
+9. After successful `new-client`, browser testing remains a task-time Agent or user-prompt decision; Creator Mode+ does not require a particular browser tool. Completion can include `CLIENT_LOADED` or `VISUAL_BEHAVIOR_VERIFIED` only after direct browser observation or an explicit live user report. A user report that the requested behavior works ends speculative diagnosis and further mutation.
+10. Report only observed layers: `SOURCE_BUILT`, `ARTIFACT_SYNCED`, `NEXT_BOOT_REGISTERED`, `HOST_TREE_ACTIVE`, `CLIENT_MANIFEST_PRESENT`, `CLIENT_LOADED`, `VISUAL_BEHAVIOR_VERIFIED`.
 
 ## Stop condition
 
 A nonzero DSHX exit code stops that branch. Quote the named blocker and preserve the rollback point. A retry is allowed only when the blocker identifies a retryable condition. A cached pre-install resolution scar is handed to the external supervisor for one controlled restart; this session does not restart its own Host.
+
+If a fixed tool throws `refusing an operation outside bridge v2` before returning a structured result, report a Creator Bridge integrity defect with the exact tool and error, then stop. Preserve the claimed plugin and its source location. Do not reinterpret this error as a supervisor or permission decision, continue through a raw shell, create the project elsewhere, edit profile files manually, or claim that a later lifecycle step succeeded. Resume only after the bridge is upgraded and the same fixed tool succeeds.
 
 If a `[Creator+ Guardian incident ...]` steering message arrives, it takes priority.
 Inspect its confidence, plugin, rollback, and log excerpt; repair the preserved

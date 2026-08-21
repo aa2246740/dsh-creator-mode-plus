@@ -6,8 +6,9 @@ Read [docs/bridge-contract.md](docs/bridge-contract.md) before changing tool arg
 
 ## Change gates
 
-- Keep the model-facing surface to the six named tools. Every argument must remain schema-bounded and independently allowlisted in `src/runner.js`.
+- Keep the model-facing surface to the six named tools. Every argument must remain schema-bounded and independently allowlisted in `src/runner.js`. Test the exact argv behind all six tools; a registration-only test is insufficient.
 - Preserve bridge-v2 provenance: session id comes from `exec.agent.id`, not model input. Claim one plugin per session before any named operation; different plugins may run concurrently, while the same plugin fails closed for a second owner.
+- Preserve workspace provenance: scaffold destination comes from `exec.agent.session.header.cwd`, never model input. If the Harness plugin path is outside that workspace, DSHX owns the atomic source-plus-symlink transaction.
 - Preserve automatic session-start Guardian arm, agent-dispose claim release, adopted-launcher lifetime tracking, exact-session recovery steering, and incident acknowledgement. Never register or wrap Host signal handlers.
 - Keep Host start, stop, restart, arbitrary shell, arbitrary argv, paths, profile selection, and ports outside model input.
 - Preserve the ordered `activate-new-client` DSHX operation; profile linking and resolution happen before watched-patch mutation.
@@ -20,4 +21,4 @@ Read [docs/bridge-contract.md](docs/bridge-contract.md) before changing tool arg
 
 ## Release gate
 
-Run `npm run check` and `npm pack --dry-run`. Inspect the exact staged paths before committing. A release is ready only when allowlist, provenance, cross-generation route leasing, same-origin Loader recovery, recovery steering, version-gate, fresh-install, stamp-stable managed-upgrade, and legacy-migration tests pass.
+Run `npm run check` and `npm pack --dry-run`. Inspect the exact staged paths before committing. A release is ready only when every fixed-tool argv and internal lifecycle hook traverses the allowlist, and provenance, cross-generation route leasing, same-origin Loader recovery, recovery steering, version-gate, fresh-install, stamp-stable managed-upgrade, and legacy-migration tests pass.

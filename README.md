@@ -11,7 +11,7 @@ This project is unofficial and is not affiliated with DeepSeek.
 | Component | Initial supported range |
 |---|---|
 | DeepSeek Harness | `dsh-v0.1.0-rc.8` |
-| DSHX | `>=0.6.0 <0.7.0` |
+| DSHX | `>=0.6.2 <0.7.0` |
 | Creator Bridge | `v2` |
 | UI boundary | Official browser WebUI and public Cordis/client extension points |
 
@@ -77,6 +77,16 @@ node tools/dsh-creator-mode-plus/scripts/install.mjs --harness "$PWD" --upgrade
 | `dshx_activate_new_client` | Ordered link, resolution, watched patch, current-Host manifest proof | Bounded new-client registration |
 
 The bridge accepts no arbitrary shell string, argv vector, path, profile, port, or process-control operation from the model. `dshx_activate_new_client` derives the active Web port from the Host process and never reloads the browser or restarts DSH.
+
+All six tool-to-CLI mappings are exercised in release tests. If a fixed tool says
+`outside bridge v2`, that is a bridge integrity defect—not a permission or
+supervisor decision. Creator+ stops at that tool instead of mounting the plugin
+manually or guessing that a later lifecycle stage succeeded.
+
+For a new project, scaffold uses the trusted DSH session workspace rather than a
+model-provided path. When that workspace is outside the Harness checkout, DSHX
+creates the source there and atomically links it into `my-plugins`; the Agent can
+edit within its normal sandbox and the user does not need to run `ln -s`.
 
 Creator+ still inherits Standard's coding shell, but it is not the external
 supervisor. DSHX 0.6 detects RC8's managed `DSH_SHELL=1` environment and rejects

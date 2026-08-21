@@ -2,7 +2,7 @@
 
 Creator Mode+ is a user preset plus one DSH plugin. It brings six fixed DSHX
 operations into an ordinary DSH session without giving that session control of
-its Host process. DSHX `>=0.6.0 <0.7.0` supplies the external Guardian and durable
+its Host process. DSHX `>=0.6.2 <0.7.0` supplies workspace-aware scaffolding, the external Guardian, and durable
 recovery state.
 
 ## Roles
@@ -22,6 +22,37 @@ external supervisor. RC8 injects `DSH_SHELL=1` into every model shell call;
 DSHX 0.6 rejects raw mutation/process commands at its CLI boundary. This keeps
 an old or mistaken Creator session from bypassing the six fixed tools with
 `dshx start`, `restart`, `activate-new-client`, or profile shipping commands.
+
+## Fixed argv contract
+
+The six model-facing tools map to exactly these child CLI shapes:
+
+| Tool | Allowed child argv |
+|---|---|
+| `dshx_status` | `status` |
+| `dshx_claim_plugin` | `creator claim <plugin-id>` |
+| `dshx_scaffold` | `creator scaffold <plugin-id> <declared-kind>` |
+| `dshx_check` | `check <plugin-id>` |
+| `dshx_activation_plan` | `activation-plan <plugin-id> --change <declared-branch>` |
+| `dshx_activate_new_client` | `activate-new-client <plugin-id> --profile web --port <Host-derived-port>` |
+
+Session lifecycle may additionally call fixed internal watch, release, recovery
+pull, and recovery acknowledgement argv. Tests must execute every row and every
+internal lifecycle shape through the allowlist; registering a tool name does not
+prove its child argv is reachable.
+
+`refusing an operation outside bridge v2` from one of these fixed tools means the
+bridge contract itself is broken. The session reports the exact tool and error,
+preserves the claim and source location, and stops. It must not reinterpret the
+error as a supervisor decision, switch to raw shell or manual profile edits, move
+the project, or report a later lifecycle stage as successful.
+
+The scaffold command stamps the immutable session workspace from
+`exec.agent.session.header.cwd`. If Harness `my-plugins/<id>` is outside that
+writable workspace, DSHX creates the source below the workspace and creates the
+Harness link atomically. The model supplies neither path, and the user is never
+asked to add the link manually. Activation planning follows scaffold for a new
+project because a plan cannot inspect a target that does not exist.
 
 ## Trusted identity and concurrent ownership
 
