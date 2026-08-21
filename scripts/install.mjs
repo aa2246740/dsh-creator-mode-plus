@@ -93,7 +93,8 @@ function creatorComposition(standard) {
 
 function refreshManagedAssets(target, root, migrateLegacy) {
   const compositionPath = join(target, 'agent.cordis.yml')
-  let composition = existsSync(compositionPath) ? readFileSync(compositionPath, 'utf8') : ''
+  const originalComposition = existsSync(compositionPath) ? readFileSync(compositionPath, 'utf8') : ''
+  let composition = originalComposition
   const currentCount = exactRowCount(composition, CURRENT_ROW)
   const matchingLegacyRows = LEGACY_ROWS.filter(row => exactRowCount(composition, row) === 1)
   const legacyCount = LEGACY_ROWS.reduce((count, row) => count + exactRowCount(composition, row), 0)
@@ -112,9 +113,10 @@ function refreshManagedAssets(target, root, migrateLegacy) {
   const staging = join(temporaryRoot, 'next')
   const backup = join(temporaryRoot, 'previous')
   let movedOriginal = false
+  let installedNext = false
   try {
-    cpSync(target, staging, { recursive: true, errorOnExist: true })
-    writeFileSync(join(staging, 'agent.cordis.yml'), composition)
+    cpSync(target, staging, { recursive: true, errorOnExist: true, preserveTimestamps: true })
+    if (composition !== originalComposition) writeFileSync(join(staging, 'agent.cordis.yml'), composition)
     rmSync(join(staging, 'skills/creator-mode-plus'), { recursive: true, force: true })
     cpSync(
       join(packageRoot, 'preset/skills/creator-mode-plus'),
@@ -128,8 +130,14 @@ function refreshManagedAssets(target, root, migrateLegacy) {
     renameSync(target, backup)
     movedOriginal = true
     renameSync(staging, target)
+    installedNext = true
+    if (composition === originalComposition) {
+      rmSync(join(target, 'agent.cordis.yml'))
+      renameSync(join(backup, 'agent.cordis.yml'), join(target, 'agent.cordis.yml'))
+    }
   } catch (error) {
-    if (movedOriginal && !existsSync(target) && existsSync(backup)) renameSync(backup, target)
+    if (installedNext && existsSync(target)) rmSync(target, { recursive: true, force: true })
+    if (movedOriginal && existsSync(backup)) renameSync(backup, target)
     throw error
   } finally {
     rmSync(temporaryRoot, { recursive: true, force: true })

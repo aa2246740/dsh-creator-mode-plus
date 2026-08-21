@@ -58,7 +58,9 @@ git -C tools/dsh-creator-mode-plus pull --ff-only
 node tools/dsh-creator-mode-plus/scripts/install.mjs --harness "$PWD" --upgrade
 ```
 
-- Skill or preset metadata only: use a new or blank session; no Host restart.
+- The installer preserves the exact `agent.cordis.yml` stamp when its contents are unchanged, so a managed skill or metadata-only upgrade does not create another preset generation. Use a new or blank session; no Host restart.
+- A real preset-composition change may leave old and new session generations alive together. Since 0.2.1, the fixed Host route is leased once per Web Host and is safe across those generations.
+- One legacy exception: if 0.2.0 or older is already mounted when it is upgraded, restart that Web Host once from outside DSH. The old generation registered an unshared route that new code cannot safely take over. Future upgrades do not need this compatibility restart.
 - `src/*.js` bridge code: classify as `server`; restart the Host externally unless exact server HMR was separately proved.
 - Compatible DSHX update inside the table above: no Creator Mode+ update is required.
 - DSHX outside the supported range: Creator Mode+ stops until a compatible release explicitly expands the range.

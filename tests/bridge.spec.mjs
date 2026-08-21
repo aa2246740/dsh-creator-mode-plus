@@ -151,6 +151,70 @@ describe('Creator Bridge v2', () => {
     assert.equal(denied.status, 403)
   })
 
+  it('shares one client-failure route across live preset generations', async () => {
+    const first = await import(`../src/index.js?generation=first-${Date.now()}`)
+    const second = await import(`../src/index.js?generation=second-${Date.now()}`)
+    const releases = []
+    let registrations = 0
+    let disposals = 0
+    let route
+    let owner
+    const webServer = {
+      port: 43127,
+      register(value) {
+        if (route !== undefined) throw new Error('duplicate exact route')
+        registrations += 1
+        route = value
+        return () => {
+          route = undefined
+          disposals += 1
+        }
+      },
+    }
+    const context = {
+      webServer,
+      effect(callback) { releases.push(callback()) },
+    }
+
+    first.installClientFailureRoute(context, {
+      runClientFailureDshx: async () => {
+        owner = 'first'
+        return { exitCode: 0, stdout: '{}', stderr: '' }
+      },
+    })
+    second.installClientFailureRoute(context, {
+      runClientFailureDshx: async () => {
+        owner = 'second'
+        return { exitCode: 0, stdout: '{}', stderr: '' }
+      },
+    })
+
+    assert.equal(registrations, 1)
+    const req = new PassThrough()
+    req.method = 'POST'
+    req.headers = { origin: 'http://127.0.0.1:43127', host: '127.0.0.1:43127' }
+    const response = {
+      writeHead(status) { this.status = status },
+      end(body = '') { this.body = body },
+    }
+    req.end(JSON.stringify({ failedIds: ['demo'], message: 'failed' }))
+    await route.handler(req, response)
+    assert.equal(owner, 'second')
+
+    releases[1]()
+    assert.equal(disposals, 0)
+    owner = undefined
+    const fallbackRequest = new PassThrough()
+    fallbackRequest.method = 'POST'
+    fallbackRequest.headers = { origin: 'http://127.0.0.1:43127', host: '127.0.0.1:43127' }
+    fallbackRequest.end(JSON.stringify({ failedIds: ['demo'], message: 'failed again' }))
+    await route.handler(fallbackRequest, response)
+    assert.equal(owner, 'first')
+
+    releases[0]()
+    assert.equal(disposals, 1)
+  })
+
   it('derives only the current official Web port', () => {
     assert.equal(currentWebPort(['node', 'bin.ts', 'web', '--port', '43127', '--no-open']), 43127)
     assert.equal(currentWebPort(['node', 'bin.ts', '--profile', 'web']), 3080)

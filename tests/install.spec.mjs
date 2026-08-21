@@ -6,6 +6,7 @@ import {
   readFileSync,
   renameSync,
   rmSync,
+  statSync,
   writeFileSync,
 } from 'node:fs'
 import { tmpdir } from 'node:os'
@@ -87,6 +88,20 @@ describe('Creator Mode+ installer', () => {
     assert.match(readFileSync(compositionPath, 'utf8'), /# user-preserved/)
     assert.match(readFileSync(compositionPath, 'utf8'), /name: dsh-creator-mode-plus/)
     assert.match(readFileSync(skillPath, 'utf8'), /dshx_activate_new_client/)
+  })
+
+  it('keeps the composition stamp stable when an upgrade changes only managed assets', () => {
+    const harnessRoot = harnessAt(temporaryDirectory('creator-mode-plus-idempotent-harness-'))
+    const dshHome = temporaryDirectory('creator-mode-plus-idempotent-home-')
+    const installed = installCreatorModePlus({ harnessRoot, dshHome })
+    const compositionPath = join(installed.target, 'agent.cordis.yml')
+    const before = statSync(compositionPath)
+
+    installCreatorModePlus({ harnessRoot, dshHome, upgrade: true })
+
+    const after = statSync(compositionPath)
+    assert.equal(after.size, before.size)
+    assert.equal(after.mtimeMs, before.mtimeMs)
   })
 
   it('transactionally migrates the one recognized bundled row', () => {

@@ -12,10 +12,12 @@ Read [docs/bridge-contract.md](docs/bridge-contract.md) before changing tool arg
 - Keep Host start, stop, restart, arbitrary shell, arbitrary argv, paths, profile selection, and ports outside model input.
 - Preserve the ordered `activate-new-client` DSHX operation; profile linking and resolution happen before watched-patch mutation.
 - Keep Host recovery outside DSH and bounded to one restart plus a crash-loop fuse. Official client-Loader recovery must remain same-origin, Host-stamped, uniquely attributed, quarantined before reload, and separate from arbitrary render/visual/function failures. Never expose internal `creator watch/release/disarm/client-failure/recovery` argv as model inputs.
+- Treat preset generations as concurrent. Any process-global route or resource must use a Host-scoped lease shared across independently loaded module generations, and must have a regression test that mounts two generations before either is disposed.
+- A managed upgrade that does not change `agent.cordis.yml` bytes must preserve that file's exact filesystem stamp. Do not retrigger preset generation for skill, metadata, or bundled-asset-only changes.
 - Version incompatibility, ambiguous Harness discovery, an unknown managed preset row, or a nonzero DSHX result stops the branch.
 - Edit only this package and user-owned presets. Never patch Harness core or shipped presets.
 - Report source, Host, client-manifest, page-load, and visual evidence as separate layers.
 
 ## Release gate
 
-Run `npm run check` and `npm pack --dry-run`. Inspect the exact staged paths before committing. A release is ready only when allowlist, provenance, same-origin Loader recovery, recovery steering, version-gate, fresh-install, managed-upgrade, and legacy-migration tests pass.
+Run `npm run check` and `npm pack --dry-run`. Inspect the exact staged paths before committing. A release is ready only when allowlist, provenance, cross-generation route leasing, same-origin Loader recovery, recovery steering, version-gate, fresh-install, stamp-stable managed-upgrade, and legacy-migration tests pass.

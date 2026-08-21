@@ -127,6 +127,15 @@ incident remains durable and is steered to its owning session. A failed report
 gets one delayed retry to cover session-start/Guardian arm races; the browser
 fuse prevents an unbounded reload loop.
 
+The POST route is a Host-scoped leased resource, not a generation-scoped side
+effect. RC8 may keep an older session generation alive while mounting a newer
+one after the preset composition stamp changes. Independently loaded bridge
+generations therefore share one route broker keyed by the WebServer instance;
+the newest live generation handles requests, disposal falls back to another live
+generation, and only the last lease unregisters the route. The installer also
+preserves the exact composition-file stamp when its bytes are unchanged so
+metadata-only upgrades do not manufacture a new generation.
+
 ## Compatibility and evidence boundary
 
 Supported: the official DSH browser WebUI, public Cordis plugin forms, public

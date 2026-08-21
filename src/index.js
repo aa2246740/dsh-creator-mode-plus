@@ -13,6 +13,7 @@ export const inject = ['tools', 'webServer']
 
 const CLIENT_FAILURE_PATH = '/dsh-creator-mode-plus/client-failure'
 const MAX_CLIENT_FAILURE_BYTES = 16 * 1024
+const CLIENT_FAILURE_ROUTE_REGISTRY = Symbol.for('dsh-creator-mode-plus.client-failure-routes.v1')
 
 const PLUGIN_ID = /^[a-z][a-z0-9-]*$/
 const KINDS = new Set(['function', 'tool', 'client', 'object', 'class'])
@@ -63,12 +64,20 @@ async function readBoundedJson(req) {
   return value
 }
 
-/** Register the same-origin browser sentry endpoint with Host-stamped identity. */
-export function installClientFailureRoute(ctx, options = {}) {
-  ctx.effect(() => ctx.webServer.register({
-    kind: 'exact',
-    path: CLIENT_FAILURE_PATH,
-    handler: async (req, res) => {
+function clientFailureRouteRegistry() {
+  if (globalThis[CLIENT_FAILURE_ROUTE_REGISTRY] === undefined) {
+    Object.defineProperty(globalThis, CLIENT_FAILURE_ROUTE_REGISTRY, {
+      value: new WeakMap(),
+      enumerable: false,
+      configurable: false,
+      writable: false,
+    })
+  }
+  return globalThis[CLIENT_FAILURE_ROUTE_REGISTRY]
+}
+
+function clientFailureHandler(webServer, options) {
+  return async (req, res) => {
       if (req.method !== 'POST') {
         res.writeHead(405, { allow: 'POST' })
         res.end()
@@ -86,7 +95,7 @@ export function installClientFailureRoute(ctx, options = {}) {
           message: input.message,
           hostPid: process.pid,
           hostParentPid: process.ppid,
-          hostPort: ctx.webServer.port,
+          hostPort: webServer.port,
         }, options)
         if (result.exitCode !== 0) {
           res.writeHead(503, { 'content-type': 'application/json' })
@@ -104,8 +113,44 @@ export function installClientFailureRoute(ctx, options = {}) {
         res.writeHead(status, { 'content-type': 'application/json' })
         res.end(JSON.stringify({ reload: false, error: error instanceof Error ? error.message : String(error) }))
       }
-    },
-  }), 'Creator Mode+ browser failure route')
+    }
+}
+
+function acquireClientFailureRoute(webServer, handler) {
+  const registry = clientFailureRouteRegistry()
+  let broker = registry.get(webServer)
+  const lease = { handler }
+  if (broker === undefined) {
+    broker = { leases: new Set([lease]), current: lease, dispose: undefined }
+    broker.dispose = webServer.register({
+      kind: 'exact',
+      path: CLIENT_FAILURE_PATH,
+      handler: (req, res) => broker.current.handler(req, res),
+    })
+    registry.set(webServer, broker)
+  } else {
+    broker.leases.add(lease)
+    broker.current = lease
+  }
+
+  return () => {
+    if (!broker.leases.delete(lease)) return
+    if (broker.leases.size === 0) {
+      broker.dispose()
+      if (registry.get(webServer) === broker) registry.delete(webServer)
+      return
+    }
+    if (broker.current !== lease) return
+    for (const remaining of broker.leases) broker.current = remaining
+  }
+}
+
+/** Register one generation-safe same-origin browser sentry route per Web Host. */
+export function installClientFailureRoute(ctx, options = {}) {
+  ctx.effect(
+    () => acquireClientFailureRoute(ctx.webServer, clientFailureHandler(ctx.webServer, options)),
+    'Creator Mode+ browser failure route',
+  )
 }
 
 /** Register file-backed Creator Mode+ operations for one preset scope. */

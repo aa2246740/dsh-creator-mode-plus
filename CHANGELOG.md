@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.2.1 - 2026-08-21
+
+- Share the fixed client-failure route across concurrent preset generations instead of registering one exact Host route per generation.
+- Keep the newest live generation behind the shared route and unregister it only after the last generation is disposed.
+- Preserve the exact `agent.cordis.yml` filesystem stamp when a managed upgrade changes only bundled assets or metadata, avoiding an unnecessary preset generation.
+- Document the one-time external Host restart required when upgrading an already-mounted 0.2.0 or older generation, whose route predates the shared broker.
+
 ## 0.2.0 - 2026-08-20
 
 - Upgrade to Creator Bridge v2 and require DSHX `>=0.6.0 <0.7.0`.
