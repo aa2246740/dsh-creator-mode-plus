@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.3.0 - 2026-08-26
+
+- Align the standalone bridge with the complete stable DSHX `>=0.7.0 <0.8.0` contract while keeping Creator Bridge v2 at six bounded model-facing tools.
+- Replace version-only acceptance with a fail-closed capability preflight covering Creator claims/scaffold, Guardian, seven-surface activation, managed-shell policy, Harness Update Assistant, and their knowledge contracts.
+- Make fresh install, managed upgrade, and legacy migration refuse an old or incomplete DSHX before writing user preset state; report the accepted DSHX version, bridge version, and contract id.
+- Add a real-checkout verifier that probes DSHX's CLI version and contract markers, plus a portable `dshx.yml` so DSHX v0.7 can check this package directly on the current RC2 line.
+- Teach the managed preset skill the Harness update state machine: only read-only `update plan` may run inside the session; `prepare`, `verify`, `apply`, `rollback`, and process control remain externally supervised.
+- Expand evidence language with preset roster/session layers and keep candidate verification, local apply, live runtime acceptance, and production activation separate.
+- Document the RC8-to-RC2 compatibility line and the one controlled server-branch restart required when a running Host upgrades from 0.2.x to 0.3.0.
+- Test Node 22.19 and Node 24 in CI and package the compatibility verifier and DSHX manifest.
+
 ## 0.2.2 - 2026-08-21
 
 - Fix the Bridge v2 allowlist so the registered `dshx_scaffold` and `dshx_activation_plan` tools can reach their exact four-argument CLI forms.

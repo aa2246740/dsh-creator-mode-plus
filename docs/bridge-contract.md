@@ -2,8 +2,9 @@
 
 Creator Mode+ is a user preset plus one DSH plugin. It brings six fixed DSHX
 operations into an ordinary DSH session without giving that session control of
-its Host process. DSHX `>=0.6.2 <0.7.0` supplies workspace-aware scaffolding, the external Guardian, and durable
-recovery state.
+its Host process. Stable DSHX `>=0.7.0 <0.8.0` supplies workspace-aware
+scaffolding, the external Guardian, durable recovery state, the seven-surface
+activation contract, and the transactional Harness Update Assistant.
 
 ## Roles
 
@@ -18,10 +19,12 @@ the user to watch every command. No model-facing tool accepts a shell string,
 arbitrary argv/path/profile/port, or Host start/stop/restart operation.
 
 The preset still inherits Standard's coding shell, but that shell is not the
-external supervisor. RC8 injects `DSH_SHELL=1` into every model shell call;
-DSHX 0.6 rejects raw mutation/process commands at its CLI boundary. This keeps
-an old or mistaken Creator session from bypassing the six fixed tools with
+external supervisor. RC8 and RC2 inject `DSH_SHELL=1` into every model shell
+call; DSHX v0.7 rejects raw mutation/process commands at its CLI boundary. This
+keeps an old or mistaken Creator session from bypassing the six fixed tools with
 `dshx start`, `restart`, `activate-new-client`, or profile shipping commands.
+The only Harness-update exception is read-only `dshx update plan`; the mutating
+update stages remain outside the Host.
 
 ## Fixed argv contract
 
@@ -40,6 +43,11 @@ Session lifecycle may additionally call fixed internal watch, release, recovery
 pull, and recovery acknowledgement argv. Tests must execute every row and every
 internal lifecycle shape through the allowlist; registering a tool name does not
 prove its child argv is reachable.
+
+DSHX v0.7 does not add a seventh Creator tool. `update prepare`, `verify`,
+`apply`, and `rollback` can replace or restore the process that owns the session,
+so the fixed bridge cannot expose them. Read-only `update plan` is available only
+through DSHX's managed-shell gate and remains inventory rather than activation.
 
 `refusing an operation outside bridge v2` from one of these fixed tools means the
 bridge contract itself is broken. The session reports the exact tool and error,
@@ -75,6 +83,23 @@ for that exact persisted session. Once a plugin id is known, the session calls
   uses a global inter-process lock.
 - Claim and incident registries use atomic locks and rename; `agent/disposed`
   releases the lease, with a 24-hour expiry as the abnormal-exit fallback.
+
+## Complete DSHX v0.7 preflight
+
+The standalone package does not accept `0.7.x` by string alone. Before any fixed
+operation or installer mutation it requires:
+
+- package identity `dsh-external-plugin-devkit` and stable version
+  `>=0.7.0 <0.8.0`;
+- Creator claim/scaffold commands and Bridge v2 context validation;
+- external Guardian and official Loader-failure recovery implementation;
+- check, activation-plan, and bounded new-client command surfaces;
+- the managed-shell gate and the transactional Harness Update Assistant;
+- Creator+, Guardian, live-activation, and Harness-update knowledge contracts.
+
+Missing or prerelease surfaces fail closed. Release verification also probes the
+actual DSHX CLI version and contract markers through `npm run verify:dshx`;
+fabricated fixture tests are not the live-checkout gate.
 
 ## New-client transaction
 
@@ -167,10 +192,34 @@ generation, and only the last lease unregisters the route. The installer also
 preserves the exact composition-file stamp when its bytes are unchanged so
 metadata-only upgrades do not manufacture a new generation.
 
+## Harness Update Assistant boundary
+
+The v0.7 update state machine is `plan → prepare → verify → apply`; `rollback`
+requires an existing apply transaction. Creator Mode+ may inspect `plan` from a
+managed shell after `dshx_status` proves one checkout. All later stages are
+external-supervisor work.
+
+The evidence labels are deliberately non-transitive:
+
+- `plan` inventories tag/SHA, dirty state, and plugins; it proves no build.
+- `prepare` proves an isolated candidate installed and built; it does not update
+  the current checkout.
+- `verify` proves candidate static/cold-boot gates; it does not activate the
+  production Host or page.
+- `apply` updates local source and artifacts transactionally; it does not restart
+  or establish user-visible acceptance.
+- `rollback` restores the recorded checkout, dependencies, and artifacts; it
+  does not promise reversal of product-data migrations outside this contract.
+
+The update assistant never silently stops or restarts a production Host. Creator
+Mode+ must report candidate verified, applied locally, real runtime accepted, and
+production activated as separate states.
+
 ## Compatibility and evidence boundary
 
 Supported: the official DSH browser WebUI, public Cordis plugin forms, public
-client runtime, and public UI slots.
+client runtime, and public UI slots across the RC8 Creator/Guardian contract and
+the current RC2 package/update line.
 
 Outside acceptance: native menus, window chrome, App IPC, desktop bridges, and
 shell-specific refresh behavior. A wrapper may work when it embeds the same
@@ -178,6 +227,13 @@ WebUI unchanged, but browser-WebUI reproduction is the defect gate.
 
 Guardian proves Host process/HTTP recovery and the narrow official Loader-failure
 recovery above. A component render exception, loaded package id, visual
-correctness, and functional behavior remain separate evidence. These layers are independent: `SOURCE_BUILT`,
-`ARTIFACT_SYNCED`, `NEXT_BOOT_REGISTERED`, `HOST_TREE_ACTIVE`,
+correctness, and functional behavior remain separate evidence. These layers are
+independent: `SOURCE_BUILT`, `ARTIFACT_SYNCED`, `NEXT_BOOT_REGISTERED`,
+`PRESET_ROSTER_VISIBLE`, `PRESET_SESSION_ACTIVE`, `HOST_TREE_ACTIVE`,
 `CLIENT_MANIFEST_PRESENT`, `CLIENT_LOADED`, and `VISUAL_BEHAVIOR_VERIFIED`.
+
+Upgrading an already-loaded 0.2.x package to 0.3.0 changes the server bridge
+module, so the external supervisor performs one controlled `server`-branch
+restart. That is different from preset discovery: managed skill/metadata refresh
+continues to preserve an unchanged `agent.cordis.yml` stamp and does not create a
+new generation by itself.

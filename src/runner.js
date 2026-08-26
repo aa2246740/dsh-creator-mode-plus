@@ -7,40 +7,25 @@ import { createRequire } from 'node:module'
 import { homedir } from 'node:os'
 import { dirname, isAbsolute, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import {
+  CREATOR_BRIDGE_VERSION,
+  DSHX_CONTRACT,
+  inspectDshxCompatibility,
+} from './compatibility.js'
+
+export {
+  CREATOR_BRIDGE_VERSION,
+  DSHX_CONTRACT,
+  inspectDshxCompatibility,
+  SUPPORTED_DSHX,
+  supportsDshxVersion,
+} from './compatibility.js'
 
 const MAX_CAPTURE_BYTES = 64 * 1024
 const CLIENT_FAILURE_TIMEOUT_MS = 15_000
 const PLUGIN_ID = /^[a-z][a-z0-9-]*$/
 const KINDS = new Set(['function', 'tool', 'client', 'object', 'class'])
 const CHANGES = new Set(['patch', 'manifest', 'preset', 'client', 'new-client', 'server', 'artifact'])
-
-export const CREATOR_BRIDGE_VERSION = 2
-export const SUPPORTED_DSHX = Object.freeze({
-  minimum: '0.6.2',
-  maximumExclusive: '0.7.0',
-})
-
-function parseVersion(value) {
-  const match = /^(\d+)\.(\d+)\.(\d+)(?:[-+].*)?$/.exec(value)
-  return match ? match.slice(1, 4).map(Number) : undefined
-}
-
-function compareVersions(left, right) {
-  for (let index = 0; index < 3; index += 1) {
-    if (left[index] !== right[index]) return left[index] - right[index]
-  }
-  return 0
-}
-
-/** Return whether a dshx release implements this bridge's v2 recovery contract. */
-export function supportsDshxVersion(version) {
-  const parsed = parseVersion(version)
-  const minimum = parseVersion(SUPPORTED_DSHX.minimum)
-  const maximum = parseVersion(SUPPORTED_DSHX.maximumExclusive)
-  return Boolean(parsed)
-    && compareVersions(parsed, minimum) >= 0
-    && compareVersions(parsed, maximum) < 0
-}
 
 function isAllowedArgs(args) {
   if (args.length === 1) return args[0] === 'status'
@@ -205,27 +190,19 @@ export function resolveHarnessRoot(options = {}) {
 /** Resolve and version-gate the external dshx bridge implementation. */
 export function resolveDshxRuntime(options = {}) {
   const root = resolveHarnessRoot(options)
-  const packagePath = join(root, 'tools/dshx/package.json')
-  const metadata = JSON.parse(readFileSync(packagePath, 'utf8'))
-  if (metadata.name !== 'dsh-external-plugin-devkit') {
-    throw new Error(`dsh-creator-mode-plus: unexpected package at ${packagePath}`)
-  }
-  if (!supportsDshxVersion(metadata.version)) {
-    throw new Error(
-      `dsh-creator-mode-plus: dshx ${metadata.version} is incompatible; `
-      + `bridge v${CREATOR_BRIDGE_VERSION} requires >=${SUPPORTED_DSHX.minimum} <${SUPPORTED_DSHX.maximumExclusive}`,
-    )
-  }
+  const compatibility = inspectDshxCompatibility(root)
 
   const cli = join(root, 'tools/dshx/src/cli.ts')
   const loader = options.loaderPath
-    || createRequire(packagePath).resolve('tsx/esm')
+    || createRequire(compatibility.packagePath).resolve('tsx/esm')
   return {
     root,
     cli,
     loader,
-    dshxVersion: metadata.version,
+    dshxVersion: compatibility.dshxVersion,
     bridgeVersion: CREATOR_BRIDGE_VERSION,
+    contractId: compatibility.contractId,
+    capabilities: compatibility.capabilities,
   }
 }
 
@@ -274,6 +251,8 @@ export function runDshx(args, exec, options = {}) {
         stderr: stderr.trim(),
         dshxVersion: runtime.dshxVersion,
         creatorBridgeVersion: runtime.bridgeVersion,
+        dshxContract: runtime.contractId,
+        dshxCapabilities: runtime.capabilities,
         ...args[0] === 'activate-new-client'
           ? { hostPid: process.pid, hostPort: Number(args[5]) }
           : {},
@@ -320,6 +299,8 @@ export function runClientFailureDshx(report, options = {}) {
         stderr: timedOut ? `${stderr.trim()}\nclient-failure recovery timed out`.trim() : stderr.trim(),
         dshxVersion: runtime.dshxVersion,
         creatorBridgeVersion: runtime.bridgeVersion,
+        dshxContract: runtime.contractId,
+        dshxCapabilities: runtime.capabilities,
       })
     })
   })

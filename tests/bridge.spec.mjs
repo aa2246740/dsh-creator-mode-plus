@@ -3,7 +3,7 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { EventEmitter } from 'node:events'
 import { PassThrough } from 'node:stream'
 import { tmpdir } from 'node:os'
-import { join } from 'node:path'
+import { dirname, join } from 'node:path'
 import { afterEach, describe, it } from 'node:test'
 import { apply, installClientFailureRoute } from '../src/index.js'
 import {
@@ -17,6 +17,12 @@ import {
   runDshx,
   supportsDshxVersion,
 } from '../src/runner.js'
+import {
+  CREATOR_MODEL_TOOLS,
+  DSHX_CONTRACT,
+  DSHX_SURFACE_MARKERS,
+  REQUIRED_DSHX_PATHS,
+} from '../src/compatibility.js'
 
 const temporaryRoots = []
 
@@ -26,11 +32,14 @@ function temporaryDirectory(label) {
   return path
 }
 
-function harnessAt(root, version = '0.6.2') {
+function harnessAt(root, version = '0.7.0') {
   mkdirSync(join(root, 'apps/cli/src'), { recursive: true })
-  mkdirSync(join(root, 'tools/dshx/src'), { recursive: true })
   writeFileSync(join(root, 'apps/cli/src/bin.ts'), '')
-  writeFileSync(join(root, 'tools/dshx/src/cli.ts'), '')
+  for (const path of REQUIRED_DSHX_PATHS) {
+    const target = join(root, 'tools/dshx', path)
+    mkdirSync(dirname(target), { recursive: true })
+    writeFileSync(target, DSHX_SURFACE_MARKERS[path].join('\n'))
+  }
   writeFileSync(join(root, 'tools/dshx/package.json'), JSON.stringify({
     name: 'dsh-external-plugin-devkit',
     version,
@@ -53,14 +62,7 @@ describe('Creator Bridge v2', () => {
       },
     })
 
-    assert.deepEqual(registered.map(tool => tool.name), [
-      'dshx_claim_plugin',
-      'dshx_scaffold',
-      'dshx_check',
-      'dshx_activation_plan',
-      'dshx_activate_new_client',
-      'dshx_status',
-    ])
+    assert.deepEqual(registered.map(tool => tool.name), CREATOR_MODEL_TOOLS)
     assert.equal(registered.some(tool => /start|stop|restart|shell|command/.test(tool.name)), false)
     assert.throws(
       () => registered[0].execute({ name: '../escape' }, { signal: undefined }),
@@ -267,12 +269,12 @@ describe('Creator Bridge v2', () => {
 
   it('accepts only the declared DSHX compatibility range', () => {
     assert.equal(CREATOR_BRIDGE_VERSION, 2)
-    assert.equal(supportsDshxVersion('0.5.99'), false)
-    assert.equal(supportsDshxVersion('0.6.0'), false)
-    assert.equal(supportsDshxVersion('0.6.1'), false)
-    assert.equal(supportsDshxVersion('0.6.2'), true)
-    assert.equal(supportsDshxVersion('0.6.99'), true)
-    assert.equal(supportsDshxVersion('0.7.0'), false)
+    assert.equal(DSHX_CONTRACT.id, 'dshx-v0.7/creator-bridge-v2')
+    assert.equal(supportsDshxVersion('0.6.99'), false)
+    assert.equal(supportsDshxVersion('0.7.0-beta.1'), false)
+    assert.equal(supportsDshxVersion('0.7.0'), true)
+    assert.equal(supportsDshxVersion('0.7.9+build.4'), true)
+    assert.equal(supportsDshxVersion('0.8.0'), false)
     assert.equal(supportsDshxVersion('invalid'), false)
   })
 
@@ -291,16 +293,28 @@ describe('Creator Bridge v2', () => {
   })
 
   it('resolves a compatible DSHX runtime and fails closed on drift', () => {
-    const compatible = harnessAt(temporaryDirectory('creator-mode-plus-compatible-'), '0.6.2')
+    const compatible = harnessAt(temporaryDirectory('creator-mode-plus-compatible-'), '0.7.0')
     const runtime = resolveDshxRuntime({ harnessRoot: compatible, loaderPath: '/fake/tsx-loader.mjs' })
-    assert.equal(runtime.dshxVersion, '0.6.2')
+    assert.equal(runtime.dshxVersion, '0.7.0')
     assert.equal(runtime.bridgeVersion, 2)
     assert.equal(runtime.loader, '/fake/tsx-loader.mjs')
+    assert.equal(runtime.contractId, 'dshx-v0.7/creator-bridge-v2')
+    assert.equal(runtime.capabilities.includes('transactional-harness-update-assistant'), true)
 
-    const incompatible = harnessAt(temporaryDirectory('creator-mode-plus-incompatible-'), '0.7.0')
+    const incompatible = harnessAt(temporaryDirectory('creator-mode-plus-incompatible-'), '0.8.0')
     assert.throws(
       () => resolveDshxRuntime({ harnessRoot: incompatible, loaderPath: '/fake/tsx-loader.mjs' }),
-      /dshx 0\.7\.0 is incompatible/,
+      /dshx 0\.8\.0 is incompatible/,
+    )
+  })
+
+  it('requires the complete DSHX v0.7 Creator, Guardian, activation, and update surfaces', () => {
+    const incomplete = harnessAt(temporaryDirectory('creator-mode-plus-incomplete-'))
+    rmSync(join(incomplete, 'tools/dshx/src/commands/update.ts'))
+    rmSync(join(incomplete, 'tools/dshx/knowledge/contracts/harness-update.md'))
+    assert.throws(
+      () => resolveDshxRuntime({ harnessRoot: incomplete, loaderPath: '/fake/tsx-loader.mjs' }),
+      /missing required dshx-v0\.7\/creator-bridge-v2 surfaces: src\/commands\/update\.ts, knowledge\/contracts\/harness-update\.md/,
     )
   })
 

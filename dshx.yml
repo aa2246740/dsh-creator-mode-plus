@@ -1,0 +1,6 @@
+id: dsh-creator-mode-plus
+name: Creator Mode+
+entry: src/index.js
+marker: "[dsh-creator-mode-plus] loaded"
+kind: client
+profile: web

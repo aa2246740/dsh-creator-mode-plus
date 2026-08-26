@@ -2,7 +2,7 @@
 
 [中文](README.md)
 
-Pick Creator Mode+ in a normal DeepSeek Harness WebUI session. Six fixed tools scaffold, check, and mount a file-backed plugin. Anything outside that list stops. The session does not get Host start, stop, or restart, and it does not get a raw command through the bridge.
+Pick Creator Mode+ in a normal DeepSeek Harness WebUI session. Six fixed tools scaffold, check, and mount a file-backed plugin. Version 0.3.0 fully aligns session claims, workspace scaffolding, the seven activation surfaces, the external Guardian, and the Harness Update Assistant authority boundary with DSHX v0.7. Anything outside the fixed contract stops.
 
 This does not replace official Creator Mode. It does not patch Harness core. Unofficial.
 
@@ -33,9 +33,9 @@ node tools/dsh-creator-mode-plus/scripts/install.mjs --harness "$PWD"
 
 Restart the Web Host once from outside the session, because the profile changed. Open the official WebUI, pick Creator Mode+, and start a new session or a still-blank one.
 
-This wants DSH `dsh-v0.1.0-rc.8` and [DSHX](https://github.com/aa2246740/dsh-external-plugin-devkit) `>=0.6.2 <0.7.0`. A mismatch stops before anything is mutated.
+The compatibility line covers the Creator/Guardian contracts from DSH `dsh-v0.1.0-rc.8` through the current `dsh-v0.1.1-rc.2`. It requires [DSHX](https://github.com/aa2246740/dsh-external-plugin-devkit) `>=0.7.0 <0.8.0`. The installer checks the actual Creator, Guardian, activation, managed-shell, Harness Update Assistant, and knowledge surfaces—not only a version string—and stops before preset mutation when any surface is missing.
 
-Migrating from the old bundled row, and later upgrades, live in the [Bridge v2 contract](docs/bridge-contract.md).
+Migration and upgrade rules live in the [Bridge v2 contract](docs/bridge-contract.md); the complete release mapping is in [DSHX v0.7 alignment](docs/dshx-v0.7-alignment.md).
 
 ![Installer writing the user preset](docs/screenshots/install.png)
 
@@ -60,11 +60,32 @@ A second install does not overwrite. Start, restart, and a garbage port are refu
 
 How Guardian quarantines, restarts once, and hands the incident back to the same session is in the contract. Not here.
 
+## Harness update boundary
+
+DSHX v0.7 adds `update plan → prepare → verify → apply` and exact `rollback`, but Creator Mode+ still exposes only six model tools. A managed shell may read `update plan`; `prepare`, `verify`, `apply`, `rollback`, and Host process control remain external-supervisor operations. Candidate verified, locally applied, real-runtime accepted, and production activated are separate states.
+
+## Upgrading from 0.2.x
+
+Run outside an Agent session:
+
+```sh
+cd /path/to/deepseek-harness/tools/dsh-creator-mode-plus
+git pull --ff-only
+node scripts/install.mjs --harness /path/to/deepseek-harness --upgrade
+npm run verify:dshx -- --harness /path/to/deepseek-harness
+```
+
+Version 0.3.0 changes the server bridge module, so a Web Host that already loaded 0.2.x needs one controlled external restart. That is the `server` activation branch. Ordinary preset discovery and later skill-only upgrades with unchanged composition bytes and stamp do not require a restart.
+
 ## Development
 
 ```sh
 npm test
 npm run check
+npm run verify:dshx -- --harness /absolute/path/to/deepseek-harness
+npm run verify:harness-install -- --harness /absolute/path/to/deepseek-harness
+/absolute/path/to/deepseek-harness/tools/dshx/skill/dshx/scripts/dshx.sh check "$PWD" --harness /absolute/path/to/deepseek-harness
+npm pack --dry-run
 ```
 
 ## License

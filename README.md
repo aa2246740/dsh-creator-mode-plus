@@ -2,7 +2,7 @@
 
 [English](README.en.md)
 
-在 DeepSeek Harness 的普通 Web 会话里选 Creator Mode+，就能用六个固定工具把一个文件化插件搭起来、检查完、挂上去。过不了的操作直接停。会话拿不到 Host 的开关，也拿不到一条随便写的命令。
+在 DeepSeek Harness 的普通 Web 会话里选 Creator Mode+，就能用六个固定工具把一个文件化插件搭起来、检查完、挂上去。0.3.0 完整对齐 DSHX v0.7：会话认领、工作区 scaffold、七分支激活、外部 Guardian 和 Harness Update Assistant 的权限边界都进入同一份 fail-closed 合同。过不了的操作直接停。
 
 不替代官方创造模式。不改 Harness 核心。非官方。
 
@@ -33,9 +33,9 @@ node tools/dsh-creator-mode-plus/scripts/install.mjs --harness "$PWD"
 
 因为加了 profile 依赖，先在会话外面把 Web Host 重启一次。然后打开官方 WebUI，选 Creator Mode+，开一个新会话，或者还是空白的那个。
 
-要 DSH `dsh-v0.1.0-rc.8`，以及 [DSHX](https://github.com/aa2246740/dsh-external-plugin-devkit) `>=0.6.2 <0.7.0`。对不上，桥会在改任何东西之前停掉。
+兼容线覆盖 DSH `dsh-v0.1.0-rc.8` 的 Creator/Guardian 合同和当前 `dsh-v0.1.1-rc.2`。必须使用 [DSHX](https://github.com/aa2246740/dsh-external-plugin-devkit) `>=0.7.0 <0.8.0`。安装器不只看版本号，还会检查 Creator、Guardian、激活矩阵、managed-shell gate、Harness Update Assistant 和对应知识合同；缺一项就在写 preset 前停止。
 
-从旧的 bundled 版本迁过来、以后升级，看 [Bridge v2 合同](docs/bridge-contract.md)。
+从旧的 bundled 版本迁过来、以后升级，看 [Bridge v2 合同](docs/bridge-contract.md)；本次完整对齐矩阵见 [DSHX v0.7 alignment](docs/dshx-v0.7-alignment.md)。
 
 ![安装器把 preset 写进用户目录](docs/screenshots/install.png)
 
@@ -60,11 +60,32 @@ node tools/dsh-creator-mode-plus/scripts/install.mjs --harness "$PWD"
 
 Guardian 怎么隔离、怎么只重启一次、怎么把事故交回原来的会话，都写在合同里。这里不展开。
 
+## Harness 更新边界
+
+DSHX v0.7 新增 `update plan → prepare → verify → apply` 和精确 `rollback`，但 Creator Mode+ 仍然只有六个模型工具。会话内只允许通过 managed shell 读取 `update plan`；`prepare`、`verify`、`apply`、`rollback` 和 Host 进程控制全部交给外部 DSHX supervisor。候选验证通过、本机应用完成、真实运行时接受、正式激活是四个不同状态。
+
+## 从 0.2.x 升级
+
+在 Agent 会话外执行：
+
+```sh
+cd /path/to/deepseek-harness/tools/dsh-creator-mode-plus
+git pull --ff-only
+node scripts/install.mjs --harness /path/to/deepseek-harness --upgrade
+npm run verify:dshx -- --harness /path/to/deepseek-harness
+```
+
+0.3.0 改了 server bridge 模块，因此已经运行并加载过 0.2.x 的 Web Host 需要由外部 supervisor 受控重启一次。这个重启属于 `server` 分支；普通 preset 发现和以后只更新 skill、且 composition 字节不变的升级不需要重启。
+
 ## 开发
 
 ```sh
 npm test
 npm run check
+npm run verify:dshx -- --harness /absolute/path/to/deepseek-harness
+npm run verify:harness-install -- --harness /absolute/path/to/deepseek-harness
+/absolute/path/to/deepseek-harness/tools/dshx/skill/dshx/scripts/dshx.sh check "$PWD" --harness /absolute/path/to/deepseek-harness
+npm pack --dry-run
 ```
 
 ## License

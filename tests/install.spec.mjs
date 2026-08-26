@@ -10,9 +10,10 @@ import {
   writeFileSync,
 } from 'node:fs'
 import { tmpdir } from 'node:os'
-import { join } from 'node:path'
+import { dirname, join } from 'node:path'
 import { afterEach, describe, it } from 'node:test'
 import { installCreatorModePlus } from '../scripts/install.mjs'
+import { DSHX_SURFACE_MARKERS, REQUIRED_DSHX_PATHS } from '../src/compatibility.js'
 
 const temporaryRoots = []
 const CURRENT_ROW = `- id: dsh-creator-mode-plus\n  name: dsh-creator-mode-plus`
@@ -25,15 +26,18 @@ function temporaryDirectory(label) {
   return path
 }
 
-function harnessAt(root) {
+function harnessAt(root, version = '0.7.0') {
   mkdirSync(join(root, 'apps/cli/src'), { recursive: true })
   mkdirSync(join(root, 'apps/cli/config/agent-presets/standard'), { recursive: true })
-  mkdirSync(join(root, 'tools/dshx/src'), { recursive: true })
   writeFileSync(join(root, 'apps/cli/src/bin.ts'), '')
-  writeFileSync(join(root, 'tools/dshx/src/cli.ts'), '')
+  for (const path of REQUIRED_DSHX_PATHS) {
+    const target = join(root, 'tools/dshx', path)
+    mkdirSync(dirname(target), { recursive: true })
+    writeFileSync(target, DSHX_SURFACE_MARKERS[path].join('\n'))
+  }
   writeFileSync(join(root, 'tools/dshx/package.json'), JSON.stringify({
     name: 'dsh-external-plugin-devkit',
-    version: '0.6.0',
+    version,
   }))
   writeFileSync(join(root, 'apps/cli/config/agent-presets/standard/preset.yml'), 'name: Standard\n')
   writeFileSync(join(root, 'apps/cli/config/agent-presets/standard/agent.cordis.yml'), `# The \`standard\` agent preset: the full coding agent, mounted once per process.
@@ -65,6 +69,9 @@ describe('Creator Mode+ installer', () => {
     const composition = readFileSync(join(result.target, 'agent.cordis.yml'), 'utf8')
 
     assert.equal(result.action, 'installed')
+    assert.equal(result.dshxVersion, '0.7.0')
+    assert.equal(result.creatorBridgeVersion, 2)
+    assert.equal(result.dshxContract, 'dshx-v0.7/creator-bridge-v2')
     assert.match(result.target, /creator-mode-plus$/)
     assert.equal(readFileSync(source, 'utf8'), before)
     assert.match(composition, /You are Creator Mode\+/)
@@ -141,6 +148,38 @@ describe('Creator Mode+ installer', () => {
     const migrated = installCreatorModePlus({ harnessRoot, dshHome, migrateLegacy: true })
     assert.equal(migrated.action, 'migrated')
     assert.match(readFileSync(compositionPath, 'utf8'), /name: dsh-creator-mode-plus/)
+  })
+
+  it('fails before preset mutation when DSHX is older than the complete v0.7 contract', () => {
+    const harnessRoot = harnessAt(temporaryDirectory('creator-mode-plus-old-dshx-harness-'), '0.6.2')
+    const dshHome = temporaryDirectory('creator-mode-plus-old-dshx-home-')
+    assert.throws(
+      () => installCreatorModePlus({ harnessRoot, dshHome }),
+      /dshx 0\.6\.2 is incompatible/,
+    )
+    assert.equal(existsSync(join(dshHome, '.agent-presets')), false)
+  })
+
+  it('fails before preset mutation when DSHX v0.7 is missing Update Assistant surfaces', () => {
+    const harnessRoot = harnessAt(temporaryDirectory('creator-mode-plus-incomplete-dshx-harness-'))
+    const dshHome = temporaryDirectory('creator-mode-plus-incomplete-dshx-home-')
+    rmSync(join(harnessRoot, 'tools/dshx/src/commands/update.ts'))
+    assert.throws(
+      () => installCreatorModePlus({ harnessRoot, dshHome }),
+      /missing required dshx-v0\.7\/creator-bridge-v2 surfaces/,
+    )
+    assert.equal(existsSync(join(dshHome, '.agent-presets')), false)
+  })
+
+  it('fails before preset mutation when a named v0.7 surface has contract drift', () => {
+    const harnessRoot = harnessAt(temporaryDirectory('creator-mode-plus-drifted-dshx-harness-'))
+    const dshHome = temporaryDirectory('creator-mode-plus-drifted-dshx-home-')
+    writeFileSync(join(harnessRoot, 'tools/dshx/src/commands/update.ts'), 'export function cmdUpdate() {}\n')
+    assert.throws(
+      () => installCreatorModePlus({ harnessRoot, dshHome }),
+      /contract drift for dshx-v0\.7\/creator-bridge-v2: src\/commands\/update\.ts/,
+    )
+    assert.equal(existsSync(join(dshHome, '.agent-presets')), false)
   })
 
   it('refuses an unrecognized managed row instead of guessing', () => {

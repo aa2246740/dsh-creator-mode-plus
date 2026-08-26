@@ -8,6 +8,12 @@ import {
   runDshx,
 } from './runner.js'
 
+export {
+  CREATOR_BRIDGE_VERSION,
+  CREATOR_MODEL_TOOLS,
+  DSHX_CONTRACT,
+} from './compatibility.js'
+
 export const name = 'dsh-creator-mode-plus'
 export const inject = ['tools', 'webServer']
 
@@ -202,7 +208,7 @@ export function apply(ctx) {
 
   ctx.tools.register({
     name: 'dshx_check',
-    description: 'Run dshx static checks, including client Cordis service injection and the built-client handoff. Passing proves SOURCE_BUILT only.',
+    description: 'Run DSHX v0.7 external-plugin checks, including client Cordis service injection and the built-client handoff. Passing proves SOURCE_BUILT only, not live activation.',
     parameters: {
       type: 'object',
       properties: { name: { type: 'string', description: 'Plugin id under my-plugins' } },
@@ -220,7 +226,7 @@ export function apply(ctx) {
 
   ctx.tools.register({
     name: 'dshx_activation_plan',
-    description: 'Classify one change before any new-session, browser-reload, or Host-restart decision.',
+    description: 'Classify one change as patch, manifest, preset, client, new-client, server, or artifact before any new-session, reload, or restart decision.',
     parameters: {
       type: 'object',
       properties: {
@@ -243,7 +249,7 @@ export function apply(ctx) {
 
   ctx.tools.register({
     name: 'dshx_activate_new_client',
-    description: 'Activate one checked my-plugins Web client in the safe order: profile link, resolution proof, watched patch, then current-Host manifest proof. It never reloads the browser or restarts DSH.',
+    description: 'Activate one checked my-plugins Web client in the DSHX v0.7 safe order: profile link, resolution proof, watched-patch transaction, then current-Host manifest proof. It never reloads the browser or restarts DSH.',
     parameters: {
       type: 'object',
       properties: { name: { type: 'string', description: 'Plugin id under my-plugins' } },
@@ -264,7 +270,7 @@ export function apply(ctx) {
 
   ctx.tools.register({
     name: 'dshx_status',
-    description: 'Read the external dshx supervisor and Web Host status. It never starts, stops, or restarts DSH.',
+    description: 'Read the external DSHX v0.7 supervisor and Web Host status. The bridge also reports its pinned contract and capabilities; it never starts, stops, restarts, or updates DSH.',
     parameters: { type: 'object', properties: {}, additionalProperties: false },
     timeoutMs: 30_000,
     output,

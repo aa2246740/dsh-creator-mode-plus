@@ -14,7 +14,7 @@ import {
 import { homedir } from 'node:os'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
-import { resolveHarnessRoot } from '../src/runner.js'
+import { inspectDshxCompatibility, resolveHarnessRoot } from '../src/runner.js'
 
 const packageRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const CURRENT_PRESET_ID = 'creator-mode-plus'
@@ -74,7 +74,7 @@ function creatorComposition(standard) {
   text = replaceOnce(
     text,
     `    text: >-\n      You are a coding agent powered by the {{model}} model. Your working directory is {{cwd}}.`,
-    `    text: |-\n      You are Creator Mode+, a coding agent powered by the {{model}} model. Your working directory is {{cwd}}.\n\n      Create file-backed DeepSeek Harness plugins through the fixed dshx bridge. Treat the official browser WebUI and public Cordis/client extension points as the compatibility target. App-shell APIs and wrapper-specific behavior are outside the supported surface.\n\n      Load the \`creator-mode-plus\` skill before creating, activating, hot-reloading, or validating a DSH plugin. Keep Harness core and shipped presets unchanged.`,
+    `    text: |-\n      You are Creator Mode+, a coding agent powered by the {{model}} model. Your working directory is {{cwd}}.\n\n      Create file-backed DeepSeek Harness plugins through the six-tool DSHX v0.7 fixed bridge. Treat the official browser WebUI and public Cordis/client extension points as the compatibility target. App-shell APIs and wrapper-specific behavior are outside the supported surface. Harness update planning is read-only inside this session; prepare, verify, apply, rollback, and process control belong to the external DSHX supervisor.\n\n      Load the \`creator-mode-plus\` skill before creating, activating, hot-reloading, updating Harness, or validating a DSH plugin. Keep Harness core and shipped presets unchanged.`,
     'persona',
   )
   text = replaceOnce(
@@ -153,6 +153,7 @@ export function installCreatorModePlus(options = {}) {
     cwd: options.cwd,
     moduleDir: options.moduleDir,
   })
+  const compatibility = inspectDshxCompatibility(harnessRoot)
   const source = standardPresetAt(harnessRoot)
   const dshHome = resolve(options.dshHome || process.env.DSH_HOME || join(homedir(), '.dsh'))
   const root = join(dshHome, '.agent-presets')
@@ -160,6 +161,13 @@ export function installCreatorModePlus(options = {}) {
   const legacyTarget = join(root, LEGACY_PRESET_ID)
   const currentExists = existsSync(currentTarget)
   const legacyExists = existsSync(legacyTarget)
+  const result = (target, action) => ({
+    target,
+    action,
+    dshxVersion: compatibility.dshxVersion,
+    creatorBridgeVersion: compatibility.creatorBridgeVersion,
+    dshxContract: compatibility.contractId,
+  })
 
   if (currentExists && legacyExists) {
     throw new Error(`both ${currentTarget} and ${legacyTarget} exist; refusing to choose or overwrite either preset`)
@@ -171,7 +179,7 @@ export function installCreatorModePlus(options = {}) {
       throw new Error(`Creator Mode+ already exists at ${currentTarget}; pass --upgrade to refresh only managed assets`)
     }
     refreshManagedAssets(currentTarget, root, false)
-    return { target: currentTarget, action: 'updated' }
+    return result(currentTarget, 'updated')
   }
 
   if (legacyExists) {
@@ -179,7 +187,7 @@ export function installCreatorModePlus(options = {}) {
       throw new Error(`legacy Creator Mode+ exists at ${legacyTarget}; pass --migrate-legacy after adding the standalone package`)
     }
     refreshManagedAssets(legacyTarget, root, true)
-    return { target: legacyTarget, action: 'migrated' }
+    return result(legacyTarget, 'migrated')
   }
 
   if (options.upgrade || options.migrateLegacy) {
@@ -199,7 +207,7 @@ export function installCreatorModePlus(options = {}) {
   } finally {
     rmSync(temporaryRoot, { recursive: true, force: true })
   }
-  return { target: currentTarget, action: 'installed' }
+  return result(currentTarget, 'installed')
 }
 
 function parseArguments(argv) {
@@ -231,7 +239,10 @@ if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1]
       process.stdout.write('Usage: node scripts/install.mjs --harness <path> [--upgrade | --migrate-legacy]\n')
     } else {
       const result = installCreatorModePlus(options)
-      process.stdout.write(`Creator Mode+ ${result.action} at ${result.target}\n`)
+      process.stdout.write(
+        `Creator Mode+ ${result.action} at ${result.target}\n`
+        + `DSHX ${result.dshxVersion}; bridge v${result.creatorBridgeVersion}; contract ${result.dshxContract}\n`,
+      )
     }
   } catch (error) {
     process.stderr.write(`${error instanceof Error ? error.message : String(error)}\n`)
