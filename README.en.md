@@ -33,7 +33,9 @@ node tools/dsh-creator-mode-plus/scripts/install.mjs --harness "$PWD"
 
 Restart the Web Host once from outside the session, because the profile changed. Open the official WebUI, pick Creator Mode+, and start a new session or a still-blank one.
 
-The compatibility line covers the Creator/Guardian contracts from DSH `dsh-v0.1.0-rc.8` through the current `dsh-v0.1.1-rc.2`. It requires [DSHX](https://github.com/aa2246740/dsh-external-plugin-devkit) `>=0.7.0 <0.8.0`. The installer checks the actual Creator, Guardian, activation, managed-shell, Harness Update Assistant, and knowledge surfaces—not only a version string—and stops before preset mutation when any surface is missing.
+The compatibility line covers the Creator/Guardian contracts from DSH `dsh-v0.1.0-rc.8` through the current `dsh-v0.1.1-rc.2`. It requires [DSHX](https://github.com/aa2246740/dsh-external-plugin-devkit) `>=0.7.1 <0.8.0`. Version 0.7.1 accepts both RC8's `window.__DSH_BOOT__` and RC2's official `globalThis["__DSH_BOOT__"]` injection. The installer also checks the actual Creator, Guardian, activation, managed-shell, Harness Update Assistant, and knowledge surfaces and stops before preset mutation when any surface is missing.
+
+For a fresh browser plugin, the fixed order is scaffold, implement/build, `dshx_check`, `dshx_activation_plan`, then same-PID activation. An unbuilt scaffold is no longer required to pass an activation plan.
 
 Migration and upgrade rules live in the [Bridge v2 contract](docs/bridge-contract.md); the complete release mapping is in [DSHX v0.7 alignment](docs/dshx-v0.7-alignment.md).
 

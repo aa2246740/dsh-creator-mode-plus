@@ -26,7 +26,7 @@ function temporaryDirectory(label) {
   return path
 }
 
-function harnessAt(root, version = '0.7.0') {
+function harnessAt(root, version = '0.7.1') {
   mkdirSync(join(root, 'apps/cli/src'), { recursive: true })
   mkdirSync(join(root, 'apps/cli/config/agent-presets/standard'), { recursive: true })
   writeFileSync(join(root, 'apps/cli/src/bin.ts'), '')
@@ -69,7 +69,7 @@ describe('Creator Mode+ installer', () => {
     const composition = readFileSync(join(result.target, 'agent.cordis.yml'), 'utf8')
 
     assert.equal(result.action, 'installed')
-    assert.equal(result.dshxVersion, '0.7.0')
+    assert.equal(result.dshxVersion, '0.7.1')
     assert.equal(result.creatorBridgeVersion, 2)
     assert.equal(result.dshxContract, 'dshx-v0.7/creator-bridge-v2')
     assert.match(result.target, /creator-mode-plus$/)
@@ -178,6 +178,20 @@ describe('Creator Mode+ installer', () => {
     assert.throws(
       () => installCreatorModePlus({ harnessRoot, dshHome }),
       /contract drift for dshx-v0\.7\/creator-bridge-v2: src\/commands\/update\.ts/,
+    )
+    assert.equal(existsSync(join(dshHome, '.agent-presets')), false)
+  })
+
+  it('fails before preset mutation when DSHX lacks the RC2 boot-manifest parser', () => {
+    const harnessRoot = harnessAt(temporaryDirectory('creator-mode-plus-rc2-parser-harness-'))
+    const dshHome = temporaryDirectory('creator-mode-plus-rc2-parser-home-')
+    writeFileSync(
+      join(harnessRoot, 'tools/dshx/src/internal/new-client.ts'),
+      "const marker = 'window.__DSH_BOOT__ = '\n",
+    )
+    assert.throws(
+      () => installCreatorModePlus({ harnessRoot, dshHome }),
+      /contract drift for dshx-v0\.7\/creator-bridge-v2: src\/internal\/new-client\.ts/,
     )
     assert.equal(existsSync(join(dshHome, '.agent-presets')), false)
   })

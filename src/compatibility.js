@@ -5,8 +5,8 @@ export const CREATOR_BRIDGE_VERSION = 2
 
 export const DSHX_CONTRACT = Object.freeze({
   id: 'dshx-v0.7/creator-bridge-v2',
-  release: 'v0.7.0',
-  minimum: '0.7.0',
+  release: 'v0.7.1',
+  minimum: '0.7.1',
   maximumExclusive: '0.8.0',
   capabilities: Object.freeze([
     'creator-session-claims',
@@ -65,6 +65,12 @@ export const DSHX_SURFACE_MARKERS = Object.freeze({
     "reason: 'crash-loop'",
   ]),
   'src/internal/io.ts': Object.freeze(["command === 'update'", "args[0] ?? 'plan'"]),
+  'src/internal/new-client.ts': Object.freeze([
+    'BOOT_MANIFEST_ASSIGNMENT',
+    'window.__DSH_BOOT__',
+    'globalThis["__DSH_BOOT__"]',
+    'no supported __DSH_BOOT__ manifest assignment',
+  ]),
   'knowledge/contracts/creator-mode-plus.md': Object.freeze([
     'creator claim',
     'creator scaffold',

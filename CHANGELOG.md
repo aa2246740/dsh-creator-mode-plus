@@ -2,7 +2,9 @@
 
 ## 0.3.0 - 2026-08-26
 
-- Align the standalone bridge with the complete stable DSHX `>=0.7.0 <0.8.0` contract while keeping Creator Bridge v2 at six bounded model-facing tools.
+- Align the standalone bridge with the complete stable DSHX `>=0.7.1 <0.8.0` contract while keeping Creator Bridge v2 at six bounded model-facing tools.
+- Require the RC2-compatible boot-manifest surface that recognizes both `window.__DSH_BOOT__` and `globalThis["__DSH_BOOT__"]` before any bridge or installer mutation.
+- Unblock fresh client creation by enforcing scaffold → implement/build → `dshx_check` → `dshx_activation_plan` → same-PID activation; an unbuilt client scaffold is no longer asked to pass the plan gate.
 - Replace version-only acceptance with a fail-closed capability preflight covering Creator claims/scaffold, Guardian, seven-surface activation, managed-shell policy, Harness Update Assistant, and their knowledge contracts.
 - Make fresh install, managed upgrade, and legacy migration refuse an old or incomplete DSHX before writing user preset state; report the accepted DSHX version, bridge version, and contract id.
 - Add a real-checkout verifier that probes DSHX's CLI version and contract markers, plus a portable `dshx.yml` so DSHX v0.7 can check this package directly on the current RC2 line.

@@ -1,8 +1,9 @@
 # DSHX v0.7 alignment
 
-Creator Mode+ 0.3.0 is aligned to stable DSHX `>=0.7.0 <0.8.0`, Creator Bridge
-v2, and the official browser WebUI lifecycle. The pinned baseline for this
-alignment is DSHX `v0.7.0` (`2676f259fff7492eebd8bc8823c0f5012ae7adf3`).
+Creator Mode+ 0.3.0 is aligned to stable DSHX `>=0.7.1 <0.8.0`, Creator Bridge
+v2, and the official browser WebUI lifecycle. The pinned baseline is DSHX
+`v0.7.1` (`51eabe2dea19d05bd4ca194ce05c679debb987d2`), including the RC2
+boot-manifest parser and corrected fresh-client plan order.
 
 This is a contract alignment, not a version-number exception. Before the bridge
 or installer mutates anything, it verifies the DSHX package identity, stable

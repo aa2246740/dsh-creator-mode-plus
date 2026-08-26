@@ -33,7 +33,9 @@ node tools/dsh-creator-mode-plus/scripts/install.mjs --harness "$PWD"
 
 因为加了 profile 依赖，先在会话外面把 Web Host 重启一次。然后打开官方 WebUI，选 Creator Mode+，开一个新会话，或者还是空白的那个。
 
-兼容线覆盖 DSH `dsh-v0.1.0-rc.8` 的 Creator/Guardian 合同和当前 `dsh-v0.1.1-rc.2`。必须使用 [DSHX](https://github.com/aa2246740/dsh-external-plugin-devkit) `>=0.7.0 <0.8.0`。安装器不只看版本号，还会检查 Creator、Guardian、激活矩阵、managed-shell gate、Harness Update Assistant 和对应知识合同；缺一项就在写 preset 前停止。
+兼容线覆盖 DSH `dsh-v0.1.0-rc.8` 的 Creator/Guardian 合同和当前 `dsh-v0.1.1-rc.2`。必须使用 [DSHX](https://github.com/aa2246740/dsh-external-plugin-devkit) `>=0.7.1 <0.8.0`。0.7.1 同时识别 RC8 的 `window.__DSH_BOOT__` 和 RC2 官方 `globalThis["__DSH_BOOT__"]` 注入；安装器还会检查 Creator、Guardian、激活矩阵、managed-shell gate、Harness Update Assistant 和对应知识合同，缺一项就在写 preset 前停止。
+
+新浏览器插件的固定顺序是：scaffold 后先实现、构建并通过 `dshx_check`，再运行 `dshx_activation_plan` 和同 PID 激活。未构建的 scaffold 不再被错误地要求先通过 activation plan。
 
 从旧的 bundled 版本迁过来、以后升级，看 [Bridge v2 合同](docs/bridge-contract.md)；本次完整对齐矩阵见 [DSHX v0.7 alignment](docs/dshx-v0.7-alignment.md)。
 

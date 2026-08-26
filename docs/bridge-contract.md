@@ -2,7 +2,7 @@
 
 Creator Mode+ is a user preset plus one DSH plugin. It brings six fixed DSHX
 operations into an ordinary DSH session without giving that session control of
-its Host process. Stable DSHX `>=0.7.0 <0.8.0` supplies workspace-aware
+its Host process. Stable DSHX `>=0.7.1 <0.8.0` supplies workspace-aware
 scaffolding, the external Guardian, durable recovery state, the seven-surface
 activation contract, and the transactional Harness Update Assistant.
 
@@ -59,8 +59,10 @@ The scaffold command stamps the immutable session workspace from
 `exec.agent.session.header.cwd`. If Harness `my-plugins/<id>` is outside that
 writable workspace, DSHX creates the source below the workspace and creates the
 Harness link atomically. The model supplies neither path, and the user is never
-asked to add the link manually. Activation planning follows scaffold for a new
-project because a plan cannot inspect a target that does not exist.
+asked to add the link manually. For a fresh `new-client`, implementation, build,
+and `dshx_check` follow scaffold before activation planning because the plan
+validates the built lazy-CJS handoff. Other build-ready targets may plan as soon
+as the target exists.
 
 ## Trusted identity and concurrent ownership
 
@@ -90,7 +92,7 @@ The standalone package does not accept `0.7.x` by string alone. Before any fixed
 operation or installer mutation it requires:
 
 - package identity `dsh-external-plugin-devkit` and stable version
-  `>=0.7.0 <0.8.0`;
+  `>=0.7.1 <0.8.0`;
 - Creator claim/scaffold commands and Bridge v2 context validation;
 - external Guardian and official Loader-failure recovery implementation;
 - check, activation-plan, and bounded new-client command surfaces;
@@ -108,7 +110,8 @@ live registration. Its sole model-controlled value is a lower-case kebab-case
 plugin id.
 
 ```text
-dshx check / SOURCE_BUILT
+scaffold -> implement/build -> dshx check / SOURCE_BUILT
+  -> activation-plan new-client exits 0
   -> add or confirm the official Web profile link
   -> prove package and lib/client.js resolution from that profile
   -> journal session/call/Host identity and the exact patch preimage

@@ -32,7 +32,7 @@ function temporaryDirectory(label) {
   return path
 }
 
-function harnessAt(root, version = '0.7.0') {
+function harnessAt(root, version = '0.7.1') {
   mkdirSync(join(root, 'apps/cli/src'), { recursive: true })
   writeFileSync(join(root, 'apps/cli/src/bin.ts'), '')
   for (const path of REQUIRED_DSHX_PATHS) {
@@ -272,7 +272,8 @@ describe('Creator Bridge v2', () => {
     assert.equal(DSHX_CONTRACT.id, 'dshx-v0.7/creator-bridge-v2')
     assert.equal(supportsDshxVersion('0.6.99'), false)
     assert.equal(supportsDshxVersion('0.7.0-beta.1'), false)
-    assert.equal(supportsDshxVersion('0.7.0'), true)
+    assert.equal(supportsDshxVersion('0.7.0'), false)
+    assert.equal(supportsDshxVersion('0.7.1'), true)
     assert.equal(supportsDshxVersion('0.7.9+build.4'), true)
     assert.equal(supportsDshxVersion('0.8.0'), false)
     assert.equal(supportsDshxVersion('invalid'), false)
@@ -293,9 +294,9 @@ describe('Creator Bridge v2', () => {
   })
 
   it('resolves a compatible DSHX runtime and fails closed on drift', () => {
-    const compatible = harnessAt(temporaryDirectory('creator-mode-plus-compatible-'), '0.7.0')
+    const compatible = harnessAt(temporaryDirectory('creator-mode-plus-compatible-'), '0.7.1')
     const runtime = resolveDshxRuntime({ harnessRoot: compatible, loaderPath: '/fake/tsx-loader.mjs' })
-    assert.equal(runtime.dshxVersion, '0.7.0')
+    assert.equal(runtime.dshxVersion, '0.7.1')
     assert.equal(runtime.bridgeVersion, 2)
     assert.equal(runtime.loader, '/fake/tsx-loader.mjs')
     assert.equal(runtime.contractId, 'dshx-v0.7/creator-bridge-v2')

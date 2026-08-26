@@ -7,7 +7,7 @@ Read [docs/bridge-contract.md](docs/bridge-contract.md) and [docs/dshx-v0.7-alig
 ## Change gates
 
 - Keep the model-facing surface to the six named tools. Every argument must remain schema-bounded and independently allowlisted in `src/runner.js`. Test the exact argv behind all six tools; a registration-only test is insufficient.
-- Require the complete stable DSHX `>=0.7.0 <0.8.0` contract, not only a matching version string. Creator, Guardian, activation, managed-shell, Harness Update Assistant, and their knowledge contracts must be present before the bridge or installer mutates anything.
+- Require the complete stable DSHX `>=0.7.1 <0.8.0` contract, not only a matching version string. Creator, Guardian, RC2 boot-manifest activation, managed-shell, Harness Update Assistant, and their knowledge contracts must be present before the bridge or installer mutates anything.
 - Preserve bridge-v2 provenance: session id comes from `exec.agent.id`, not model input. Claim one plugin per session before any named operation; different plugins may run concurrently, while the same plugin fails closed for a second owner.
 - Preserve workspace provenance: scaffold destination comes from `exec.agent.session.header.cwd`, never model input. If the Harness plugin path is outside that workspace, DSHX owns the atomic source-plus-symlink transaction.
 - Preserve automatic session-start Guardian arm, agent-dispose claim release, adopted-launcher lifetime tracking, exact-session recovery steering, and incident acknowledgement. Never register or wrap Host signal handlers.
