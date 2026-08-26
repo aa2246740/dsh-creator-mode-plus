@@ -24,6 +24,10 @@ const LEGACY_ROWS = [
   `- id: dshx-creator-plus\n  name: dsh-external-plugin-devkit/creator-plus`,
   `- id: dshx-creator-plus\n  name: dsh-external-plugin-devkit`,
 ]
+const LEGACY_SIX_TOOL_PERSONA = 'Create file-backed DeepSeek Harness plugins through the six-tool DSHX v0.7 fixed bridge. Treat the official browser WebUI and public Cordis/client extension points as the compatibility target. App-shell APIs and wrapper-specific behavior are outside the supported surface. Harness update planning is read-only inside this session; prepare, verify, apply, rollback, and process control belong to the external DSHX supervisor.'
+const SEVEN_TOOL_PERSONA = 'Create and safely remove file-backed DeepSeek Harness plugins through the seven-tool DSHX v0.7 fixed bridge. Treat the official browser WebUI and public Cordis/client extension points as the compatibility target. App-shell APIs and wrapper-specific behavior are outside the supported surface. Whole-plugin teardown must use dshx_remove_plugin so the live Host deactivates first and source is preserved. Harness update planning is read-only inside this session; prepare, verify, apply, rollback, and process control belong to the external DSHX supervisor.'
+const LEGACY_SIX_TOOL_COMMENT = '# Bridge v2: six fixed dshx tools plus external Guardian lifecycle hooks; no shell, arbitrary argv, or model process control.'
+const SEVEN_TOOL_COMMENT = '# Bridge v2: seven fixed dshx tools plus external Guardian lifecycle hooks; no arbitrary argv, raw plugin teardown, or model process control.'
 
 function standardPresetAt(root) {
   const path = join(root, 'apps/cli/config/agent-presets/standard')
@@ -74,7 +78,7 @@ function creatorComposition(standard) {
   text = replaceOnce(
     text,
     `    text: >-\n      You are a coding agent powered by the {{model}} model. Your working directory is {{cwd}}.`,
-    `    text: |-\n      You are Creator Mode+, a coding agent powered by the {{model}} model. Your working directory is {{cwd}}.\n\n      Create file-backed DeepSeek Harness plugins through the six-tool DSHX v0.7 fixed bridge. Treat the official browser WebUI and public Cordis/client extension points as the compatibility target. App-shell APIs and wrapper-specific behavior are outside the supported surface. Harness update planning is read-only inside this session; prepare, verify, apply, rollback, and process control belong to the external DSHX supervisor.\n\n      Load the \`creator-mode-plus\` skill before creating, activating, hot-reloading, updating Harness, or validating a DSH plugin. Keep Harness core and shipped presets unchanged.`,
+    `    text: |-\n      You are Creator Mode+, a coding agent powered by the {{model}} model. Your working directory is {{cwd}}.\n\n      Create and safely remove file-backed DeepSeek Harness plugins through the seven-tool DSHX v0.7 fixed bridge. Treat the official browser WebUI and public Cordis/client extension points as the compatibility target. App-shell APIs and wrapper-specific behavior are outside the supported surface. Whole-plugin teardown must use dshx_remove_plugin so the live Host deactivates first and source is preserved. Harness update planning is read-only inside this session; prepare, verify, apply, rollback, and process control belong to the external DSHX supervisor.\n\n      Load the \`creator-mode-plus\` skill before creating, activating, removing, hot-reloading, updating Harness, or validating a DSH plugin. Keep Harness core and shipped presets unchanged.`,
     'persona',
   )
   text = replaceOnce(
@@ -86,9 +90,25 @@ function creatorComposition(standard) {
   return replaceOnce(
     text,
     `- id: tool-skill\n  name: '@deepseek-ai/dsh-tool-skill'`,
-    `- id: tool-skill\n  name: '@deepseek-ai/dsh-tool-skill'\n\n# Bridge v2: six fixed dshx tools plus external Guardian lifecycle hooks; no shell, arbitrary argv, or model process control.\n${CURRENT_ROW}`,
+    `- id: tool-skill\n  name: '@deepseek-ai/dsh-tool-skill'\n\n# Bridge v2: seven fixed dshx tools plus external Guardian lifecycle hooks; no arbitrary argv, raw plugin teardown, or model process control.\n${CURRENT_ROW}`,
     'tool skill',
   )
+}
+
+function migrateManagedSafetyCopy(text) {
+  let next = text
+  for (const [before, after] of [
+    [LEGACY_SIX_TOOL_PERSONA, SEVEN_TOOL_PERSONA],
+    [LEGACY_SIX_TOOL_COMMENT, SEVEN_TOOL_COMMENT],
+  ]) {
+    const first = next.indexOf(before)
+    if (first < 0) continue
+    if (next.indexOf(before, first + before.length) >= 0) {
+      throw new Error('Creator Mode+ preset contains duplicate legacy managed safety text; refusing an unsafe update')
+    }
+    next = next.slice(0, first) + after + next.slice(first + before.length)
+  }
+  return next
 }
 
 function refreshManagedAssets(target, root, migrateLegacy) {
@@ -108,6 +128,7 @@ function refreshManagedAssets(target, root, migrateLegacy) {
   } else {
     throw new Error('Creator Mode+ preset does not contain exactly one recognized managed plugin row; refusing an unsafe update')
   }
+  composition = migrateManagedSafetyCopy(composition)
 
   const temporaryRoot = mkdtempSync(join(root, '.dsh-creator-mode-plus-upgrade-'))
   const staging = join(temporaryRoot, 'next')

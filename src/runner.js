@@ -12,6 +12,7 @@ import {
   DSHX_CONTRACT,
   inspectDshxCompatibility,
 } from './compatibility.js'
+import { forgetCreatorClaim, rememberCreatorClaim } from './safety.js'
 
 export {
   CREATOR_BRIDGE_VERSION,
@@ -32,7 +33,7 @@ function isAllowedArgs(args) {
   if (args.length === 2) return args[0] === 'check' && PLUGIN_ID.test(args[1])
   if (args.length === 3) {
     return args[0] === 'creator'
-      && ((args[1] === 'claim' && PLUGIN_ID.test(args[2]))
+      && (((args[1] === 'claim' || args[1] === 'remove') && PLUGIN_ID.test(args[2]))
         || ((args[1] === 'watch' || args[1] === 'release') && args[2] === '--json'))
   }
   if (args.length === 4) {
@@ -310,6 +311,7 @@ export function runClientFailureDshx(report, options = {}) {
 export async function runClaimedDshx(pluginId, args, exec, options = {}) {
   const claim = await runDshx(['creator', 'claim', pluginId], exec, options)
   if (claim.exitCode !== 0) return claim
+  rememberCreatorClaim(exec, pluginId)
   const result = await runDshx(args, exec, options)
   return { ...result, claim: { sessionId: exec.agent.id, pluginId } }
 }
@@ -371,6 +373,7 @@ export async function releaseCreatorClaim(agent, options = {}) {
     signal: AbortSignal.timeout(5_000),
   }, options)
   if (result.exitCode !== 0) throw new Error(result.stderr || result.stdout || 'Creator+ claim release failed')
+  forgetCreatorClaim({ agent })
 }
 
 /** Register fail-contained recovery delivery on the preset-scoped Agent lifecycle. */

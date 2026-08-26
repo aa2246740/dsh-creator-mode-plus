@@ -67,7 +67,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1]
       process.stdout.write('Usage: node scripts/verify-dshx.mjs [--harness /absolute/path/to/deepseek-harness]\n')
     } else {
       const result = verifyDshxAlignment(options)
-      process.stdout.write('CREATOR_MODE_PLUS_DSHX_V071_COMPATIBILITY_PASS\n')
+      process.stdout.write('CREATOR_MODE_PLUS_DSHX_V072_COMPATIBILITY_PASS\n')
       process.stdout.write(`${JSON.stringify(result, null, 2)}\n`)
     }
   } catch (error) {

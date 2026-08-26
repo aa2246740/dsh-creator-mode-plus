@@ -16,9 +16,11 @@ describe('Creator Mode+ 0.3 package contract', () => {
     const metadata = JSON.parse(read('package.json'))
     const manifest = read('dshx.yml')
 
-    assert.equal(metadata.version, '0.3.0')
+    assert.equal(metadata.version, '0.3.1')
     assert.equal(metadata.files.includes('dshx.yml'), true)
     assert.equal(metadata.files.includes('scripts'), true)
+    assert.equal(metadata.files.includes('docs'), false)
+    assert.equal(metadata.files.includes('docs/screenshots/six-tools.png'), false)
     assert.equal(CREATOR_BRIDGE_VERSION, 2)
     assert.equal(DSHX_CONTRACT.id, 'dshx-v0.7/creator-bridge-v2')
     assert.deepEqual(CREATOR_MODEL_TOOLS, [
@@ -27,6 +29,7 @@ describe('Creator Mode+ 0.3 package contract', () => {
       'dshx_check',
       'dshx_activation_plan',
       'dshx_activate_new_client',
+      'dshx_remove_plugin',
       'dshx_status',
     ])
     assert.match(manifest, /^id: dsh-creator-mode-plus$/m)
@@ -51,13 +54,15 @@ describe('Creator Mode+ 0.3 package contract', () => {
     const skill = read('preset/skills/creator-mode-plus/SKILL.md')
     assert.match(skill, /update plan → prepare → verify → apply/)
     assert.match(skill, /prepare.*verify.*apply.*rollback.*external DSHX supervisor/s)
-    assert.match(skill, /six fixed model tools/)
+    assert.match(skill, /seven fixed model tools/)
+    assert.match(skill, /dshx_remove_plugin/)
+    assert.match(skill, /detached-orphan-symlink/)
     assert.doesNotMatch(skill, /Do not implement until the plan/)
     assert.doesNotMatch(skill, /activation_plan.*before implementation/)
     assert.match(skill, /fresh `new-client`.*before activation planning/s)
     assert.match(skill, /fresh `new-client`.*only after `dshx_check` exits `0`/s)
     const alignment = read('docs/dshx-v0.7-alignment.md')
-    assert.match(alignment, /51eabe2dea19d05bd4ca194ce05c679debb987d2/)
-    assert.match(alignment, /does not add a seventh Creator tool|still six tools/i)
+    assert.match(alignment, /DSHX v0\.7\.2/)
+    assert.match(alignment, /seven tools|dshx_remove_plugin/i)
   })
 })

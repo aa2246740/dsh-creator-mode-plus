@@ -19,6 +19,8 @@ const temporaryRoots = []
 const CURRENT_ROW = `- id: dsh-creator-mode-plus\n  name: dsh-creator-mode-plus`
 const LEGACY_ROW = `- id: dshx-creator-plus\n  name: dsh-external-plugin-devkit/creator-plus`
 const ROOT_LEGACY_ROW = `- id: dshx-creator-plus\n  name: dsh-external-plugin-devkit`
+const LEGACY_SIX_TOOL_PERSONA = 'Create file-backed DeepSeek Harness plugins through the six-tool DSHX v0.7 fixed bridge. Treat the official browser WebUI and public Cordis/client extension points as the compatibility target. App-shell APIs and wrapper-specific behavior are outside the supported surface. Harness update planning is read-only inside this session; prepare, verify, apply, rollback, and process control belong to the external DSHX supervisor.'
+const SEVEN_TOOL_PERSONA = 'Create and safely remove file-backed DeepSeek Harness plugins through the seven-tool DSHX v0.7 fixed bridge. Treat the official browser WebUI and public Cordis/client extension points as the compatibility target. App-shell APIs and wrapper-specific behavior are outside the supported surface. Whole-plugin teardown must use dshx_remove_plugin so the live Host deactivates first and source is preserved. Harness update planning is read-only inside this session; prepare, verify, apply, rollback, and process control belong to the external DSHX supervisor.'
 
 function temporaryDirectory(label) {
   const path = mkdtempSync(join(tmpdir(), label))
@@ -26,7 +28,7 @@ function temporaryDirectory(label) {
   return path
 }
 
-function harnessAt(root, version = '0.7.1') {
+function harnessAt(root, version = '0.7.2') {
   mkdirSync(join(root, 'apps/cli/src'), { recursive: true })
   mkdirSync(join(root, 'apps/cli/config/agent-presets/standard'), { recursive: true })
   writeFileSync(join(root, 'apps/cli/src/bin.ts'), '')
@@ -69,7 +71,7 @@ describe('Creator Mode+ installer', () => {
     const composition = readFileSync(join(result.target, 'agent.cordis.yml'), 'utf8')
 
     assert.equal(result.action, 'installed')
-    assert.equal(result.dshxVersion, '0.7.1')
+    assert.equal(result.dshxVersion, '0.7.2')
     assert.equal(result.creatorBridgeVersion, 2)
     assert.equal(result.dshxContract, 'dshx-v0.7/creator-bridge-v2')
     assert.match(result.target, /creator-mode-plus$/)
@@ -87,13 +89,17 @@ describe('Creator Mode+ installer', () => {
     const installed = installCreatorModePlus({ harnessRoot, dshHome })
     const compositionPath = join(installed.target, 'agent.cordis.yml')
     const skillPath = join(installed.target, 'skills/creator-mode-plus/SKILL.md')
-    writeFileSync(compositionPath, `${readFileSync(compositionPath, 'utf8')}\n# user-preserved\n`)
+    writeFileSync(compositionPath, `${readFileSync(compositionPath, 'utf8')
+      .replace(SEVEN_TOOL_PERSONA, LEGACY_SIX_TOOL_PERSONA)
+      .replace('# Bridge v2: seven fixed dshx tools plus external Guardian lifecycle hooks; no arbitrary argv, raw plugin teardown, or model process control.', '# Bridge v2: six fixed dshx tools plus external Guardian lifecycle hooks; no shell, arbitrary argv, or model process control.')}\n# user-preserved\n`)
     writeFileSync(skillPath, '# stale managed skill\n')
 
     const updated = installCreatorModePlus({ harnessRoot, dshHome, upgrade: true })
     assert.equal(updated.action, 'updated')
     assert.match(readFileSync(compositionPath, 'utf8'), /# user-preserved/)
     assert.match(readFileSync(compositionPath, 'utf8'), /name: dsh-creator-mode-plus/)
+    assert.match(readFileSync(compositionPath, 'utf8'), /seven-tool DSHX v0\.7 fixed bridge/)
+    assert.doesNotMatch(readFileSync(compositionPath, 'utf8'), /six-tool DSHX v0\.7 fixed bridge/)
     assert.match(readFileSync(skillPath, 'utf8'), /dshx_activate_new_client/)
   })
 

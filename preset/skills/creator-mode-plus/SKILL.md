@@ -1,15 +1,15 @@
 ---
 name: creator-mode-plus
-description: Use for DSH WebUI plugin creation, DSHX v0.7 projects, client components, activation, hot reload, Harness update requests, concurrent Creator+ sessions, Guardian recovery, refresh or restart decisions, and Creator Mode+ delivery.
+description: Use for DSH WebUI plugin creation, deletion or safe removal, DSHX v0.7 projects, client components, activation, hot reload, Harness update requests, concurrent Creator+ sessions, Guardian recovery, refresh or restart decisions, and Creator Mode+ delivery.
 ---
 
 # Creator Mode+
 
-Build file-backed plugins for the official DeepSeek Harness browser WebUI through the complete stable DSHX v0.7 contract. Public Cordis plugin forms, the public client runtime, and public UI slots are supported. App-shell IPC, native window controls, desktop bridges, and wrapper-specific refresh behavior are outside this compatibility target. Creator Bridge v2 remains six fixed model tools; the v0.7 Harness Update Assistant stays externally supervised.
+Build file-backed plugins for the official DeepSeek Harness browser WebUI through the complete stable DSHX v0.7 contract. Public Cordis plugin forms, the public client runtime, and public UI slots are supported. App-shell IPC, native window controls, desktop bridges, and wrapper-specific refresh behavior are outside this compatibility target. Creator Bridge v2 exposes seven fixed model tools, including source-preserving safe removal; the v0.7 Harness Update Assistant stays externally supervised.
 
 ## Workflow
 
-1. Session-start automatically arms the external Guardian. Call `dshx_status`; completion means exit code `0`, one Harness checkout, stable DSHX `>=0.7.1 <0.8.0`, contract `dshx-v0.7/creator-bridge-v2`, and bridge version `2`. The bridge must report Creator claims, workspace scaffold, bounded new-client activation, Guardian, same-PID activation matrix, and Harness Update Assistant capabilities. Status is inventory, not activation proof.
+1. Session-start automatically arms the external Guardian. Call `dshx_status`; completion means exit code `0`, one Harness checkout, stable DSHX `>=0.7.2 <0.8.0`, contract `dshx-v0.7/creator-bridge-v2`, and bridge version `2`. The bridge must report Creator claims, workspace scaffold, bounded new-client activation, safe plugin removal, proactive plugin-integrity quarantine, Guardian, same-PID activation matrix, and Harness Update Assistant capabilities. Status is inventory, not activation proof.
 2. As soon as the plugin id is known, call `dshx_claim_plugin` before editing. Different sessions may claim different plugins concurrently; the same plugin has one owner. A nonzero conflict stops the branch.
 3. For a new project, call `dshx_scaffold` immediately after the claim. It creates source under the calling session's trusted writable workspace and, when that workspace is outside the Harness checkout, creates the required `my-plugins/<name>` link itself. Use the returned source path for every edit. Never create a substitute project or ask the user to add a symlink. Existing projects skip this step.
 4. Classify the change as exactly one of `patch`, `manifest`, `preset`, `client`, `new-client`, `server`, or `artifact`. A new browser UI plugin is normally `new-client`. Before broad repository exploration, use the read-only DSHX knowledge bundle for the selected seam. A client starts with `dshx kb cat contracts/client-build` and `dshx kb cat maps/extension-points`; an update request starts with `dshx kb cat contracts/harness-update`. Follow an official source pointer only when the contract lacks the needed detail.
@@ -24,6 +24,14 @@ Build file-backed plugins for the official DeepSeek Harness browser WebUI throug
    - `patch` or `artifact`: follow the plan literally; neither alone proves browser activation.
 9. After successful `new-client`, browser testing remains a task-time Agent or user-prompt decision; Creator Mode+ does not require a particular browser tool. Completion can include `CLIENT_LOADED` or `VISUAL_BEHAVIOR_VERIFIED` only after direct browser observation or an explicit live user report. A user report that the requested behavior works ends speculative diagnosis and further mutation.
 10. Report only observed layers: `SOURCE_BUILT`, `ARTIFACT_SYNCED`, `NEXT_BOOT_REGISTERED`, `PRESET_ROSTER_VISIBLE`, `PRESET_SESSION_ACTIVE`, `HOST_TREE_ACTIVE`, `CLIENT_MANIFEST_PRESENT`, `CLIENT_LOADED`, `VISUAL_BEHAVIOR_VERIFIED`.
+
+## Safe removal
+
+When the user asks to remove, uninstall, or delete a whole plugin, call `dshx_remove_plugin` with only its claimed plugin id. Do not use bash, `rm`, `unlink`, `mv`, package-manager commands, or manual edits to the Web profile, Harness `my-plugins`, or the plugin root.
+
+Completion requires exit code `0`, `HOST_TREE_INACTIVE`, and `PROFILE_DEPENDENCY_REMOVED`. The tool removes or disables the watched row first, proves absence in the same Host PID, uses the official profile remover while its dependency exists, proves dependency/link absence, and detaches only target-verified plugin-owned symlinks. RC8 may remove the dependency while leaving its `node_modules` symlink: `detached-orphan-symlink` means DSHX proved the residual entry was a symlink targeting this claim's Harness/source path before unlinking it. A directory or outside target fails closed. A partial attempt resumes from durable quarantine without rerunning package removal for an already-absent dependency. The source directory remains preserved; `SOURCE_PRESERVED` is reported only when observed. This operation never restarts DSH or controls the browser.
+
+Deleting or renaming an ordinary file/component inside the claimed source remains normal editing. The protected boundary is teardown of the claimed plugin root or its DSH/Harness registration. If raw teardown is denied, do not retry through another shell or script; call `dshx_remove_plugin`. If Guardian reports `plugin-integrity-failed`, the registration has already been quarantined before cold boot: inspect preserved source and incident evidence, then use the fixed tool or repair the plugin.
 
 ## Harness update requests
 
@@ -49,11 +57,13 @@ undo quarantine and repeat unchanged bytes.
 ## Invariants
 
 - The external DSHX supervisor owns process restart and rollback.
-- The inherited bash tool is not an external supervisor. Raw mutating `dshx` commands from a DSH-managed shell are rejected by DSHX v0.7; read-only `update plan` is the sole Harness-update exception. Use only the six fixed tools for plugin mutation and never unset managed DSH environment markers to bypass that boundary.
-- A matching `0.7.x` string is insufficient if Creator, Guardian, activation, managed-shell, Update Assistant, or their knowledge contract is missing. The bridge and installer fail before mutation on incomplete surfaces.
+- The inherited bash tool is not an external supervisor. Raw mutating `dshx` commands from a DSH-managed shell are rejected by DSHX v0.7; read-only `update plan` is the sole Harness-update exception. Use only the seven fixed tools for plugin mutation and never unset managed DSH environment markers to bypass that boundary.
+- A matching `0.7.x` string is insufficient if Creator, safe removal, proactive integrity quarantine, Guardian, activation, managed-shell, Update Assistant, or their knowledge contract is missing. The bridge and installer fail before mutation on incomplete surfaces.
 - Guardian is armed for every Creator+ session and may perform one deterministic recovery outside DSH; a second failure inside 30 seconds opens the fuse.
 - Normal launcher exit disarms Guardian. The fixed browser sentry may recover an official Loader `FAILED` entry only after DSHX uniquely attributes and quarantines it; component render exceptions, visual defects, and functional defects remain outside automatic recovery.
+- While the Host remains healthy, Guardian quarantines a claimed watched client whose profile link or source package disappears. This prevents a later cold boot from consuming the stale row; it does not delete source or restart the Host.
 - `dshx_activate_new_client` is the only live new-client mutation. Its model input is one validated plugin id, never a path, argv vector, port, profile, or shell string.
+- `dshx_remove_plugin` is the only whole-plugin teardown operation. It is source-preserving and accepts one validated plugin id, never a path or deletion command.
 - Profile manifest and watched patch rows are not edited as separate manual steps.
 - `ARTIFACT_SYNCED` remains `LIVE_ACTIVATION_UNPROVEN` until Host and browser evidence exist.
 - A failed, interrupted, or waiting turn is not a completed AI answer.

@@ -5,14 +5,16 @@ export const CREATOR_BRIDGE_VERSION = 2
 
 export const DSHX_CONTRACT = Object.freeze({
   id: 'dshx-v0.7/creator-bridge-v2',
-  release: 'v0.7.1',
-  minimum: '0.7.1',
+  release: 'v0.7.2',
+  minimum: '0.7.2',
   maximumExclusive: '0.8.0',
   capabilities: Object.freeze([
     'creator-session-claims',
     'workspace-scaffold',
     'bounded-new-client-activation',
+    'safe-plugin-removal',
     'external-guardian-recovery',
+    'proactive-plugin-integrity-quarantine',
     'same-pid-activation-matrix',
     'transactional-harness-update-assistant',
   ]),
@@ -29,6 +31,7 @@ export const CREATOR_MODEL_TOOLS = Object.freeze([
   'dshx_check',
   'dshx_activation_plan',
   'dshx_activate_new_client',
+  'dshx_remove_plugin',
   'dshx_status',
 ])
 
@@ -49,6 +52,7 @@ export const DSHX_SURFACE_MARKERS = Object.freeze({
   'src/commands/creator.ts': Object.freeze([
     "action === 'claim'",
     "action === 'scaffold'",
+    "action === 'remove'",
     "action === 'client-failure'",
     'recoverCreatorClientFailure(root, failure)',
   ]),
@@ -63,6 +67,12 @@ export const DSHX_SURFACE_MARKERS = Object.freeze({
     'export async function recoverCreatorClientFailure',
     'export async function runGuardianCycle',
     "reason: 'crash-loop'",
+    "reason: 'plugin-integrity-failed'",
+  ]),
+  'src/internal/remove-plugin.ts': Object.freeze([
+    'HOST_TREE_INACTIVE',
+    'official dsh plugin remove',
+    'Source is never',
   ]),
   'src/internal/io.ts': Object.freeze(["command === 'update'", "args[0] ?? 'plan'"]),
   'src/internal/new-client.ts': Object.freeze([
@@ -74,9 +84,10 @@ export const DSHX_SURFACE_MARKERS = Object.freeze({
   'knowledge/contracts/creator-mode-plus.md': Object.freeze([
     'creator claim',
     'creator scaffold',
+    'creator remove',
     'activate-new-client',
   ]),
-  'knowledge/contracts/creator-guardian.md': Object.freeze(['Creator+', 'crash-loop fuse', 'quarantine']),
+  'knowledge/contracts/creator-guardian.md': Object.freeze(['Creator+', 'crash-loop fuse', 'quarantine', 'plugin-integrity-failed']),
   'knowledge/contracts/harness-update.md': Object.freeze(['plan → prepare → verify → apply', 'rollback']),
   'knowledge/contracts/live-activation.md': Object.freeze(['SOURCE_BUILT', 'CLIENT_MANIFEST_PRESENT']),
 })

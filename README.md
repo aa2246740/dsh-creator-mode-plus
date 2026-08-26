@@ -2,7 +2,7 @@
 
 [English](README.en.md)
 
-在 DeepSeek Harness 的普通 Web 会话里选 Creator Mode+，就能用六个固定工具把一个文件化插件搭起来、检查完、挂上去。0.3.0 完整对齐 DSHX v0.7：会话认领、工作区 scaffold、七分支激活、外部 Guardian 和 Harness Update Assistant 的权限边界都进入同一份 fail-closed 合同。过不了的操作直接停。
+在 DeepSeek Harness 的普通 Web 会话里选 Creator Mode+，就能用七个固定工具把一个文件化插件搭起来、检查、挂载，也能按安全顺序卸载。0.3.1 对齐 DSHX v0.7.2：会话认领、工作区 scaffold、安全卸载、七分支激活、主动完整性隔离、外部 Guardian 和 Harness Update Assistant 的权限边界都进入同一份 fail-closed 合同。过不了的操作直接停。
 
 不替代官方创造模式。不改 Harness 核心。非官方。
 
@@ -12,7 +12,7 @@
 
 ![模式列表里的 Creator Mode+](docs/screenshots/mode-picker.png)
 
-选中之后，新会话走这六个固定工具。
+选中之后，新会话走这七个固定工具。
 
 ![已选中 Creator Mode+](docs/screenshots/mode-selected.png)
 
@@ -33,7 +33,7 @@ node tools/dsh-creator-mode-plus/scripts/install.mjs --harness "$PWD"
 
 因为加了 profile 依赖，先在会话外面把 Web Host 重启一次。然后打开官方 WebUI，选 Creator Mode+，开一个新会话，或者还是空白的那个。
 
-兼容线覆盖 DSH `dsh-v0.1.0-rc.8` 的 Creator/Guardian 合同和当前 `dsh-v0.1.1-rc.2`。必须使用 [DSHX](https://github.com/aa2246740/dsh-external-plugin-devkit) `>=0.7.1 <0.8.0`。0.7.1 同时识别 RC8 的 `window.__DSH_BOOT__` 和 RC2 官方 `globalThis["__DSH_BOOT__"]` 注入；安装器还会检查 Creator、Guardian、激活矩阵、managed-shell gate、Harness Update Assistant 和对应知识合同，缺一项就在写 preset 前停止。
+兼容线覆盖 DSH `dsh-v0.1.0-rc.8` 的 Creator/Guardian 合同和当前 `dsh-v0.1.1-rc.2`。必须使用 [DSHX](https://github.com/aa2246740/dsh-external-plugin-devkit) `>=0.7.2 <0.8.0`。0.7.2 在 0.7.1 的 RC8/RC2 boot-manifest 兼容上新增安全卸载和 Guardian 主动完整性隔离；安装器会检查 Creator、Guardian、卸载、激活矩阵、managed-shell gate、Harness Update Assistant 和对应知识合同，缺一项就在写 preset 前停止。
 
 新浏览器插件的固定顺序是：scaffold 后先实现、构建并通过 `dshx_check`，再运行 `dshx_activation_plan` 和同 PID 激活。未构建的 scaffold 不再被错误地要求先通过 activation plan。
 
@@ -41,7 +41,7 @@ node tools/dsh-creator-mode-plus/scripts/install.mjs --harness "$PWD"
 
 ![安装器把 preset 写进用户目录](docs/screenshots/install.png)
 
-## 六个工具
+## 七个工具
 
 | 工具 | 做什么 |
 |---|---|
@@ -51,8 +51,9 @@ node tools/dsh-creator-mode-plus/scripts/install.mjs --harness "$PWD"
 | `dshx_check` | 静态检查。过了只证明源码能建起来 |
 | `dshx_activation_plan` | 分类这次改动要不要重载或重启 |
 | `dshx_activate_new_client` | 按固定顺序挂新 client。不刷新浏览器，不重启 DSH |
+| `dshx_remove_plugin` | 先让当前 Host 脱载，再清 profile；只断开链接，保留源码 |
 
-![桥注册六个工具，并拒绝 start / restart](docs/screenshots/six-tools.png)
+整插件删除只走 `dshx_remove_plugin`。组件内部普通文件仍可正常删除；直接拆插件根、`my-plugins` 链接或 active profile 会被桥拒绝。RC8 若删了 dependency 却遗留该插件的 `node_modules` symlink，事务会从 durable quarantine 续跑，只在目标精确属于本 claim 时解绑；目录或越界目标失败关闭。即使旧 Agent 绕过桥，Guardian 也会在 profile link 消失、Host 尚健康时先隔离 stale row，避免下一次冷启动炸掉。
 
 ## 过不了就停
 
@@ -64,7 +65,7 @@ Guardian 怎么隔离、怎么只重启一次、怎么把事故交回原来的�
 
 ## Harness 更新边界
 
-DSHX v0.7 新增 `update plan → prepare → verify → apply` 和精确 `rollback`，但 Creator Mode+ 仍然只有六个模型工具。会话内只允许通过 managed shell 读取 `update plan`；`prepare`、`verify`、`apply`、`rollback` 和 Host 进程控制全部交给外部 DSHX supervisor。候选验证通过、本机应用完成、真实运行时接受、正式激活是四个不同状态。
+DSHX v0.7 新增 `update plan → prepare → verify → apply` 和精确 `rollback`，但 Creator Mode+ 的第七个工具只负责安全卸载，不把 Harness 更新变成第八个工具。会话内只允许通过 managed shell 读取 `update plan`；`prepare`、`verify`、`apply`、`rollback` 和 Host 进程控制全部交给外部 DSHX supervisor。候选验证通过、本机应用完成、真实运行时接受、正式激活是四个不同状态。
 
 ## 从 0.2.x 升级
 
@@ -77,7 +78,7 @@ node scripts/install.mjs --harness /path/to/deepseek-harness --upgrade
 npm run verify:dshx -- --harness /path/to/deepseek-harness
 ```
 
-0.3.0 改了 server bridge 模块，因此已经运行并加载过 0.2.x 的 Web Host 需要由外部 supervisor 受控重启一次。这个重启属于 `server` 分支；普通 preset 发现和以后只更新 skill、且 composition 字节不变的升级不需要重启。
+0.3.1 增加了 server bridge 的安全卸载工具和 bash guard，因此已经运行 0.3.0 的 Web Host 也需要由外部 supervisor 受控重启一次，才能加载新保护。这个重启属于 `server` 分支；普通 preset 发现和以后只更新 skill、且 composition 字节不变的升级不需要重启。
 
 ## 开发
 

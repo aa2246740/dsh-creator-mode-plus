@@ -23,6 +23,10 @@ import {
   DSHX_SURFACE_MARKERS,
   REQUIRED_DSHX_PATHS,
 } from '../src/compatibility.js'
+import {
+  creatorDestructiveCommandReason,
+  rememberCreatorClaim,
+} from '../src/safety.js'
 
 const temporaryRoots = []
 
@@ -32,7 +36,7 @@ function temporaryDirectory(label) {
   return path
 }
 
-function harnessAt(root, version = '0.7.1') {
+function harnessAt(root, version = '0.7.2') {
   mkdirSync(join(root, 'apps/cli/src'), { recursive: true })
   writeFileSync(join(root, 'apps/cli/src/bin.ts'), '')
   for (const path of REQUIRED_DSHX_PATHS) {
@@ -52,7 +56,7 @@ afterEach(() => {
 })
 
 describe('Creator Bridge v2', () => {
-  it('registers only the six fixed tools and rejects process control', () => {
+  it('registers only the seven fixed tools and rejects process control', () => {
     const registered = []
     apply({
       tools: { register(tool) { registered.push(tool) } },
@@ -100,6 +104,7 @@ describe('Creator Bridge v2', () => {
       ['check', 'demo'],
       ['activation-plan', 'demo', '--change', 'new-client'],
       ['activate-new-client', 'demo', '--profile', 'web', '--port', '43127'],
+      ['creator', 'remove', 'demo'],
       ['creator', 'watch', '--json'],
       ['creator', 'release', '--json'],
       ['creator', 'recovery', 'pull', '--json'],
@@ -116,6 +121,27 @@ describe('Creator Bridge v2', () => {
       assert.equal(result.exitCode, 0)
     }
     assert.deepEqual(spawned.map(argv => argv.slice(3)), operations)
+  })
+
+  it('blocks the observed raw teardown chain while allowing ordinary component cleanup', () => {
+    const agent = { id: 'session-a', session: { header: { cwd: '/Users/wu/Documents/DSH/mmx3' } } }
+    const exec = command => ({ name: 'bash', arguments: { command }, agent })
+    rememberCreatorClaim({ agent }, 'emoji-rain')
+
+    assert.match(
+      creatorDestructiveCommandReason(exec('rm -rf "/Users/wu/Documents/DSH/mmx3/emoji-rain"')),
+      /dshx_remove_plugin/,
+    )
+    assert.match(
+      creatorDestructiveCommandReason(exec('unlink "/harness/my-plugins/emoji-rain"')),
+      /dshx_remove_plugin/,
+    )
+    assert.match(
+      creatorDestructiveCommandReason(exec('rm -f "/Users/wu/.dsh/profiles/web/node_modules/emoji-rain"')),
+      /active DSH profile/,
+    )
+    assert.equal(creatorDestructiveCommandReason(exec('rm -f emoji-rain/src/old-component.ts')), undefined)
+    assert.equal(creatorDestructiveCommandReason(exec('rm -rf dist')), undefined)
   })
 
   it('forwards browser failures through fixed argv without a model context', async () => {
@@ -273,7 +299,8 @@ describe('Creator Bridge v2', () => {
     assert.equal(supportsDshxVersion('0.6.99'), false)
     assert.equal(supportsDshxVersion('0.7.0-beta.1'), false)
     assert.equal(supportsDshxVersion('0.7.0'), false)
-    assert.equal(supportsDshxVersion('0.7.1'), true)
+    assert.equal(supportsDshxVersion('0.7.1'), false)
+    assert.equal(supportsDshxVersion('0.7.2'), true)
     assert.equal(supportsDshxVersion('0.7.9+build.4'), true)
     assert.equal(supportsDshxVersion('0.8.0'), false)
     assert.equal(supportsDshxVersion('invalid'), false)
@@ -294,9 +321,9 @@ describe('Creator Bridge v2', () => {
   })
 
   it('resolves a compatible DSHX runtime and fails closed on drift', () => {
-    const compatible = harnessAt(temporaryDirectory('creator-mode-plus-compatible-'), '0.7.1')
+    const compatible = harnessAt(temporaryDirectory('creator-mode-plus-compatible-'), '0.7.2')
     const runtime = resolveDshxRuntime({ harnessRoot: compatible, loaderPath: '/fake/tsx-loader.mjs' })
-    assert.equal(runtime.dshxVersion, '0.7.1')
+    assert.equal(runtime.dshxVersion, '0.7.2')
     assert.equal(runtime.bridgeVersion, 2)
     assert.equal(runtime.loader, '/fake/tsx-loader.mjs')
     assert.equal(runtime.contractId, 'dshx-v0.7/creator-bridge-v2')

@@ -1,9 +1,9 @@
 # DSHX v0.7 alignment
 
-Creator Mode+ 0.3.0 is aligned to stable DSHX `>=0.7.1 <0.8.0`, Creator Bridge
-v2, and the official browser WebUI lifecycle. The pinned baseline is DSHX
-`v0.7.1` (`51eabe2dea19d05bd4ca194ce05c679debb987d2`), including the RC2
-boot-manifest parser and corrected fresh-client plan order.
+Creator Mode+ 0.3.1 is aligned to stable DSHX `>=0.7.2 <0.8.0`, Creator Bridge
+v2, and the official browser WebUI lifecycle. DSHX v0.7.2 includes the RC2
+boot-manifest parser and corrected fresh-client plan order from v0.7.1, plus
+source-preserving safe removal and proactive claimed-plugin integrity quarantine.
 
 This is a contract alignment, not a version-number exception. Before the bridge
 or installer mutates anything, it verifies the DSHX package identity, stable
@@ -19,15 +19,19 @@ contract, managed-shell gate, and transactional Harness Update Assistant.
 | Static/client checks | `dshx_check` | Exit 0 proves `SOURCE_BUILT` only |
 | Seven activation surfaces | `dshx_activation_plan` selects exactly one of patch, manifest, preset, client, new-client, server, or artifact | Dependency installation is not activation |
 | New Web client | `dshx_activate_new_client` owns link → resolution → watched transaction → current manifest | Exit 0 reaches `CLIENT_MANIFEST_PRESENT`; the page still needs reload and observation |
-| Guardian | Session start arms external recovery; Host and official Loader failures use exact attribution, quarantine, one recovery, and a fuse | Recovery does not prove render, visual, or functional correctness |
+| Safe plugin removal | `dshx_remove_plugin` owns live-row quarantine → same-Host absence → official profile remove → target-verified symlink detach; partial RC8 removals resume from durable quarantine | Exit 0 reaches `HOST_TREE_INACTIVE` and `PROFILE_DEPENDENCY_REMOVED`; `detached-orphan-symlink` is bounded to this claim and source remains preserved |
+| Guardian | Session start arms external recovery; Host, official Loader, and claimed-link integrity failures use exact attribution and quarantine | Recovery does not prove render, visual, or functional correctness |
 | Harness Update Assistant | A managed shell may inspect read-only `dshx update plan`; `prepare`, `verify`, `apply`, and `rollback` stay outside DSH | Candidate verified, locally applied, live runtime accepted, and production activated are different states |
 
-## Why there are still six tools
+## Why there are seven tools
 
-DSHX v0.7 adds the transactional Harness Update Assistant, but it does not widen
-Creator Bridge v2. Harness replacement and rollback can change the process that
+DSHX v0.7.2 adds one bounded tool because whole-plugin teardown previously let a
+Creator Agent delete source/profile links before removing the live watched row.
+`dshx_remove_plugin` closes that lifecycle gap without accepting paths, shell, or
+process control. The transactional Harness Update Assistant still does not widen
+Creator Bridge v2: Harness replacement and rollback can change the process that
 owns the current session, so they remain external-supervisor operations. Adding
-an `update` bridge tool would erase that authority boundary. Read-only
+an `update` bridge tool as an eighth tool would erase that authority boundary. Read-only
 `dshx update plan` is permitted by DSHX's managed-shell gate and is documented in
 the preset skill as inventory only.
 
@@ -65,10 +69,10 @@ VISUAL_BEHAVIOR_VERIFIED
 
 ## Upgrade activation
 
-Moving from Creator Mode+ 0.2.x to 0.3.0 changes the server bridge runtime, the
-browser sentry package bytes, and managed preset assets. Run the installer with
+Moving from Creator Mode+ 0.3.0 to 0.3.1 changes the server bridge runtime by
+adding safe removal and the preset-scoped bash guard. Run the installer with
 `--upgrade` outside the Agent session. Because the server module itself changed,
-an already-running Host needs one controlled external restart to load 0.3.0.
+an already-running Host needs one controlled external restart to load 0.3.1.
 That restart is the `server` activation branch; it is not required for ordinary
 preset discovery or future skill-only refreshes whose composition bytes and
 filesystem stamp remain unchanged.

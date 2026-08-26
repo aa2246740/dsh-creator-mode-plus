@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.3.1 - 2026-08-26
+
+- Add `dshx_remove_plugin`, the seventh fixed tool. It deactivates the watched Host row, proves same-PID absence, runs official profile cleanup, detaches only target-verified symlinks, and preserves source. RC8 partial removals resume from durable quarantine and safely handle a package-manager orphan link without rerunning removal for an already-absent dependency.
+- Add a preset-scoped monotonic bash guard for claimed plugin-root, Harness-link, and active-profile teardown while leaving ordinary component/file cleanup available.
+- Require DSHX `>=0.7.2 <0.8.0`, including proactive Guardian quarantine when a claimed watched client loses its profile link while the Host is still healthy.
+- Add regression coverage for the exact failure chain that previously left stale patch/profile registration and broke the next DSH cold boot.
+
 ## 0.3.0 - 2026-08-26
 
 - Align the standalone bridge with the complete stable DSHX `>=0.7.1 <0.8.0` contract while keeping Creator Bridge v2 at six bounded model-facing tools.

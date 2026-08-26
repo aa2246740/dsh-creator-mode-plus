@@ -1,17 +1,17 @@
 # Creator Bridge v2
 
-Creator Mode+ is a user preset plus one DSH plugin. It brings six fixed DSHX
+Creator Mode+ is a user preset plus one DSH plugin. It brings seven fixed DSHX
 operations into an ordinary DSH session without giving that session control of
-its Host process. Stable DSHX `>=0.7.1 <0.8.0` supplies workspace-aware
-scaffolding, the external Guardian, durable recovery state, the seven-surface
+its Host process. Stable DSHX `>=0.7.2 <0.8.0` supplies workspace-aware
+scaffolding, source-preserving safe removal, proactive integrity quarantine, the external Guardian, durable recovery state, the seven-surface
 activation contract, and the transactional Harness Update Assistant.
 
 ## Roles
 
 | Role | Authority |
 |---|---|
-| Creator Mode+ session | Claim one plugin, create files, check contracts, plan activation, perform bounded new-client activation, read status |
-| External DSHX Guardian | Monitor the Host, journal activation, quarantine a culprit, recover Host/official Loader failures, open a crash-loop fuse, persist incidents |
+| Creator Mode+ session | Claim one plugin, create files, check contracts, plan activation, perform bounded new-client activation/removal, read status |
+| External DSHX Guardian | Monitor the Host, journal activation, quarantine a culprit or missing claimed link, recover Host/official Loader failures, open a crash-loop fuse, persist incidents |
 | User | Approve normal impactful activation and decide what to do after a fused or ambiguous incident |
 
 The supervisor is outside DSH. It is not the model session and does not require
@@ -21,14 +21,14 @@ arbitrary argv/path/profile/port, or Host start/stop/restart operation.
 The preset still inherits Standard's coding shell, but that shell is not the
 external supervisor. RC8 and RC2 inject `DSH_SHELL=1` into every model shell
 call; DSHX v0.7 rejects raw mutation/process commands at its CLI boundary. This
-keeps an old or mistaken Creator session from bypassing the six fixed tools with
+keeps an old or mistaken Creator session from bypassing the seven fixed tools with
 `dshx start`, `restart`, `activate-new-client`, or profile shipping commands.
 The only Harness-update exception is read-only `dshx update plan`; the mutating
 update stages remain outside the Host.
 
 ## Fixed argv contract
 
-The six model-facing tools map to exactly these child CLI shapes:
+The seven model-facing tools map to exactly these child CLI shapes:
 
 | Tool | Allowed child argv |
 |---|---|
@@ -38,14 +38,15 @@ The six model-facing tools map to exactly these child CLI shapes:
 | `dshx_check` | `check <plugin-id>` |
 | `dshx_activation_plan` | `activation-plan <plugin-id> --change <declared-branch>` |
 | `dshx_activate_new_client` | `activate-new-client <plugin-id> --profile web --port <Host-derived-port>` |
+| `dshx_remove_plugin` | `creator remove <plugin-id>` |
 
 Session lifecycle may additionally call fixed internal watch, release, recovery
 pull, and recovery acknowledgement argv. Tests must execute every row and every
 internal lifecycle shape through the allowlist; registering a tool name does not
 prove its child argv is reachable.
 
-DSHX v0.7 does not add a seventh Creator tool. `update prepare`, `verify`,
-`apply`, and `rollback` can replace or restore the process that owns the session,
+DSHX v0.7.2 adds `dshx_remove_plugin` as the seventh Creator tool. `update prepare`, `verify`,
+`apply`, and `rollback` do not become an eighth tool because they can replace or restore the process that owns the session,
 so the fixed bridge cannot expose them. Read-only `update plan` is available only
 through DSHX's managed-shell gate and remains inventory rather than activation.
 
@@ -92,8 +93,9 @@ The standalone package does not accept `0.7.x` by string alone. Before any fixed
 operation or installer mutation it requires:
 
 - package identity `dsh-external-plugin-devkit` and stable version
-  `>=0.7.1 <0.8.0`;
+  `>=0.7.2 <0.8.0`;
 - Creator claim/scaffold commands and Bridge v2 context validation;
+- source-preserving removal and proactive claimed-link integrity quarantine;
 - external Guardian and official Loader-failure recovery implementation;
 - check, activation-plan, and bounded new-client command surfaces;
 - the managed-shell gate and the transactional Harness Update Assistant;
@@ -124,6 +126,34 @@ scaffold -> implement/build -> dshx check / SOURCE_BUILT
 The order is invariant. A failed new row is rolled back by DSHX. A nonzero
 result stops the branch; the session does not compensate with package
 installation, manual profile edits, or a Host restart.
+
+## Safe removal transaction
+
+`dshx_remove_plugin({ name })` is the only whole-plugin teardown operation. Its
+sole model-controlled value is the claimed lower-case kebab-case id.
+
+```text
+claim refresh
+  -> remove a standalone watched insert row, or append one unique disabled override
+  -> poll the same Host PID until its manifest no longer contains the id
+  -> run official dsh plugin --profile web remove while the dependency exists
+  -> prove profile dependency and node_modules entry are absent
+  -> if RC8 left an orphan profile link, detach it only after target verification
+  -> detach only a Harness my-plugins symlink
+  -> preserve the source directory
+  -> HOST_TREE_INACTIVE + PROFILE_DEPENDENCY_REMOVED (+ SOURCE_PRESERVED when observed)
+```
+
+If same-Host absence cannot be proved, the operation stops with its live row
+quarantined and leaves the profile dependency, Harness link, and source intact.
+If the official remover deleted the dependency but left `node_modules/<id>`, a
+retry resumes from the durable quarantine without asking pnpm to remove an
+already-absent dependency. It may report `detached-orphan-symlink` only when the
+entry is a symlink whose resolved target is the claimed Harness/source path;
+directories and outside targets fail closed without recursive cleanup.
+Creator infrastructure ids cannot self-remove. The preset-scoped bash guard
+blocks direct teardown of a claimed plugin root, its Harness link, and the active
+DSH profile while permitting ordinary component/file cleanup inside the source.
 
 ## Guardian recovery
 
@@ -164,6 +194,15 @@ stop/restart disarms before signaling a DSHX-owned Host. An adopted Host records
 its launcher pid; when that launcher exits, Guardian neither resurrects the child
 nor leaves behind a Guardian replacement tied to that App lifetime. Manual DSHX
 stop or restart refuses adopted official/App Hosts.
+
+On every healthy cycle, Guardian also checks only claimed clients that are still
+active in the watched patch. If such an id has lost its resolvable profile
+package, Guardian removes the byte-identifiable standalone row or appends a
+unique disabled override, waits for same-Host manifest absence, and records a
+`plugin-integrity-failed` incident for the owning session. It does not delete
+source, clean the profile dependency, stop, or restart the Host. This is an
+independent fail-safe for an older Agent or script that bypassed the bridge and
+prevents a later cold boot from consuming stale active configuration.
 
 ## Official client-Loader recovery
 
@@ -235,8 +274,8 @@ independent: `SOURCE_BUILT`, `ARTIFACT_SYNCED`, `NEXT_BOOT_REGISTERED`,
 `PRESET_ROSTER_VISIBLE`, `PRESET_SESSION_ACTIVE`, `HOST_TREE_ACTIVE`,
 `CLIENT_MANIFEST_PRESENT`, `CLIENT_LOADED`, and `VISUAL_BEHAVIOR_VERIFIED`.
 
-Upgrading an already-loaded 0.2.x package to 0.3.0 changes the server bridge
-module, so the external supervisor performs one controlled `server`-branch
-restart. That is different from preset discovery: managed skill/metadata refresh
+Upgrading an already-loaded 0.3.0 package to 0.3.1 adds safe removal and the
+preset-scoped bash guard to the server bridge module, so the external supervisor
+performs one controlled `server`-branch restart. That is different from preset discovery: managed skill/metadata refresh
 continues to preserve an unchanged `agent.cordis.yml` stamp and does not create a
 new generation by itself.
