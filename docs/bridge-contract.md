@@ -2,8 +2,9 @@
 
 Creator Mode+ is a user preset plus one DSH plugin. It brings seven fixed DSHX
 operations into an ordinary DSH session without giving that session control of
-its Host process. Stable DSHX `>=0.7.2 <0.8.0` supplies workspace-aware
-scaffolding, source-preserving safe removal, proactive integrity quarantine, the external Guardian, durable recovery state, the seven-surface
+its Host process. Stable DSHX `>=0.7.3 <0.8.0` supplies workspace-aware
+scaffolding, source-preserving watched-plugin removal, external safe profile-bundle
+removal, proactive integrity quarantine, the external Guardian, durable recovery state, the seven-surface
 activation contract, and the transactional Harness Update Assistant.
 
 ## Roles
@@ -49,6 +50,10 @@ DSHX v0.7.2 adds `dshx_remove_plugin` as the seventh Creator tool. `update prepa
 `apply`, and `rollback` do not become an eighth tool because they can replace or restore the process that owns the session,
 so the fixed bridge cannot expose them. Read-only `update plan` is available only
 through DSHX's managed-shell gate and remains inventory rather than activation.
+DSHX v0.7.3 adds the external `dshx plugin remove` transaction for boot-captured
+profile bundles. It also stays outside the fixed bridge: it requires current
+profile/port authority and may own a tombstone across App boots, so Creator
+sessions may hand off to it but never execute it as an eighth tool or raw shell.
 
 `refusing an operation outside bridge v2` from one of these fixed tools means the
 bridge contract itself is broken. The session reports the exact tool and error,
@@ -93,9 +98,10 @@ The standalone package does not accept `0.7.x` by string alone. Before any fixed
 operation or installer mutation it requires:
 
 - package identity `dsh-external-plugin-devkit` and stable version
-  `>=0.7.2 <0.8.0`;
+  `>=0.7.3 <0.8.0`;
 - Creator claim/scaffold commands and Bridge v2 context validation;
-- source-preserving removal and proactive claimed-link integrity quarantine;
+- source-preserving watched-plugin removal, external safe profile-bundle
+  removal, and proactive claimed-link integrity quarantine;
 - external Guardian and official Loader-failure recovery implementation;
 - check, activation-plan, and bounded new-client command surfaces;
 - the managed-shell gate and the transactional Harness Update Assistant;
@@ -154,6 +160,26 @@ directories and outside targets fail closed without recursive cleanup.
 Creator infrastructure ids cannot self-remove. The preset-scoped bash guard
 blocks direct teardown of a claimed plugin root, its Harness link, and the active
 DSH profile while permitting ordinary component/file cleanup inside the source.
+
+## External profile-bundle removal handoff
+
+`dshx_remove_plugin` stops when a package is a boot-captured bundle without a
+bounded watched row. The Creator session reports that boundary and hands the
+operation to the external supervisor:
+
+```text
+dshx plugin remove <package> --profile web --port <current-port>
+  -> prove the same-name Loader row in current __DSH_BOOT__
+  -> write or resume one exact disabled tombstone
+  -> prove same-PID HOST_TREE_INACTIVE
+  -> run the official profile remover
+  -> prove dependency, bundle, and link absence
+  -> retain the tombstone while the old boot is alive
+  -> after a later normal App boot, rerun and remove it only with start-time proof
+```
+
+The command also resumes the dependency-gone/bundle-leftover failure seam. It
+does not restart the Host, delete source, or grant process control to Creator.
 
 ## Guardian recovery
 
@@ -275,7 +301,10 @@ independent: `SOURCE_BUILT`, `ARTIFACT_SYNCED`, `NEXT_BOOT_REGISTERED`,
 `CLIENT_MANIFEST_PRESENT`, `CLIENT_LOADED`, and `VISUAL_BEHAVIOR_VERIFIED`.
 
 Upgrading an already-loaded 0.3.0 package to 0.3.1 adds safe removal and the
-preset-scoped bash guard to the server bridge module, so the external supervisor
-performs one controlled `server`-branch restart. That is different from preset discovery: managed skill/metadata refresh
-continues to preserve an unchanged `agent.cordis.yml` stamp and does not create a
-new generation by itself.
+preset-scoped bash guard to the server bridge module, so that older jump still
+requires one controlled `server`-branch restart. Version 0.3.2 adds no bridge
+tool; it tightens compatibility preflight to DSHX 0.7.3 and adds the external
+bundle handoff to the skill. A running Host keeps the bridge loaded at boot and
+may adopt the stricter preflight on its next normal App reopen. Managed upgrade
+preserves an unchanged `agent.cordis.yml` stamp and does not create a generation
+or justify an immediate restart merely for skill/metadata refresh.

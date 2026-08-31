@@ -5,14 +5,15 @@ export const CREATOR_BRIDGE_VERSION = 2
 
 export const DSHX_CONTRACT = Object.freeze({
   id: 'dshx-v0.7/creator-bridge-v2',
-  release: 'v0.7.2',
-  minimum: '0.7.2',
+  release: 'v0.7.3',
+  minimum: '0.7.3',
   maximumExclusive: '0.8.0',
   capabilities: Object.freeze([
     'creator-session-claims',
     'workspace-scaffold',
     'bounded-new-client-activation',
     'safe-plugin-removal',
+    'safe-profile-bundle-removal',
     'external-guardian-recovery',
     'proactive-plugin-integrity-quarantine',
     'same-pid-activation-matrix',
@@ -42,6 +43,7 @@ export const DSHX_SURFACE_MARKERS = Object.freeze({
     "case 'activation-plan'",
     "case 'activate-new-client'",
     "case 'creator'",
+    "case 'plugin'",
     "case 'update'",
   ]),
   'src/commands/activation.ts': Object.freeze([
@@ -57,6 +59,11 @@ export const DSHX_SURFACE_MARKERS = Object.freeze({
     'recoverCreatorClientFailure(root, failure)',
   ]),
   'src/commands/new-client.ts': Object.freeze(['SOURCE_BUILT', 'CLIENT_MANIFEST_PRESENT']),
+  'src/commands/plugin.ts': Object.freeze([
+    "action !== 'remove'",
+    'HOST_TREE_INACTIVE',
+    'PROFILE_DEPENDENCY_REMOVED',
+  ]),
   'src/commands/update.ts': Object.freeze([
     'dshx update plan|prepare|verify|apply|rollback',
     "action === 'apply' || action === 'rollback'",
@@ -73,6 +80,12 @@ export const DSHX_SURFACE_MARKERS = Object.freeze({
     'HOST_TREE_INACTIVE',
     'official dsh plugin remove',
     'Source is never',
+  ]),
+  'src/internal/profile-plugin-remove.ts': Object.freeze([
+    'current __DSH_BOOT__ has no same-name Loader id',
+    'HOST_TREE_INACTIVE was not proved',
+    'official dsh plugin remove failed',
+    'retained-until-next-boot',
   ]),
   'src/internal/io.ts': Object.freeze(["command === 'update'", "args[0] ?? 'plan'"]),
   'src/internal/new-client.ts': Object.freeze([

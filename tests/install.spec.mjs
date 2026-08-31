@@ -28,7 +28,7 @@ function temporaryDirectory(label) {
   return path
 }
 
-function harnessAt(root, version = '0.7.2') {
+function harnessAt(root, version = '0.7.3') {
   mkdirSync(join(root, 'apps/cli/src'), { recursive: true })
   mkdirSync(join(root, 'apps/cli/config/agent-presets/standard'), { recursive: true })
   writeFileSync(join(root, 'apps/cli/src/bin.ts'), '')
@@ -71,7 +71,7 @@ describe('Creator Mode+ installer', () => {
     const composition = readFileSync(join(result.target, 'agent.cordis.yml'), 'utf8')
 
     assert.equal(result.action, 'installed')
-    assert.equal(result.dshxVersion, '0.7.2')
+    assert.equal(result.dshxVersion, '0.7.3')
     assert.equal(result.creatorBridgeVersion, 2)
     assert.equal(result.dshxContract, 'dshx-v0.7/creator-bridge-v2')
     assert.match(result.target, /creator-mode-plus$/)

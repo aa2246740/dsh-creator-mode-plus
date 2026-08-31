@@ -1,9 +1,10 @@
 # DSHX v0.7 alignment
 
-Creator Mode+ 0.3.1 is aligned to stable DSHX `>=0.7.2 <0.8.0`, Creator Bridge
-v2, and the official browser WebUI lifecycle. DSHX v0.7.2 includes the RC2
-boot-manifest parser and corrected fresh-client plan order from v0.7.1, plus
-source-preserving safe removal and proactive claimed-plugin integrity quarantine.
+Creator Mode+ 0.3.2 is aligned to stable DSHX `>=0.7.3 <0.8.0`, Creator Bridge
+v2, and the official browser WebUI lifecycle. DSHX v0.7.3 keeps v0.7.2's RC2
+boot-manifest parser, corrected fresh-client order, watched-plugin safe removal,
+and proactive integrity quarantine, then adds safe profile bundle removal for
+the dependency-deleted/stale-Loader failure seam.
 
 This is a contract alignment, not a version-number exception. Before the bridge
 or installer mutates anything, it verifies the DSHX package identity, stable
@@ -20,6 +21,7 @@ contract, managed-shell gate, and transactional Harness Update Assistant.
 | Seven activation surfaces | `dshx_activation_plan` selects exactly one of patch, manifest, preset, client, new-client, server, or artifact | Dependency installation is not activation |
 | New Web client | `dshx_activate_new_client` owns link → resolution → watched transaction → current manifest | Exit 0 reaches `CLIENT_MANIFEST_PRESENT`; the page still needs reload and observation |
 | Safe plugin removal | `dshx_remove_plugin` owns live-row quarantine → same-Host absence → official profile remove → target-verified symlink detach; partial RC8 removals resume from durable quarantine | Exit 0 reaches `HOST_TREE_INACTIVE` and `PROFILE_DEPENDENCY_REMOVED`; `detached-orphan-symlink` is bounded to this claim and source remains preserved |
+| External bundle removal | Creator stops at boot-captured bundle evidence and hands off to external `dshx plugin remove`; DSHX owns tombstone → same-PID absence → official remove → later-boot cleanup | Not an eighth tool; current Host is not restarted and old pages may still need refresh |
 | Guardian | Session start arms external recovery; Host, official Loader, and claimed-link integrity failures use exact attribution and quarantine | Recovery does not prove render, visual, or functional correctness |
 | Harness Update Assistant | A managed shell may inspect read-only `dshx update plan`; `prepare`, `verify`, `apply`, and `rollback` stay outside DSH | Candidate verified, locally applied, live runtime accepted, and production activated are different states |
 
@@ -34,6 +36,8 @@ owns the current session, so they remain external-supervisor operations. Adding
 an `update` bridge tool as an eighth tool would erase that authority boundary. Read-only
 `dshx update plan` is permitted by DSHX's managed-shell gate and is documented in
 the preset skill as inventory only.
+DSHX v0.7.3's external bundle transaction likewise does not widen the bridge:
+it requires supervisor-owned profile/port context and may span a later App boot.
 
 ## Harness compatibility
 
@@ -69,10 +73,11 @@ VISUAL_BEHAVIOR_VERIFIED
 
 ## Upgrade activation
 
-Moving from Creator Mode+ 0.3.0 to 0.3.1 changes the server bridge runtime by
-adding safe removal and the preset-scoped bash guard. Run the installer with
-`--upgrade` outside the Agent session. Because the server module itself changed,
-an already-running Host needs one controlled external restart to load 0.3.1.
-That restart is the `server` activation branch; it is not required for ordinary
-preset discovery or future skill-only refreshes whose composition bytes and
-filesystem stamp remain unchanged.
+Moving from Creator Mode+ 0.3.0 to 0.3.1 changed the server bridge runtime by
+adding safe removal and the preset-scoped bash guard, so that older jump still
+requires one controlled external `server`-branch restart. Moving from 0.3.1 to
+0.3.2 tightens the server compatibility preflight to DSHX 0.7.3 and refreshes
+the managed skill without changing the seven-tool surface or preset composition.
+Run the installer with `--upgrade` outside the Agent session. The current Host
+may remain on its boot-loaded bridge until the next normal App reopen; unchanged
+composition bytes and filesystem stamp do not justify a restart alone.

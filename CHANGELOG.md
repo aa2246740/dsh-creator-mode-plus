@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.2 - 2026-08-31
+
+- Require the complete DSHX `>=0.7.3 <0.8.0` surface, including the external `dshx plugin remove` profile-bundle transaction and its same-PID/tombstone guards.
+- Teach Creator Mode+ to distinguish its fixed watched-row `dshx_remove_plugin` tool from boot-captured bundle removal, which is handed to the external supervisor without adding an eighth model tool.
+- Keep managed preset composition stamp-stable; a running Host may load the stricter bridge preflight on its next normal App reopen instead of restarting only for this metadata/skill refresh.
+
 ## 0.3.1 - 2026-08-26
 
 - Add `dshx_remove_plugin`, the seventh fixed tool. It deactivates the watched Host row, proves same-PID absence, runs official profile cleanup, detaches only target-verified symlinks, and preserves source. RC8 partial removals resume from durable quarantine and safely handle a package-manager orphan link without rerunning removal for an already-absent dependency.
