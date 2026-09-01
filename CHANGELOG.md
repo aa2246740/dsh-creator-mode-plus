@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.3 - 2026-09-01
+
+- Require the complete DSHX `>=0.7.4 <0.8.0` surface, including same-Home Web Host discovery/attach, three-state PID/port probes, and temporary-Home `verify-boot` teardown.
+- Teach the managed skill that App, direct `dsh web`, and dshx are launchers for one long-lived Host; collision or unknown visibility is a stop condition and `--keep` is unsafe.
+- Keep the seven-tool bridge unchanged. Managed skill/metadata refresh remains stamp-stable when the user's preset composition is unchanged, so no immediate Host restart is required.
+
 ## 0.3.2 - 2026-08-31
 
 - Require the complete DSHX `>=0.7.3 <0.8.0` surface, including the external `dshx plugin remove` profile-bundle transaction and its same-PID/tombstone guards.

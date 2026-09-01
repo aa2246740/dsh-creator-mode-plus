@@ -1,6 +1,6 @@
 {
   "name": "dsh-creator-mode-plus",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "description": "A fail-closed DeepSeek Harness Creator Mode+ bridge backed by the external dshx supervisor.",
   "type": "module",
   "license": "MIT",

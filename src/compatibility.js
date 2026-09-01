@@ -5,8 +5,8 @@ export const CREATOR_BRIDGE_VERSION = 2
 
 export const DSHX_CONTRACT = Object.freeze({
   id: 'dshx-v0.7/creator-bridge-v2',
-  release: 'v0.7.3',
-  minimum: '0.7.3',
+  release: 'v0.7.4',
+  minimum: '0.7.4',
   maximumExclusive: '0.8.0',
   capabilities: Object.freeze([
     'creator-session-claims',
@@ -17,6 +17,8 @@ export const DSHX_CONTRACT = Object.freeze({
     'external-guardian-recovery',
     'proactive-plugin-integrity-quarantine',
     'same-pid-activation-matrix',
+    'single-home-web-host',
+    'isolated-verify-home',
     'transactional-harness-update-assistant',
   ]),
 })
@@ -94,6 +96,23 @@ export const DSHX_SURFACE_MARKERS = Object.freeze({
     'globalThis["__DSH_BOOT__"]',
     'no supported __DSH_BOOT__ manifest assignment',
   ]),
+  'src/internal/host-discovery.ts': Object.freeze([
+    'discoverWebHosts',
+    'parseWebProcessTable',
+    'process table unavailable',
+  ]),
+  'src/internal/host.ts': Object.freeze([
+    'export function probePid',
+    "'ESRCH'",
+    'export async function probePort',
+    "'ECONNREFUSED'",
+  ]),
+  'src/commands/host.ts': Object.freeze([
+    'shared-home-collision',
+    'already-attached',
+    'dshx-verify-home-',
+    '--keep is not available for isolated verification',
+  ]),
   'knowledge/contracts/creator-mode-plus.md': Object.freeze([
     'creator claim',
     'creator scaffold',
@@ -103,6 +122,8 @@ export const DSHX_SURFACE_MARKERS = Object.freeze({
   'knowledge/contracts/creator-guardian.md': Object.freeze(['Creator+', 'crash-loop fuse', 'quarantine', 'plugin-integrity-failed']),
   'knowledge/contracts/harness-update.md': Object.freeze(['plan → prepare → verify → apply', 'rollback']),
   'knowledge/contracts/live-activation.md': Object.freeze(['SOURCE_BUILT', 'CLIENT_MANIFEST_PRESENT']),
+  'knowledge/playbooks/verify-boot.md': Object.freeze(['临时 `DSH_HOME`', '`--keep` 会被拒绝']),
+  'skill/dshx/SKILL.md': Object.freeze(['Treat DSH.app, direct `dsh web`', '`--keep` is unsafe and']),
 })
 
 export const REQUIRED_DSHX_PATHS = Object.freeze(Object.keys(DSHX_SURFACE_MARKERS))

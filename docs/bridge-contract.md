@@ -2,7 +2,8 @@
 
 Creator Mode+ is a user preset plus one DSH plugin. It brings seven fixed DSHX
 operations into an ordinary DSH session without giving that session control of
-its Host process. Stable DSHX `>=0.7.3 <0.8.0` supplies workspace-aware
+its Host process. Stable DSHX `>=0.7.4 <0.8.0` supplies single-Home Host
+discovery/attachment, temporary-Home cold-boot verification, workspace-aware
 scaffolding, source-preserving watched-plugin removal, external safe profile-bundle
 removal, proactive integrity quarantine, the external Guardian, durable recovery state, the seven-surface
 activation contract, and the transactional Harness Update Assistant.
@@ -55,6 +56,12 @@ profile bundles. It also stays outside the fixed bridge: it requires current
 profile/port authority and may own a tombstone across App boots, so Creator
 sessions may hand off to it but never execute it as an eighth tool or raw shell.
 
+DSHX v0.7.4 makes App, direct CLI, and dshx launchers for one long-lived Web
+Host per real `DSH_HOME`. `start` attaches to one existing Host, while duplicate
+or unknown Host/Home evidence fails closed. `verify-boot` uses a temporary Home,
+always tears it down, and rejects `--keep`. These remain external-supervisor
+rules and do not add an eighth Creator tool.
+
 `refusing an operation outside bridge v2` from one of these fixed tools means the
 bridge contract itself is broken. The session reports the exact tool and error,
 preserves the claim and source location, and stops. It must not reinterpret the
@@ -98,7 +105,9 @@ The standalone package does not accept `0.7.x` by string alone. Before any fixed
 operation or installer mutation it requires:
 
 - package identity `dsh-external-plugin-devkit` and stable version
-  `>=0.7.3 <0.8.0`;
+  `>=0.7.4 <0.8.0`;
+- same-Home Web Host discovery/attach, three-state PID/port probes, and
+  temporary-Home verification teardown;
 - Creator claim/scaffold commands and Bridge v2 context validation;
 - source-preserving watched-plugin removal, external safe profile-bundle
   removal, and proactive claimed-link integrity quarantine;
@@ -302,9 +311,9 @@ independent: `SOURCE_BUILT`, `ARTIFACT_SYNCED`, `NEXT_BOOT_REGISTERED`,
 
 Upgrading an already-loaded 0.3.0 package to 0.3.1 adds safe removal and the
 preset-scoped bash guard to the server bridge module, so that older jump still
-requires one controlled `server`-branch restart. Version 0.3.2 adds no bridge
-tool; it tightens compatibility preflight to DSHX 0.7.3 and adds the external
-bundle handoff to the skill. A running Host keeps the bridge loaded at boot and
+requires one controlled `server`-branch restart. Version 0.3.3 adds no bridge
+tool; it tightens compatibility preflight to DSHX 0.7.4 and adds single-Home
+Host ownership plus isolated verification to the skill. A running Host keeps the bridge loaded at boot and
 may adopt the stricter preflight on its next normal App reopen. Managed upgrade
 preserves an unchanged `agent.cordis.yml` stamp and does not create a generation
 or justify an immediate restart merely for skill/metadata refresh.

@@ -9,7 +9,7 @@ Build file-backed plugins for the official DeepSeek Harness browser WebUI throug
 
 ## Workflow
 
-1. Session-start automatically arms the external Guardian. Call `dshx_status`; completion means exit code `0`, one Harness checkout, stable DSHX `>=0.7.3 <0.8.0`, contract `dshx-v0.7/creator-bridge-v2`, and bridge version `2`. The bridge must report Creator claims, workspace scaffold, bounded new-client activation, safe watched-plugin removal, safe profile-bundle removal handoff, proactive plugin-integrity quarantine, Guardian, same-PID activation matrix, and Harness Update Assistant capabilities. Status is inventory, not activation proof.
+1. Session-start automatically arms the external Guardian. Call `dshx_status`; completion means exit code `0`, one Harness checkout, stable DSHX `>=0.7.4 <0.8.0`, contract `dshx-v0.7/creator-bridge-v2`, and bridge version `2`. The bridge must report one attached/supervised same-Home Web Host, no shared-Home collision or unknown Host, Creator claims, workspace scaffold, bounded new-client activation, safe watched-plugin removal, safe profile-bundle removal handoff, proactive plugin-integrity quarantine, Guardian, same-PID activation matrix, isolated verification Home, and Harness Update Assistant capabilities. Status is inventory, not activation proof.
 2. As soon as the plugin id is known, call `dshx_claim_plugin` before editing. Different sessions may claim different plugins concurrently; the same plugin has one owner. A nonzero conflict stops the branch.
 3. For a new project, call `dshx_scaffold` immediately after the claim. It creates source under the calling session's trusted writable workspace and, when that workspace is outside the Harness checkout, creates the required `my-plugins/<name>` link itself. Use the returned source path for every edit. Never create a substitute project or ask the user to add a symlink. Existing projects skip this step.
 4. Classify the change as exactly one of `patch`, `manifest`, `preset`, `client`, `new-client`, `server`, or `artifact`. A new browser UI plugin is normally `new-client`. Before broad repository exploration, use the read-only DSHX knowledge bundle for the selected seam. A client starts with `dshx kb cat contracts/client-build` and `dshx kb cat maps/extension-points`; an update request starts with `dshx kb cat contracts/harness-update`. Follow an official source pointer only when the contract lacks the needed detail.
@@ -59,6 +59,10 @@ undo quarantine and repeat unchanged bytes.
 ## Invariants
 
 - The external DSHX supervisor owns process restart and rollback.
+- DSH.app, direct `dsh web`, and dshx are launchers for one long-lived Web Host
+  per `DSH_HOME`. Creator Mode+ never starts a second port. Duplicate or unknown
+  Host/Home visibility stops the branch; cold-boot verification uses a temporary
+  Home and rejects `--keep`.
 - The inherited bash tool is not an external supervisor. Raw mutating `dshx` commands from a DSH-managed shell are rejected by DSHX v0.7; read-only `update plan` is the sole Harness-update exception. Use only the seven fixed tools for plugin mutation and never unset managed DSH environment markers to bypass that boundary.
 - A matching `0.7.x` string is insufficient if Creator, watched-plugin removal, safe profile-bundle removal, proactive integrity quarantine, Guardian, activation, managed-shell, Update Assistant, or their knowledge contract is missing. The bridge and installer fail before mutation on incomplete surfaces.
 - Guardian is armed for every Creator+ session and may perform one deterministic recovery outside DSH; a second failure inside 30 seconds opens the fuse.

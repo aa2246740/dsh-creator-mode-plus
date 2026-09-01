@@ -17,8 +17,8 @@ describe('Creator Mode+ 0.3 package contract', () => {
     const manifest = read('dshx.yml')
     const verifier = read('scripts/verify-dshx.mjs')
 
-    assert.equal(metadata.version, '0.3.2')
-    assert.match(verifier, /DSHX_V073_COMPATIBILITY_PASS/)
+    assert.equal(metadata.version, '0.3.3')
+    assert.match(verifier, /DSHX_V074_COMPATIBILITY_PASS/)
     assert.doesNotMatch(verifier, /DSHX_V072_COMPATIBILITY_PASS/)
     assert.equal(metadata.files.includes('dshx.yml'), true)
     assert.equal(metadata.files.includes('scripts'), true)

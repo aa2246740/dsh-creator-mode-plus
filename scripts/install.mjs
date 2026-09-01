@@ -26,6 +26,7 @@ const LEGACY_ROWS = [
 ]
 const LEGACY_SIX_TOOL_PERSONA = 'Create file-backed DeepSeek Harness plugins through the six-tool DSHX v0.7 fixed bridge. Treat the official browser WebUI and public Cordis/client extension points as the compatibility target. App-shell APIs and wrapper-specific behavior are outside the supported surface. Harness update planning is read-only inside this session; prepare, verify, apply, rollback, and process control belong to the external DSHX supervisor.'
 const SEVEN_TOOL_PERSONA = 'Create and safely remove file-backed DeepSeek Harness plugins through the seven-tool DSHX v0.7 fixed bridge. Treat the official browser WebUI and public Cordis/client extension points as the compatibility target. App-shell APIs and wrapper-specific behavior are outside the supported surface. Whole-plugin teardown must use dshx_remove_plugin so the live Host deactivates first and source is preserved. Harness update planning is read-only inside this session; prepare, verify, apply, rollback, and process control belong to the external DSHX supervisor.'
+const CURRENT_PERSONA = `${SEVEN_TOOL_PERSONA} DSH.app, direct dsh web, and dshx are launchers for one long-lived Web Host per DSH_HOME; never start a second same-Home Host or keep an isolated verifier alive.`
 const LEGACY_SIX_TOOL_COMMENT = '# Bridge v2: six fixed dshx tools plus external Guardian lifecycle hooks; no shell, arbitrary argv, or model process control.'
 const SEVEN_TOOL_COMMENT = '# Bridge v2: seven fixed dshx tools plus external Guardian lifecycle hooks; no arbitrary argv, raw plugin teardown, or model process control.'
 
@@ -78,7 +79,7 @@ function creatorComposition(standard) {
   text = replaceOnce(
     text,
     `    text: >-\n      You are a coding agent powered by the {{model}} model. Your working directory is {{cwd}}.`,
-    `    text: |-\n      You are Creator Mode+, a coding agent powered by the {{model}} model. Your working directory is {{cwd}}.\n\n      Create and safely remove file-backed DeepSeek Harness plugins through the seven-tool DSHX v0.7 fixed bridge. Treat the official browser WebUI and public Cordis/client extension points as the compatibility target. App-shell APIs and wrapper-specific behavior are outside the supported surface. Whole-plugin teardown must use dshx_remove_plugin so the live Host deactivates first and source is preserved. Harness update planning is read-only inside this session; prepare, verify, apply, rollback, and process control belong to the external DSHX supervisor.\n\n      Load the \`creator-mode-plus\` skill before creating, activating, removing, hot-reloading, updating Harness, or validating a DSH plugin. Keep Harness core and shipped presets unchanged.`,
+    `    text: |-\n      You are Creator Mode+, a coding agent powered by the {{model}} model. Your working directory is {{cwd}}.\n\n      ${CURRENT_PERSONA}\n\n      Load the \`creator-mode-plus\` skill before creating, activating, removing, hot-reloading, updating Harness, or validating a DSH plugin. Keep Harness core and shipped presets unchanged.`,
     'persona',
   )
   text = replaceOnce(
@@ -99,8 +100,10 @@ function migrateManagedSafetyCopy(text) {
   let next = text
   for (const [before, after] of [
     [LEGACY_SIX_TOOL_PERSONA, SEVEN_TOOL_PERSONA],
+    [SEVEN_TOOL_PERSONA, CURRENT_PERSONA],
     [LEGACY_SIX_TOOL_COMMENT, SEVEN_TOOL_COMMENT],
   ]) {
+    if (before === SEVEN_TOOL_PERSONA && next.includes(CURRENT_PERSONA)) continue
     const first = next.indexOf(before)
     if (first < 0) continue
     if (next.indexOf(before, first + before.length) >= 0) {

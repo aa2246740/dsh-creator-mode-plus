@@ -2,7 +2,7 @@
 
 [中文](README.md)
 
-Pick Creator Mode+ in a normal DeepSeek Harness WebUI session. Seven fixed tools scaffold, check, mount, and safely remove a file-backed plugin. Version 0.3.2 aligns session claims, workspace scaffolding, watched-plugin removal, external bundle handoff, seven activation surfaces, proactive integrity quarantine, the external Guardian, and the Harness Update Assistant authority boundary with DSHX v0.7.3. Anything outside the fixed contract stops.
+Pick Creator Mode+ in a normal DeepSeek Harness WebUI session. Seven fixed tools scaffold, check, mount, and safely remove a file-backed plugin. Version 0.3.3 aligns with DSHX v0.7.4: DSH.app, direct `dsh web`, and dshx share one long-lived same-Home Web Host, while claims, safe removal, isolated verification, Guardian recovery, and the Harness Update Assistant remain fail closed.
 
 This does not replace official Creator Mode. It does not patch Harness core. Unofficial.
 
@@ -33,7 +33,7 @@ node tools/dsh-creator-mode-plus/scripts/install.mjs --harness "$PWD"
 
 Restart the Web Host once from outside the session, because the profile changed. Open the official WebUI, pick Creator Mode+, and start a new session or a still-blank one.
 
-The compatibility line covers the Creator/Guardian contracts from DSH `dsh-v0.1.0-rc.8` through the current `dsh-v0.1.1-rc.2`. It requires [DSHX](https://github.com/aa2246740/dsh-external-plugin-devkit) `>=0.7.3 <0.8.0`. Version 0.7.3 adds same-PID profile-bundle removal to 0.7.2's Creator safe removal and proactive Guardian quarantine. The installer checks the actual Creator, Guardian, both removal paths, activation, managed-shell, Harness Update Assistant, and knowledge surfaces and stops before preset mutation when any surface is missing.
+The compatibility line covers the Creator/Guardian contracts from DSH `dsh-v0.1.0-rc.8` through the current `dsh-v0.1.1-rc.2`. It requires [DSHX](https://github.com/aa2246740/dsh-external-plugin-devkit) `>=0.7.4 <0.8.0`. The installer additionally attests same-Home Host discovery/attach, three-state PID/port probes, and temporary-Home `verify-boot` teardown; any missing surface stops before preset mutation.
 
 For a fresh browser plugin, the fixed order is scaffold, implement/build, `dshx_check`, `dshx_activation_plan`, then same-PID activation. An unbuilt scaffold is no longer required to pass an activation plan.
 
@@ -80,7 +80,7 @@ node scripts/install.mjs --harness /path/to/deepseek-harness --upgrade
 npm run verify:dshx -- --harness /path/to/deepseek-harness
 ```
 
-Version 0.3.1 added the safe-removal tool and bash guard to the server bridge, so upgrading from 0.3.0 or older still needs one controlled external `server`-branch restart. Version 0.3.2 adds no tool; it tightens compatibility preflight to DSHX 0.7.3 and teaches the skill to hand bundle removal to the external supervisor. A running Host keeps the bridge loaded at boot, so preset refresh does not justify an immediate restart; the next normal DSH.app reopen loads the 0.3.2 preflight.
+Version 0.3.1 added the safe-removal tool and bash guard to the server bridge, so upgrading from 0.3.0 or older still needs one controlled external `server`-branch restart. Version 0.3.3 adds no tool; it tightens compatibility preflight to DSHX 0.7.4 and teaches the skill single-Home Host ownership plus isolated verification. A running Host keeps the boot-loaded bridge, so preset refresh does not justify an immediate restart; the next normal DSH.app reopen loads the 0.3.3 preflight.
 
 ## Development
 
