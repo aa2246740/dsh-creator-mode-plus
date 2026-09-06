@@ -29,9 +29,12 @@ function temporaryDirectory(label) {
   return path
 }
 
-function harnessAt(root, version = '0.7.4') {
+function harnessAt(root, version = '0.7.5', presetLayout = 'legacy') {
+  const standard = presetLayout === 'rc1'
+    ? join(root, 'packages/preset/agent-presets/presets/standard')
+    : join(root, 'apps/cli/config/agent-presets/standard')
   mkdirSync(join(root, 'apps/cli/src'), { recursive: true })
-  mkdirSync(join(root, 'apps/cli/config/agent-presets/standard'), { recursive: true })
+  mkdirSync(standard, { recursive: true })
   writeFileSync(join(root, 'apps/cli/src/bin.ts'), '')
   for (const path of REQUIRED_DSHX_PATHS) {
     const target = join(root, 'tools/dshx', path)
@@ -42,8 +45,8 @@ function harnessAt(root, version = '0.7.4') {
     name: 'dsh-external-plugin-devkit',
     version,
   }))
-  writeFileSync(join(root, 'apps/cli/config/agent-presets/standard/preset.yml'), 'name: Standard\n')
-  writeFileSync(join(root, 'apps/cli/config/agent-presets/standard/agent.cordis.yml'), `# The \`standard\` agent preset: the full coding agent, mounted once per process.
+  writeFileSync(join(standard, 'preset.yml'), 'name: Standard\n')
+  writeFileSync(join(standard, 'agent.cordis.yml'), `# The \`standard\` agent preset: the full coding agent, mounted once per process.
 - id: persona
   name: '@deepseek-ai/dsh-persona'
   config:
@@ -62,6 +65,21 @@ afterEach(() => {
 })
 
 describe('Creator Mode+ installer', () => {
+  it('installs and upgrades from the RC1 Standard preset location without changing it', () => {
+    const harnessRoot = harnessAt(temporaryDirectory('creator-mode-plus-rc1-harness-'), '0.7.5', 'rc1')
+    const dshHome = temporaryDirectory('creator-mode-plus-rc1-home-')
+    const source = join(harnessRoot, 'packages/preset/agent-presets/presets/standard/agent.cordis.yml')
+    const before = readFileSync(source, 'utf8')
+
+    const installed = installCreatorModePlus({ harnessRoot, dshHome })
+    const updated = installCreatorModePlus({ harnessRoot, dshHome, upgrade: true })
+
+    assert.equal(installed.action, 'installed')
+    assert.equal(updated.action, 'updated')
+    assert.equal(readFileSync(source, 'utf8'), before)
+    assert.match(readFileSync(join(updated.target, 'agent.cordis.yml'), 'utf8'), /You are Creator Mode\+/)
+  })
+
   it('copies Standard into a new user preset without editing shipped files', () => {
     const harnessRoot = harnessAt(temporaryDirectory('creator-mode-plus-harness-'))
     const dshHome = temporaryDirectory('creator-mode-plus-home-')
@@ -72,7 +90,7 @@ describe('Creator Mode+ installer', () => {
     const composition = readFileSync(join(result.target, 'agent.cordis.yml'), 'utf8')
 
     assert.equal(result.action, 'installed')
-    assert.equal(result.dshxVersion, '0.7.4')
+    assert.equal(result.dshxVersion, '0.7.5')
     assert.equal(result.creatorBridgeVersion, 2)
     assert.equal(result.dshxContract, 'dshx-v0.7/creator-bridge-v2')
     assert.match(result.target, /creator-mode-plus$/)

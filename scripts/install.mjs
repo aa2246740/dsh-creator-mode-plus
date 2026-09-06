@@ -30,12 +30,17 @@ const CURRENT_PERSONA = `${SEVEN_TOOL_PERSONA} DSH.app, direct dsh web, and dshx
 const LEGACY_SIX_TOOL_COMMENT = '# Bridge v2: six fixed dshx tools plus external Guardian lifecycle hooks; no shell, arbitrary argv, or model process control.'
 const SEVEN_TOOL_COMMENT = '# Bridge v2: seven fixed dshx tools plus external Guardian lifecycle hooks; no arbitrary argv, raw plugin teardown, or model process control.'
 
-function standardPresetAt(root) {
-  const path = join(root, 'apps/cli/config/agent-presets/standard')
-  if (!existsSync(join(path, 'agent.cordis.yml'))) {
-    throw new Error(`Creator Mode+ installer cannot find the shipped Standard preset at ${path}`)
+const STANDARD_PRESET_PATHS = [
+  'packages/preset/agent-presets/presets/standard',
+  'apps/cli/config/agent-presets/standard',
+]
+
+export function standardPresetAt(root) {
+  for (const relative of STANDARD_PRESET_PATHS) {
+    const path = join(root, relative)
+    if (existsSync(join(path, 'agent.cordis.yml')) && existsSync(join(path, 'preset.yml'))) return path
   }
-  return path
+  throw new Error(`Creator Mode+ installer cannot find the shipped Standard preset under ${root}`)
 }
 
 function replaceOnce(text, search, replacement, label) {

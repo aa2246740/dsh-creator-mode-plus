@@ -20,7 +20,7 @@ export {
 } from './compatibility.js'
 
 export const name = 'dsh-creator-mode-plus'
-export const inject = ['tools', 'webServer']
+export const inject = ['tools', 'webServer', 'connection']
 
 const CLIENT_FAILURE_PATH = '/dsh-creator-mode-plus/client-failure'
 const MAX_CLIENT_FAILURE_BYTES = 16 * 1024
@@ -167,8 +167,9 @@ export function installClientFailureRoute(ctx, options = {}) {
 /** Register file-backed Creator Mode+ operations for one preset scope. */
 export function apply(ctx) {
   console.log('[dsh-creator-mode-plus] loaded')
-  installCreatorRecovery(ctx)
-  installClientFailureRoute(ctx)
+  const authOptions = { getWebStartupUrl: port => ctx.connection.authenticatedUrl(`http://127.0.0.1:${port}/`) }
+  installCreatorRecovery(ctx, authOptions)
+  installClientFailureRoute(ctx, authOptions)
   installCreatorSafetyGuard(ctx)
 
   ctx.tools.register({
@@ -184,7 +185,7 @@ export function apply(ctx) {
     output,
     execute(args, exec) {
       const id = pluginId(args.name)
-      return runDshx(['creator', 'claim', id], exec, { hostPort: currentWebPort() }).then((result) => {
+      return runDshx(['creator', 'claim', id], exec, { ...authOptions, hostPort: currentWebPort() }).then((result) => {
         if (result.exitCode === 0) rememberCreatorClaim(exec, id)
         return result
       })
@@ -210,7 +211,7 @@ export function apply(ctx) {
       const id = pluginId(args.name)
       return runClaimedDshx(id, [
         'creator', 'scaffold', id, choice(args.kind, KINDS, 'plugin kind'),
-      ], exec, { hostPort: currentWebPort() })
+      ], exec, { ...authOptions, hostPort: currentWebPort() })
     },
     presentCall: args => ({ card: 'generic', title: `dshx scaffold ${args.name}`, kind: 'edit', rawInput: args }),
   })
@@ -228,7 +229,7 @@ export function apply(ctx) {
     output,
     execute(args, exec) {
       const id = pluginId(args.name)
-      return runClaimedDshx(id, ['check', id], exec, { hostPort: currentWebPort() })
+      return runClaimedDshx(id, ['check', id], exec, { ...authOptions, hostPort: currentWebPort() })
     },
     presentCall: args => ({ card: 'generic', title: `dshx check ${args.name}`, kind: 'read', rawInput: args.name }),
   })
@@ -251,7 +252,7 @@ export function apply(ctx) {
       const id = pluginId(args.name)
       return runClaimedDshx(id, [
         'activation-plan', id, '--change', choice(args.change, CHANGES, 'change surface'),
-      ], exec, { hostPort: currentWebPort() })
+      ], exec, { ...authOptions, hostPort: currentWebPort() })
     },
     presentCall: args => ({ card: 'generic', title: `dshx plan ${args.change}`, kind: 'read', rawInput: args }),
   })
@@ -272,7 +273,7 @@ export function apply(ctx) {
       const port = currentWebPort()
       return runClaimedDshx(id, [
         'activate-new-client', id, '--profile', 'web', '--port', String(port),
-      ], exec, { hostPort: port })
+      ], exec, { ...authOptions, hostPort: port })
     },
     presentCall: args => ({ card: 'generic', title: `dshx activate ${args.name}`, kind: 'edit', rawInput: args.name }),
   })
@@ -291,7 +292,7 @@ export function apply(ctx) {
     async execute(args, exec) {
       const id = pluginId(args.name)
       const port = currentWebPort()
-      const result = await runClaimedDshx(id, ['creator', 'remove', id], exec, { hostPort: port })
+      const result = await runClaimedDshx(id, ['creator', 'remove', id], exec, { ...authOptions, hostPort: port })
       if (result.exitCode === 0) forgetCreatorClaim(exec)
       return result
     },
@@ -305,7 +306,7 @@ export function apply(ctx) {
     timeoutMs: 30_000,
     output,
     execute(_args, exec) {
-      return runDshx(['status'], exec, { hostPort: currentWebPort() })
+      return runDshx(['status'], exec, { ...authOptions, hostPort: currentWebPort() })
     },
     presentCall: () => ({ card: 'generic', title: 'dshx status', kind: 'read' }),
   })

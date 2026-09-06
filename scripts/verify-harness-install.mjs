@@ -9,7 +9,7 @@ import {
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
-import { installCreatorModePlus } from './install.mjs'
+import { installCreatorModePlus, standardPresetAt } from './install.mjs'
 
 function digest(path) {
   return createHash('sha256').update(readFileSync(path)).digest('hex')
@@ -36,8 +36,9 @@ function parseArguments(argv) {
 
 /** Exercise the real shipped Standard preset in an isolated disposable DSH_HOME. */
 export function verifyHarnessInstall(harnessRoot) {
-  const sourceComposition = join(harnessRoot, 'apps/cli/config/agent-presets/standard/agent.cordis.yml')
-  const sourcePreset = join(harnessRoot, 'apps/cli/config/agent-presets/standard/preset.yml')
+  const standardPreset = standardPresetAt(harnessRoot)
+  const sourceComposition = join(standardPreset, 'agent.cordis.yml')
+  const sourcePreset = join(standardPreset, 'preset.yml')
   const before = {
     composition: digest(sourceComposition),
     preset: digest(sourcePreset),

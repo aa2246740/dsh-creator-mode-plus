@@ -2,7 +2,7 @@
 
 Creator Mode+ is a user preset plus one DSH plugin. It brings seven fixed DSHX
 operations into an ordinary DSH session without giving that session control of
-its Host process. Stable DSHX `>=0.7.4 <0.8.0` supplies single-Home Host
+its Host process. Stable DSHX `>=0.7.5 <0.8.0` supplies atomic single-Home Host
 discovery/attachment, temporary-Home cold-boot verification, workspace-aware
 scaffolding, source-preserving watched-plugin removal, external safe profile-bundle
 removal, proactive integrity quarantine, the external Guardian, durable recovery state, the seven-surface
@@ -62,6 +62,11 @@ or unknown Host/Home evidence fails closed. `verify-boot` uses a temporary Home,
 always tears it down, and rejects `--keep`. These remain external-supervisor
 rules and do not add an eighth Creator tool.
 
+DSHX v0.7.5 serializes same-Home start, restart, apply, and rollback across
+Harness checkouts; binds PID, OS start time, Home, profile, and root; and
+re-runs discovery after spawn. An affected or identity-unknown live Host blocks
+installation-directory mutation.
+
 `refusing an operation outside bridge v2` from one of these fixed tools means the
 bridge contract itself is broken. The session reports the exact tool and error,
 preserves the claim and source location, and stops. It must not reinterpret the
@@ -105,7 +110,7 @@ The standalone package does not accept `0.7.x` by string alone. Before any fixed
 operation or installer mutation it requires:
 
 - package identity `dsh-external-plugin-devkit` and stable version
-  `>=0.7.4 <0.8.0`;
+  `>=0.7.5 <0.8.0`;
 - same-Home Web Host discovery/attach, three-state PID/port probes, and
   temporary-Home verification teardown;
 - Creator claim/scaffold commands and Bridge v2 context validation;
@@ -121,6 +126,24 @@ actual DSHX CLI version and contract markers through `npm run verify:dshx`;
 fabricated fixture tests are not the live-checkout gate.
 
 ## New-client transaction
+
+### RC1 authenticated Host proof
+
+The bridge obtains the current Host's startup URL from the public
+`connection.authenticatedUrl()` API. It passes it only in the child process's
+private `DSHX_WEB_STARTUP_URL` environment, never in model arguments, tool output,
+session provenance or transaction journals. DSHX exchanges it for a cookie in
+memory and binds every proof request to the selected loopback origin. Authenticated
+activation and absence proofs use the same transport. HTTP 401/403 fails promptly
+as `WEB_AUTH_REQUIRED`, rather than being overwritten by a polling timeout.
+
+An authentication failure is an infrastructure blocker: preserve source and the
+claim and repair the bridge. Keep Host authentication enabled. Do not ask the user
+to paste credentials into chat. External launchers may supply the same private
+environment input; DSHX does not discover credentials by scanning App logs.
+
+Changing this already-loaded server bridge requires the server activation branch;
+it does not imply that ordinary plugin creation requires Host restarts.
 
 `dshx_activate_new_client({ name })` is the only bridge operation that mutates
 live registration. Its sole model-controlled value is a lower-case kebab-case
@@ -296,7 +319,7 @@ production activated as separate states.
 
 Supported: the official DSH browser WebUI, public Cordis plugin forms, public
 client runtime, and public UI slots across the RC8 Creator/Guardian contract and
-the current RC2 package/update line.
+the RC2 package/update line and the 0.1.2-rc.1 authenticated Web line.
 
 Outside acceptance: native menus, window chrome, App IPC, desktop bridges, and
 shell-specific refresh behavior. A wrapper may work when it embeds the same
@@ -316,4 +339,9 @@ tool; it tightens compatibility preflight to DSHX 0.7.4 and adds single-Home
 Host ownership plus isolated verification to the skill. A running Host keeps the bridge loaded at boot and
 may adopt the stricter preflight on its next normal App reopen. Managed upgrade
 preserves an unchanged `agent.cordis.yml` stamp and does not create a generation
-or justify an immediate restart merely for skill/metadata refresh.
+or justify an immediate restart merely for skill/metadata refresh. Version
+0.3.4 requires DSHX 0.7.5's identity-bound operation gates without adding a
+bridge tool.
+Its Connection-authentication change is a server-module change: an older loaded
+bridge needs the authorized server activation branch, independently of whether
+the preset composition stamp changes.

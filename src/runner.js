@@ -231,6 +231,7 @@ export function runDshx(args, exec, options = {}) {
         ...process.env,
         DSHX_HARNESS: runtime.root,
         DSHX_CREATOR_CONTEXT: JSON.stringify(creatorContext),
+        DSHX_WEB_STARTUP_URL: options.getWebStartupUrl?.(hostPort) ?? '',
       },
       stdio: ['ignore', 'pipe', 'pipe'],
     })
@@ -275,6 +276,7 @@ export function runClientFailureDshx(report, options = {}) {
         ...baseEnv,
         DSHX_HARNESS: runtime.root,
         DSHX_CREATOR_CLIENT_FAILURE: JSON.stringify(report),
+        DSHX_WEB_STARTUP_URL: options.getWebStartupUrl?.(report.hostPort) ?? '',
       },
       stdio: ['ignore', 'pipe', 'pipe'],
     })

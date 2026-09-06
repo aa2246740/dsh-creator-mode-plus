@@ -2,7 +2,7 @@
 
 [English](README.en.md)
 
-在 DeepSeek Harness 的普通 Web 会话里选 Creator Mode+，就能用七个固定工具把一个文件化插件搭起来、检查、挂载，也能按安全顺序卸载。0.3.3 对齐 DSHX v0.7.4：App、直接 `dsh web` 和 dshx 只对应同 Home 的一个长期 Web Host；会话认领、工作区 scaffold、安全卸载、七分支激活、隔离验证、外部 Guardian 和 Harness Update Assistant 仍在同一份 fail-closed 合同里。过不了的操作直接停。
+在 DeepSeek Harness 的普通 Web 会话里选 Creator Mode+，就能用七个固定工具把一个文件化插件搭起来、检查、挂载，也能按安全顺序卸载。0.3.4 对齐 DSHX v0.7.5：App、直接 `dsh web` 和 dshx 通过同 Home 原子互斥与完整进程身份只对应一个长期 Web Host；会话认领、工作区 scaffold、安全卸载、七分支激活、隔离验证、外部 Guardian 和 Harness Update Assistant 仍在同一份 fail-closed 合同里。过不了的操作直接停。
 
 不替代官方创造模式。不改 Harness 核心。非官方。
 
@@ -33,7 +33,7 @@ node tools/dsh-creator-mode-plus/scripts/install.mjs --harness "$PWD"
 
 因为加了 profile 依赖，先在会话外面把 Web Host 重启一次。然后打开官方 WebUI，选 Creator Mode+，开一个新会话，或者还是空白的那个。
 
-兼容线覆盖 DSH `dsh-v0.1.0-rc.8` 的 Creator/Guardian 合同和当前 `dsh-v0.1.1-rc.2`。必须使用 [DSHX](https://github.com/aa2246740/dsh-external-plugin-devkit) `>=0.7.4 <0.8.0`。安装器除 Creator、Guardian、卸载、激活、managed-shell 和更新助手外，还会验证同 Home Host 发现/附着、PID/端口三态判断，以及临时 Home `verify-boot` 必清理；缺一项就在写 preset 前停止。
+兼容线覆盖 DSH `dsh-v0.1.0-rc.8` 的 Creator/Guardian 合同和当前 `dsh-v0.1.1-rc.2`。必须使用 [DSHX](https://github.com/aa2246740/dsh-external-plugin-devkit) `>=0.7.5 <0.8.0`。安装器除 Creator、Guardian、卸载、激活、managed-shell 和更新助手外，还会验证同 Home Host 原子互斥、PID/启动时间/Home/profile/root 身份绑定，以及临时 Home `verify-boot` 必清理；缺一项就在写 preset 前停止。
 
 新浏览器插件的固定顺序是：scaffold 后先实现、构建并通过 `dshx_check`，再运行 `dshx_activation_plan` 和同 PID 激活。未构建的 scaffold 不再被错误地要求先通过 activation plan。
 
@@ -80,7 +80,7 @@ node scripts/install.mjs --harness /path/to/deepseek-harness --upgrade
 npm run verify:dshx -- --harness /path/to/deepseek-harness
 ```
 
-0.3.1 曾新增 server bridge 的安全卸载工具和 bash guard，因此从 0.3.0 或更旧版本升级时要在会话外完成一次 `server` 分支重启。0.3.3 不增加工具，只把兼容预检收紧到 DSHX 0.7.4，并把单 Home 单 Host 与隔离验证写入技能。已经运行的 Host 会继续使用启动时加载的旧 bridge；无需为了刷新 preset 立即重启，下一次正常重开 DSH.app 时会载入 0.3.3 的严格预检。
+0.3.1 曾新增 server bridge 的安全卸载工具和 bash guard，因此从 0.3.0 或更旧版本升级时要在会话外完成一次 `server` 分支重启。0.3.3 首次收紧到 DSHX 0.7.4；0.3.4 继续要求 0.7.5 的原子互斥与完整身份门禁，仍不增加工具。已经运行的 Host 会继续使用启动时加载的旧 bridge；无需为了刷新 preset 立即重启，下一次正常重开 DSH.app 时会载入 0.3.4 的严格预检。
 
 ## 开发
 

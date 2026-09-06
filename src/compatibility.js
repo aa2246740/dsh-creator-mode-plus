@@ -5,13 +5,14 @@ export const CREATOR_BRIDGE_VERSION = 2
 
 export const DSHX_CONTRACT = Object.freeze({
   id: 'dshx-v0.7/creator-bridge-v2',
-  release: 'v0.7.4',
-  minimum: '0.7.4',
+  release: 'v0.7.5',
+  minimum: '0.7.5',
   maximumExclusive: '0.8.0',
   capabilities: Object.freeze([
     'creator-session-claims',
     'workspace-scaffold',
     'bounded-new-client-activation',
+    'authenticated-host-proof',
     'safe-plugin-removal',
     'safe-profile-bundle-removal',
     'external-guardian-recovery',
@@ -39,6 +40,7 @@ export const CREATOR_MODEL_TOOLS = Object.freeze([
 ])
 
 export const DSHX_SURFACE_MARKERS = Object.freeze({
+  'src/internal/web-proof-auth.ts': Object.freeze(['createWebProofRequest', 'WEB_AUTH_REQUIRED', 'WEB_AUTH_ORIGIN_MISMATCH']),
   'src/cli.ts': Object.freeze([
     "case 'check'",
     "case 'status'",
@@ -99,9 +101,13 @@ export const DSHX_SURFACE_MARKERS = Object.freeze({
   'src/internal/host-discovery.ts': Object.freeze([
     'discoverWebHosts',
     'parseWebProcessTable',
+    'assertNoAffectedWebHosts',
+    'processStartedAt',
     'process table unavailable',
   ]),
   'src/internal/host.ts': Object.freeze([
+    'acquireWebHostOperationLock',
+    'processStartedAt',
     'export function probePid',
     "'ESRCH'",
     'export async function probePort',
@@ -110,8 +116,15 @@ export const DSHX_SURFACE_MARKERS = Object.freeze({
   'src/commands/host.ts': Object.freeze([
     'shared-home-collision',
     'already-attached',
+    'proveSpawnedWebHost',
     'dshx-verify-home-',
     '--keep is not available for isolated verification',
+  ]),
+  'src/internal/update-apply.ts': Object.freeze([
+    'assertNoAffectedWebHosts',
+    'withUpdateHostGuard',
+    'update apply',
+    'update rollback',
   ]),
   'knowledge/contracts/creator-mode-plus.md': Object.freeze([
     'creator claim',
@@ -123,7 +136,7 @@ export const DSHX_SURFACE_MARKERS = Object.freeze({
   'knowledge/contracts/harness-update.md': Object.freeze(['plan → prepare → verify → apply', 'rollback']),
   'knowledge/contracts/live-activation.md': Object.freeze(['SOURCE_BUILT', 'CLIENT_MANIFEST_PRESENT']),
   'knowledge/playbooks/verify-boot.md': Object.freeze(['临时 `DSH_HOME`', '`--keep` 会被拒绝']),
-  'skill/dshx/SKILL.md': Object.freeze(['Treat DSH.app, direct `dsh web`', '`--keep` is unsafe and']),
+  'skill/dshx/SKILL.md': Object.freeze(['Treat DSH.app, direct `dsh web`', '`--keep` is unsafe and', 'PID-reused is reported as stale']),
 })
 
 export const REQUIRED_DSHX_PATHS = Object.freeze(Object.keys(DSHX_SURFACE_MARKERS))

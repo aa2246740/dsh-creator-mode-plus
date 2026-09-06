@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.3.4 - 2026-09-06
+
+- Require DSHX `>=0.7.5 <0.8.0` and attest the atomic same-Home operation lock, PID/start-time/Home/profile/root binding, post-spawn discovery, and apply/rollback live-Host guard.
+- Keep Creator Bridge v2 and its seven fixed tools unchanged; Host process control and mutating Harness update stages remain external-supervisor-only.
+- Support Harness 0.1.2-rc.1's relocated shipped Standard preset and authenticated Host proofs through the public Connection service. Credentials stay in the child process environment, outside model arguments and output.
+- An already-loaded older server bridge needs the server activation branch; ordinary watched configuration and new-client development do not automatically require Host restarts. Plugin-specific functional correctness remains separately tested.
+
 ## 0.3.3 - 2026-09-01
 
 - Require the complete DSHX `>=0.7.4 <0.8.0` surface, including same-Home Web Host discovery/attach, three-state PID/port probes, and temporary-Home `verify-boot` teardown.

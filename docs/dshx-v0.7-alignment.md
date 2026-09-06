@@ -1,9 +1,9 @@
 # DSHX v0.7 alignment
 
-Creator Mode+ 0.3.3 is aligned to stable DSHX `>=0.7.4 <0.8.0`, Creator Bridge
-v2, and the official browser WebUI lifecycle. DSHX v0.7.4 keeps the safe
-activation/removal/update contracts, then adds one long-lived Web Host per real
-`DSH_HOME`, three-state process/port evidence, and temporary-Home verification.
+Creator Mode+ 0.3.4 is aligned to stable DSHX `>=0.7.5 <0.8.0`, Creator Bridge
+v2, and the official browser WebUI lifecycle. DSHX v0.7.5 makes same-Home
+ownership atomic across checkouts and binds PID, process start time, Home,
+profile, and root before lifecycle or update mutation.
 
 This is a contract alignment, not a version-number exception. Before the bridge
 or installer mutates anything, it verifies the DSHX package identity, stable
@@ -14,7 +14,7 @@ contract, managed-shell gate, and transactional Harness Update Assistant.
 
 | DSHX v0.7 surface | Creator Mode+ 0.3 behavior | Evidence boundary |
 |---|---|---|
-| Single-Home Host ownership | `dshx_status` must show one attached/supervised same-Home Host and no collision/unknown candidate | App, direct CLI, and dshx are launchers; another port is not isolation |
+| Single-Home Host ownership | `dshx_status` must show one identity-bound attached/supervised same-Home Host and no collision/unknown candidate | App, direct CLI, and dshx are launchers; another port is not isolation |
 | Isolated cold boot | external `verify-boot` uses a temporary Home and rejects `--keep` | It leaves the user's Host PID unchanged and does not prove live activation there |
 | Session claims | `dshx_claim_plugin`; every named operation refreshes the claim | Claim success is ownership, not build or activation |
 | Workspace scaffold | `dshx_scaffold` takes only id/kind; DSHX derives the immutable session workspace and owns any `my-plugins` link | Returned source path is the only edit target |
@@ -39,14 +39,15 @@ an `update` bridge tool as an eighth tool would erase that authority boundary. R
 the preset skill as inventory only.
 DSHX v0.7.3's external bundle transaction likewise does not widen the bridge:
 it requires supervisor-owned profile/port context and may span a later App boot.
-DSHX v0.7.4's Host discovery and verifier teardown also stay outside the bridge;
+DSHX v0.7.5's Host lock, identity binding, update guard, and verifier teardown stay outside the bridge;
 Creator receives status but never gains process or port input.
 
 ## Harness compatibility
 
 The source line covers the DSH `dsh-v0.1.0-rc.8` Creator/Guardian contracts and
-the DSHX v0.7 update path to `dsh-v0.1.1-rc.2`. Release verification against an
-RC2 checkout must include:
+the DSHX v0.7 update path through `dsh-v0.1.1-rc.2` to `dsh-v0.1.2-rc.1`.
+The RC1 line includes relocated Standard discovery and authenticated Host proof.
+Release verification against the selected checkout must include:
 
 ```sh
 npm run check
@@ -84,3 +85,8 @@ the managed skill without changing the seven-tool surface or preset composition.
 Run the installer with `--upgrade` outside the Agent session. The current Host
 may remain on its boot-loaded bridge until the next normal App reopen; unchanged
 composition bytes and filesystem stamp do not justify a restart alone.
+Version 0.3.4 raises the preflight to DSHX 0.7.5 so the non-atomic 0.7.4
+implementation is no longer accepted; the seven tools and bridge v2 are unchanged.
+It also changes the server bridge to obtain official Connection authentication.
+For an already-loaded older bridge, use the server activation plan and a normal
+authorized launcher restart; an unchanged preset stamp is not server-module HMR.
