@@ -4,3 +4,10 @@ entry: src/index.js
 marker: "[dsh-creator-mode-plus] loaded"
 kind: client
 profile: web
+hotReload:
+  artifacts:
+    - src/index.js
+    - src/runner.js
+    - src/delivery.js
+    - src/compatibility.js
+    - src/safety.js

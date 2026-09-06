@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict'
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
+import { createHash } from 'node:crypto'
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { EventEmitter } from 'node:events'
 import { PassThrough } from 'node:stream'
 import { tmpdir } from 'node:os'
@@ -56,7 +57,7 @@ afterEach(() => {
 })
 
 describe('Creator Bridge v2', () => {
-  it('registers only the seven fixed tools and rejects process control', () => {
+  it('registers only the eight fixed tools and rejects process control', () => {
     const registered = []
     apply({
       tools: { register(tool) { registered.push(tool) } },
@@ -67,6 +68,18 @@ describe('Creator Bridge v2', () => {
     })
 
     assert.deepEqual(registered.map(tool => tool.name), CREATOR_MODEL_TOOLS)
+    const hotReload = registered.find(tool => tool.name === 'dshx_hot_reload')
+    assert.deepEqual(hotReload.parameters.required, ['name'])
+    assert.deepEqual(Object.keys(hotReload.parameters.properties), ['name'])
+    assert.match(hotReload.description, /RUNTIME_VERIFICATION_REQUIRED/)
+    assert.throws(
+      () => hotReload.execute({ name: 'dsh-creator-mode-plus' }, { signal: undefined }),
+      /cannot replace its executing infrastructure plugin/,
+    )
+    assert.throws(
+      () => hotReload.execute({ name: 'dsh-external-plugin-devkit' }, { signal: undefined }),
+      /cannot replace its executing infrastructure plugin/,
+    )
     assert.equal(registered.some(tool => /start|stop|restart|shell|command/.test(tool.name)), false)
     assert.throws(
       () => registered[0].execute({ name: '../escape' }, { signal: undefined }),
@@ -75,6 +88,18 @@ describe('Creator Bridge v2', () => {
     assert.throws(() => runDshx(['restart']), /outside bridge v2/)
     assert.throws(
       () => runDshx(['activate-new-client', 'demo', '--profile', 'web', '--port', 'not-a-port']),
+      /outside bridge v2/,
+    )
+    assert.throws(
+      () => runDshx(['hot-reload', '../demo', '--profile', 'web', '--port', '43127', '--json']),
+      /outside bridge v2/,
+    )
+    assert.throws(
+      () => runDshx(['hot-reload', 'demo', '--profile', 'web', '--port', '43127']),
+      /outside bridge v2/,
+    )
+    assert.throws(
+      () => runDshx(['hot-reload', 'demo', '--profile', 'web', '--port', '43127', '--json', '--timeout', '1']),
       /outside bridge v2/,
     )
   })
@@ -88,7 +113,7 @@ describe('Creator Bridge v2', () => {
       child.stdout = new PassThrough()
       child.stderr = new PassThrough()
       child.kill = () => true
-      queueMicrotask(() => child.emit('close', 0))
+      queueMicrotask(() => child.emit('close', argv.includes('hot-reload') ? 1 : 0))
       return child
     }
     const exec = {
@@ -105,6 +130,7 @@ describe('Creator Bridge v2', () => {
       ['activation-plan', 'demo', '--change', 'new-client'],
       ['activate-new-client', 'demo', '--profile', 'web', '--port', '43127'],
       ['creator', 'remove', 'demo'],
+      ['hot-reload', 'demo', '--profile', 'web', '--port', '43127', '--json'],
       ['creator', 'watch', '--json'],
       ['creator', 'release', '--json'],
       ['creator', 'recovery', 'pull', '--json'],
@@ -118,9 +144,45 @@ describe('Creator Bridge v2', () => {
         hostPort: 43127,
         spawnProcess,
       })
-      assert.equal(result.exitCode, 0)
+      assert.equal(result.exitCode, args[0] === 'hot-reload' ? 1 : 0)
     }
-    assert.deepEqual(spawned.map(argv => argv.slice(3)), operations)
+    assert.deepEqual(spawned.map(argv => argv.slice(3)), operations.map(args => [...args, ...args[0] === 'activation-plan' ? ['--json'] : [], '--harness', harness]))
+  })
+
+  it('clears a stale hot-reload receipt when the fixed subprocess cannot start', async () => {
+    const harness = harnessAt(temporaryDirectory('creator-mode-plus-hmr-spawn-failure-'))
+    const sessionId = 'session-a'
+    const receipt = join(harness, '.dshx', 'creator-plus', 'deliveries', `${createHash('sha256').update(sessionId).digest('hex')}.json`)
+    mkdirSync(dirname(receipt), { recursive: true })
+    writeFileSync(receipt, JSON.stringify({
+      version: 1,
+      sessionId,
+      pluginId: 'demo',
+      sourceBuilt: true,
+      plan: { hostRestart: 'not-decided', handoff: { port: 43127 } },
+      hotReload: { transactionId: 'stale-success', hostPort: 43127 },
+    }))
+    const spawnProcess = () => {
+      const child = new EventEmitter()
+      child.stdout = new PassThrough()
+      child.stderr = new PassThrough()
+      child.kill = () => true
+      queueMicrotask(() => child.emit('error', new Error('spawn unavailable')))
+      return child
+    }
+    await assert.rejects(
+      runDshx(['hot-reload', 'demo', '--profile', 'web', '--port', '43127', '--json'], {
+        agent: { id: sessionId },
+        signal: new AbortController().signal,
+      }, {
+        harnessRoot: harness,
+        loaderPath: '/fake/tsx-loader.mjs',
+        hostPort: 43127,
+        spawnProcess,
+      }),
+      /spawn unavailable/,
+    )
+    assert.equal(JSON.parse(readFileSync(receipt, 'utf8')).hotReload, undefined)
   })
 
   it('blocks the observed raw teardown chain while allowing ordinary component cleanup', () => {
@@ -334,6 +396,7 @@ describe('Creator Bridge v2', () => {
     assert.equal(runtime.capabilities.includes('transactional-harness-update-assistant'), true)
     assert.equal(runtime.capabilities.includes('single-home-web-host'), true)
     assert.equal(runtime.capabilities.includes('isolated-verify-home'), true)
+    assert.equal(runtime.capabilities.includes('bounded-same-pid-server-hot-reload'), true)
 
     const incompatible = harnessAt(temporaryDirectory('creator-mode-plus-incompatible-'), '0.8.0')
     assert.throws(
@@ -349,6 +412,17 @@ describe('Creator Bridge v2', () => {
     assert.throws(
       () => resolveDshxRuntime({ harnessRoot: incomplete, loaderPath: '/fake/tsx-loader.mjs' }),
       /missing required dshx-v0\.7\/creator-bridge-v2 surfaces: src\/commands\/update\.ts, knowledge\/contracts\/harness-update\.md/,
+    )
+  })
+
+  it('does not accept a version-only 0.7.5 checkout without hot-reload command, observer, and journal surfaces', () => {
+    const legacy = harnessAt(temporaryDirectory('creator-mode-plus-legacy-'), '0.7.5')
+    rmSync(join(legacy, 'tools/dshx/src/commands/hot-reload.ts'))
+    rmSync(join(legacy, 'tools/dshx/src/runtime/hot-reload-observer.mjs'))
+    rmSync(join(legacy, 'tools/dshx/src/internal/hot-reload-journal.ts'))
+    assert.throws(
+      () => resolveDshxRuntime({ harnessRoot: legacy, loaderPath: '/fake/tsx-loader.mjs' }),
+      /missing required .*src\/commands\/hot-reload\.ts.*src\/internal\/hot-reload-journal\.ts.*src\/runtime\/hot-reload-observer\.mjs/,
     )
   })
 

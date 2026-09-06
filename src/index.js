@@ -29,6 +29,7 @@ const CLIENT_FAILURE_ROUTE_REGISTRY = Symbol.for('dsh-creator-mode-plus.client-f
 const PLUGIN_ID = /^[a-z][a-z0-9-]*$/
 const KINDS = new Set(['function', 'tool', 'client', 'object', 'class'])
 const CHANGES = new Set(['patch', 'manifest', 'preset', 'client', 'new-client', 'server', 'artifact'])
+const HOT_RELOAD_INFRASTRUCTURE = new Set(['dsh-creator-mode-plus', 'dsh-external-plugin-devkit'])
 
 function pluginId(value) {
   if (!PLUGIN_ID.test(value)) throw new Error('plugin name must be lower-case kebab-case')
@@ -297,6 +298,30 @@ export function apply(ctx) {
       return result
     },
     presentCall: args => ({ card: 'generic', title: `dshx remove ${args.name}`, kind: 'edit', rawInput: args.name }),
+  })
+
+  ctx.tools.register({
+    name: 'dshx_hot_reload',
+    description: 'Replace one already-loaded, checked Web-profile server plugin through DSHX controlled same-PID module HMR. Success proves module replacement and temporary-scope cleanup only; the requested behavior remains RUNTIME_VERIFICATION_REQUIRED. It never accepts paths, ports, arbitrary commands, or Host process control.',
+    parameters: {
+      type: 'object',
+      properties: { name: { type: 'string', description: 'Existing checked plugin id under my-plugins' } },
+      required: ['name'],
+      additionalProperties: false,
+    },
+    timeoutMs: 90_000,
+    output,
+    execute(args, exec) {
+      const id = pluginId(args.name)
+      if (HOT_RELOAD_INFRASTRUCTURE.has(id)) {
+        throw new Error(`dshx_hot_reload cannot replace its executing infrastructure plugin: ${id}`)
+      }
+      const port = currentWebPort()
+      return runClaimedDshx(id, [
+        'hot-reload', id, '--profile', 'web', '--port', String(port), '--json',
+      ], exec, { ...authOptions, hostPort: port })
+    },
+    presentCall: args => ({ card: 'generic', title: `dshx hot reload ${args.name}`, kind: 'edit', rawInput: args.name }),
   })
 
   ctx.tools.register({

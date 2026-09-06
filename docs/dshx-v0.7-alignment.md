@@ -22,11 +22,13 @@ contract, managed-shell gate, and transactional Harness Update Assistant.
 | Seven activation surfaces | `dshx_activation_plan` selects exactly one of patch, manifest, preset, client, new-client, server, or artifact | Dependency installation is not activation |
 | New Web client | `dshx_activate_new_client` owns link → resolution → watched transaction → current manifest | Exit 0 reaches `CLIENT_MANIFEST_PRESENT`; the page still needs reload and observation |
 | Safe plugin removal | `dshx_remove_plugin` owns live-row quarantine → same-Host absence → official profile remove → target-verified symlink detach; partial RC8 removals resume from durable quarantine | Exit 0 reaches `HOST_TREE_INACTIVE` and `PROFILE_DEPENDENCY_REMOVED`; `detached-orphan-symlink` is bounded to this claim and source remains preserved |
-| External bundle removal | Creator stops at boot-captured bundle evidence and hands off to external `dshx plugin remove`; DSHX owns tombstone → same-PID absence → official remove → later-boot cleanup | Not an eighth tool; current Host is not restarted and old pages may still need refresh |
+| External bundle removal | Creator stops at boot-captured bundle evidence and hands off to external `dshx plugin remove`; DSHX owns tombstone → same-PID absence → official remove → later-boot cleanup | External-only operation; current Host is not restarted and old pages may still need refresh |
 | Guardian | Session start arms external recovery; Host, official Loader, and claimed-link integrity failures use exact attribution and quarantine | Recovery does not prove render, visual, or functional correctness |
 | Harness Update Assistant | A managed shell may inspect read-only `dshx update plan`; `prepare`, `verify`, `apply`, and `rollback` stay outside DSH | Candidate verified, locally applied, live runtime accepted, and production activated are different states |
 
-## Why there are seven tools
+## Why the eighth tool is bounded
+
+The approved eighth tool is `dshx_hot_reload`, not a Harness update or process command. It accepts a single claimed plugin id; the bridge derives Host/profile/port and requires the DSHX bounded-same-pid-server-hot-reload capability. Same-PID module and cleanup evidence advances delivery only to functional verification. Unknown or unsupported targets remain pending without restart authority.
 
 DSHX v0.7.2 adds one bounded tool because whole-plugin teardown previously let a
 Creator Agent delete source/profile links before removing the live watched row.
@@ -34,7 +36,7 @@ Creator Agent delete source/profile links before removing the live watched row.
 process control. The transactional Harness Update Assistant still does not widen
 Creator Bridge v2: Harness replacement and rollback can change the process that
 owns the current session, so they remain external-supervisor operations. Adding
-an `update` bridge tool as an eighth tool would erase that authority boundary. Read-only
+an `update` bridge tool would erase that authority boundary. Read-only
 `dshx update plan` is permitted by DSHX's managed-shell gate and is documented in
 the preset skill as inventory only.
 DSHX v0.7.3's external bundle transaction likewise does not widen the bridge:
@@ -77,16 +79,11 @@ VISUAL_BEHAVIOR_VERIFIED
 
 ## Upgrade activation
 
-Moving from Creator Mode+ 0.3.0 to 0.3.1 changed the server bridge runtime by
-adding safe removal and the preset-scoped bash guard, so that older jump still
-requires one controlled external `server`-branch restart. Moving from 0.3.1 to
-0.3.3 tightens the server compatibility preflight to DSHX 0.7.4 and refreshes
-the managed skill without changing the seven-tool surface or preset composition.
-Run the installer with `--upgrade` outside the Agent session. The current Host
-may remain on its boot-loaded bridge until the next normal App reopen; unchanged
-composition bytes and filesystem stamp do not justify a restart alone.
-Version 0.3.4 raises the preflight to DSHX 0.7.5 so the non-atomic 0.7.4
-implementation is no longer accepted; the seven tools and bridge v2 are unchanged.
-It also changes the server bridge to obtain official Connection authentication.
-For an already-loaded older bridge, use the server activation plan and a normal
-authorized launcher restart; an unchanged preset stamp is not server-module HMR.
+Server changes across these versions need live activation evidence, not a blanket
+restart instruction. A server plan with `hostRestart: not-decided` keeps delivery
+at `ACTIVATION_DECISION_REQUIRED`. It does not authorize process control.
+Run the installer with `--upgrade` outside the Agent session; unchanged preset
+composition bytes retain their stamp. Root Loader module HMR and preset-private
+bridge replacement are distinct scopes and need separate proof. A module or
+manifest receipt still requires exercising the changed feature. Use launcher
+handoff only after an evidence-backed and authorized restart decision.

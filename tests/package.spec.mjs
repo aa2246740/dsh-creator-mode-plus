@@ -12,6 +12,27 @@ const root = join(import.meta.dirname, '..')
 const read = path => readFileSync(join(root, path), 'utf8')
 
 describe('Creator Mode+ 0.3 package contract', () => {
+  it('advertises all eight fixed tools and bounded same-PID hot reload in preset metadata', () => {
+    const preset = read('preset/preset.yml')
+    assert.match(preset, /八工具固定桥/)
+    assert.match(preset, /受限同 PID 服务器模块热重载/)
+    assert.doesNotMatch(preset, /七工具固定桥/)
+  })
+
+  it('does not teach agents to convert missing server HMR evidence into a restart', () => {
+    const paths = ['README.md', 'README.en.md', 'docs/bridge-contract.md',
+      'docs/dshx-v0.7-alignment.md', 'preset/skills/creator-mode-plus/SKILL.md']
+    for (const path of paths) {
+      const source = read(path)
+      assert.doesNotMatch(source, /because the profile changed|A profile dependency is a manifest change|因为加了 profile 依赖|still (?:needs|requires) one controlled/i, path)
+    }
+    const skill = read('preset/skills/creator-mode-plus/SKILL.md')
+    assert.match(skill, /ACTIVATION_DECISION_REQUIRED/)
+    assert.match(skill, /not that a restart is required/)
+    assert.match(skill, /Root Loader module replacement does not prove preset-private/)
+    assert.doesNotMatch(skill, /`manifest` or `server`:/)
+  })
+
   it('publishes the complete DSHX v0.7 contract and portable DSHX manifest', () => {
     const metadata = JSON.parse(read('package.json'))
     const manifest = read('dshx.yml')
@@ -33,6 +54,7 @@ describe('Creator Mode+ 0.3 package contract', () => {
       'dshx_activation_plan',
       'dshx_activate_new_client',
       'dshx_remove_plugin',
+      'dshx_hot_reload',
       'dshx_status',
     ])
     assert.match(manifest, /^id: dsh-creator-mode-plus$/m)
@@ -57,7 +79,8 @@ describe('Creator Mode+ 0.3 package contract', () => {
     const skill = read('preset/skills/creator-mode-plus/SKILL.md')
     assert.match(skill, /update plan → prepare → verify → apply/)
     assert.match(skill, /prepare.*verify.*apply.*rollback.*external DSHX supervisor/s)
-    assert.match(skill, /seven fixed model tools/)
+    assert.match(skill, /eight fixed model tools/)
+    assert.match(skill, /dshx_hot_reload/)
     assert.match(skill, /dshx_remove_plugin/)
     assert.match(skill, /dshx plugin remove/)
     assert.match(skill, /detached-orphan-symlink/)
@@ -69,5 +92,17 @@ describe('Creator Mode+ 0.3 package contract', () => {
     assert.match(alignment, /DSHX v0\.7\.3/)
     assert.match(alignment, /safe profile bundle removal|external bundle/i)
     assert.match(alignment, /seven tools|dshx_remove_plugin/i)
+  })
+
+  it('declares only the exact server module set for external self-upgrade', () => {
+    const files = [...read('dshx.yml').matchAll(/^    - (.+)$/gm)].map(match => match[1])
+    assert.deepEqual(files, ['src/index.js', 'src/runner.js', 'src/delivery.js', 'src/compatibility.js', 'src/safety.js'])
+    for (const file of files) {
+      assert.doesNotThrow(() => read(file))
+      for (const match of read(file).matchAll(/from ['"]\.\/([^'"]+)['"]/g)) {
+        assert(files.includes(`src/${match[1]}`), `${file} imports an undeclared server artifact`)
+      }
+    }
+    assert(!files.includes('src/client.js'))
   })
 })

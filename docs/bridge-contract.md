@@ -1,6 +1,6 @@
 # Creator Bridge v2
 
-Creator Mode+ is a user preset plus one DSH plugin. It brings seven fixed DSHX
+Creator Mode+ is a user preset plus one DSH plugin. It brings eight fixed DSHX
 operations into an ordinary DSH session without giving that session control of
 its Host process. Stable DSHX `>=0.7.5 <0.8.0` supplies atomic single-Home Host
 discovery/attachment, temporary-Home cold-boot verification, workspace-aware
@@ -12,7 +12,7 @@ activation contract, and the transactional Harness Update Assistant.
 
 | Role | Authority |
 |---|---|
-| Creator Mode+ session | Claim one plugin, create files, check contracts, plan activation, perform bounded new-client activation/removal, read status |
+| Creator Mode+ session | Claim one plugin, create files, check contracts, plan activation, perform bounded new-client activation/removal or server hot replacement, read status |
 | External DSHX Guardian | Monitor the Host, journal activation, quarantine a culprit or missing claimed link, recover Host/official Loader failures, open a crash-loop fuse, persist incidents |
 | User | Approve normal impactful activation and decide what to do after a fused or ambiguous incident |
 
@@ -23,14 +23,14 @@ arbitrary argv/path/profile/port, or Host start/stop/restart operation.
 The preset still inherits Standard's coding shell, but that shell is not the
 external supervisor. RC8 and RC2 inject `DSH_SHELL=1` into every model shell
 call; DSHX v0.7 rejects raw mutation/process commands at its CLI boundary. This
-keeps an old or mistaken Creator session from bypassing the seven fixed tools with
+keeps an old or mistaken Creator session from bypassing the eight fixed tools with
 `dshx start`, `restart`, `activate-new-client`, or profile shipping commands.
 The only Harness-update exception is read-only `dshx update plan`; the mutating
 update stages remain outside the Host.
 
 ## Fixed argv contract
 
-The seven model-facing tools map to exactly these child CLI shapes:
+The eight model-facing tools map to exactly these child CLI shapes:
 
 | Tool | Allowed child argv |
 |---|---|
@@ -41,6 +41,13 @@ The seven model-facing tools map to exactly these child CLI shapes:
 | `dshx_activation_plan` | `activation-plan <plugin-id> --change <declared-branch>` |
 | `dshx_activate_new_client` | `activate-new-client <plugin-id> --profile web --port <Host-derived-port>` |
 | `dshx_remove_plugin` | `creator remove <plugin-id>` |
+| `dshx_hot_reload` | `hot-reload <plugin-id> --profile web --port <Host-derived-port> --json` |
+
+The approved eighth operation performs bounded official module HMR, not Host restart. The bridge supplies JSON output and trusted session/Host context, refreshes the claim first, and accepts no model-controlled path, profile, port, argv or shell. A successful module receipt remains pending functional verification; a failed attempt cannot reuse an earlier successful replacement receipt. The fixed tool accepts only root-scope receipts. Explicit preset-private replacement stays external and requires its own runtime acceptance, never a ninth tool or managed-shell bypass.
+
+Multi-file server implementations declare exact package-relative `hotReload.artifacts` in `dshx.yml`. The receipt binds before/after hashes for that complete set and its exact watch roots. This matters because an entry-only reload can leave an imported helper cached. Creator+ declares its five server files, excluding its browser client; a self-upgrade must replace those files together and prove that the existing session uses the new tools.
+
+The bridge appends a fixed `--json` output flag to activation-plan (not model input). Its session-local delivery journal stores plan/check metadata and validated hot-replacement receipts under the selected Harness `.dshx/creator-plus/deliveries`; credentials and conversation content are excluded. Status and session recovery expose pending delivery across normal launcher restarts. A new Host does not mark the feature accepted, and old module proof is labeled historical when its PID no longer matches. Status uses Connection authentication for same-origin manifest and bundle proof; actual behavior remains a separate required check.
 
 Session lifecycle may additionally call fixed internal watch, release, recovery
 pull, and recovery acknowledgement argv. Tests must execute every row and every
@@ -48,19 +55,19 @@ internal lifecycle shape through the allowlist; registering a tool name does not
 prove its child argv is reachable.
 
 DSHX v0.7.2 adds `dshx_remove_plugin` as the seventh Creator tool. `update prepare`, `verify`,
-`apply`, and `rollback` do not become an eighth tool because they can replace or restore the process that owns the session,
+`apply`, and `rollback` remain outside the bridge because they can replace or restore the process that owns the session,
 so the fixed bridge cannot expose them. Read-only `update plan` is available only
 through DSHX's managed-shell gate and remains inventory rather than activation.
 DSHX v0.7.3 adds the external `dshx plugin remove` transaction for boot-captured
 profile bundles. It also stays outside the fixed bridge: it requires current
 profile/port authority and may own a tombstone across App boots, so Creator
-sessions may hand off to it but never execute it as an eighth tool or raw shell.
+sessions may hand off to it but never execute it as a bridge tool or raw shell.
 
 DSHX v0.7.4 makes App, direct CLI, and dshx launchers for one long-lived Web
 Host per real `DSH_HOME`. `start` attaches to one existing Host, while duplicate
 or unknown Host/Home evidence fails closed. `verify-boot` uses a temporary Home,
 always tears it down, and rejects `--keep`. These remain external-supervisor
-rules and do not add an eighth Creator tool.
+rules and do not grant process control to Creator.
 
 DSHX v0.7.5 serializes same-Home start, restart, apply, and rollback across
 Harness checkouts; binds PID, OS start time, Home, profile, and root; and
@@ -332,16 +339,13 @@ independent: `SOURCE_BUILT`, `ARTIFACT_SYNCED`, `NEXT_BOOT_REGISTERED`,
 `PRESET_ROSTER_VISIBLE`, `PRESET_SESSION_ACTIVE`, `HOST_TREE_ACTIVE`,
 `CLIENT_MANIFEST_PRESENT`, `CLIENT_LOADED`, and `VISUAL_BEHAVIOR_VERIFIED`.
 
-Upgrading an already-loaded 0.3.0 package to 0.3.1 adds safe removal and the
-preset-scoped bash guard to the server bridge module, so that older jump still
-requires one controlled `server`-branch restart. Version 0.3.3 adds no bridge
-tool; it tightens compatibility preflight to DSHX 0.7.4 and adds single-Home
-Host ownership plus isolated verification to the skill. A running Host keeps the bridge loaded at boot and
-may adopt the stricter preflight on its next normal App reopen. Managed upgrade
-preserves an unchanged `agent.cordis.yml` stamp and does not create a generation
-or justify an immediate restart merely for skill/metadata refresh. Version
-0.3.4 requires DSHX 0.7.5's identity-bound operation gates without adding a
-bridge tool.
-Its Connection-authentication change is a server-module change: an older loaded
-bridge needs the authorized server activation branch, independently of whether
-the preset composition stamp changes.
+Changes to safe removal, the bash guard, Connection authentication or preflight
+are server changes and need live activation evidence. They are not automatically
+restart-required. An unproved server activation remains
+`ACTIVATION_DECISION_REQUIRED`; a launcher handoff supplies identity, not approval.
+Official HMR of a root Loader entry does not prove replacement of a preset-private
+bridge. Keep that scope distinction explicit and verify the actual fixed-tool
+behavior before claiming delivery. Managed upgrade preserves an unchanged
+`agent.cordis.yml` stamp: skill/metadata refresh alone neither creates a generation
+nor justifies an immediate restart. The approved eighth tool must traverse the
+same allowlist and provenance gates as the existing operations before release.

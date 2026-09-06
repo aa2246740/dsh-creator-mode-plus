@@ -18,6 +18,7 @@ export const DSHX_CONTRACT = Object.freeze({
     'external-guardian-recovery',
     'proactive-plugin-integrity-quarantine',
     'same-pid-activation-matrix',
+    'bounded-same-pid-server-hot-reload',
     'single-home-web-host',
     'isolated-verify-home',
     'transactional-harness-update-assistant',
@@ -36,6 +37,7 @@ export const CREATOR_MODEL_TOOLS = Object.freeze([
   'dshx_activation_plan',
   'dshx_activate_new_client',
   'dshx_remove_plugin',
+  'dshx_hot_reload',
   'dshx_status',
 ])
 
@@ -46,6 +48,7 @@ export const DSHX_SURFACE_MARKERS = Object.freeze({
     "case 'status'",
     "case 'activation-plan'",
     "case 'activate-new-client'",
+    "case 'hot-reload'",
     "case 'creator'",
     "case 'plugin'",
     "case 'update'",
@@ -63,6 +66,11 @@ export const DSHX_SURFACE_MARKERS = Object.freeze({
     'recoverCreatorClientFailure(root, failure)',
   ]),
   'src/commands/new-client.ts': Object.freeze(['SOURCE_BUILT', 'CLIENT_MANIFEST_PRESENT']),
+  'src/commands/hot-reload.ts': Object.freeze([
+    'hotReloadPlugin',
+    'HOST_MODULE_RELOADED',
+    'behaviorVerified: false',
+  ]),
   'src/commands/plugin.ts': Object.freeze([
     "action !== 'remove'",
     'HOST_TREE_INACTIVE',
@@ -97,6 +105,29 @@ export const DSHX_SURFACE_MARKERS = Object.freeze({
     'window.__DSH_BOOT__',
     'globalThis["__DSH_BOOT__"]',
     'no supported __DSH_BOOT__ manifest assignment',
+  ]),
+  'src/internal/hot-reload.ts': Object.freeze([
+    'export async function hotReloadPlugin',
+    'artifactHashes',
+    'targetScope',
+    'bytesUnchanged: true',
+    'cleanupProved: true',
+  ]),
+  'src/internal/hot-reload-journal.ts': Object.freeze([
+    "kind: 'server-hot-reload'",
+    'automaticRecovery: false',
+    'writeHotReloadJournal',
+  ]),
+  'src/runtime/hot-reload-observer.mjs': Object.freeze([
+    "ctx.on('hmr/reload'",
+    "publish('MODULE_RELOADED'",
+    'targetGenerationStates',
+    "publish('OBSERVER_DISPOSED'",
+  ]),
+  'src/runtime/hot-reload-hmr-audit.mjs': Object.freeze([
+    'export async function auditActiveHmr',
+    'could not resolve the official HMR runtime',
+    'another watcher overlapping targetFiles',
   ]),
   'src/internal/host-discovery.ts': Object.freeze([
     'discoverWebHosts',

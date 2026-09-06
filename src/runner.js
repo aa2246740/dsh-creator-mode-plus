@@ -13,6 +13,7 @@ import {
   inspectDshxCompatibility,
 } from './compatibility.js'
 import { forgetCreatorClaim, rememberCreatorClaim } from './safety.js'
+import { deliveryStatus, readDelivery, recordDelivery, verifyDeliveryClient } from './delivery.js'
 
 export {
   CREATOR_BRIDGE_VERSION,
@@ -64,6 +65,15 @@ function isAllowedArgs(args) {
       && /^\d{1,5}$/.test(args[5])
       && Number(args[5]) >= 1
       && Number(args[5]) <= 65_535
+  }
+  if (args.length === 7 && args[0] === 'hot-reload' && PLUGIN_ID.test(args[1])) {
+    return args[2] === '--profile'
+      && args[3] === 'web'
+      && args[4] === '--port'
+      && /^\d{1,5}$/.test(args[5])
+      && Number(args[5]) >= 1
+      && Number(args[5]) <= 65_535
+      && args[6] === '--json'
   }
   return false
 }
@@ -214,12 +224,12 @@ function appendBounded(current, chunk) {
 }
 
 /** Execute one allowlisted dshx operation with structured session provenance. */
-export function runDshx(args, exec, options = {}) {
+function executeDshx(args, exec, options = {}) {
   if (!Array.isArray(args) || !args.every(value => typeof value === 'string') || !isAllowedArgs(args)) {
     throw new Error('dsh-creator-mode-plus: refusing an operation outside bridge v2')
   }
   const runtime = resolveDshxRuntime(options)
-  const argv = ['--import', runtime.loader, runtime.cli, ...args]
+  const argv = ['--import', runtime.loader, runtime.cli, ...args, ...args[0] === 'activation-plan' ? ['--json'] : [], '--harness', runtime.root]
   const spawnProcess = options.spawnProcess ?? spawn
   const hostPort = options.hostPort ?? currentWebPort()
   const creatorContext = contextFromExecution(exec, hostPort)
@@ -255,11 +265,39 @@ export function runDshx(args, exec, options = {}) {
         creatorBridgeVersion: runtime.bridgeVersion,
         dshxContract: runtime.contractId,
         dshxCapabilities: runtime.capabilities,
-        ...args[0] === 'activate-new-client'
+        ...((args[0] === 'activate-new-client' || args[0] === 'hot-reload')
           ? { hostPid: process.pid, hostPort: Number(args[5]) }
-          : {},
+          : {}),
       })
     })
+  })
+}
+
+export function runDshx(args, exec, options = {}) {
+  if (!Array.isArray(args) || !args.every(value => typeof value === 'string') || !isAllowedArgs(args)) {
+    throw new Error('dsh-creator-mode-plus: refusing an operation outside bridge v2')
+  }
+  let root
+  return Promise.resolve().then(() => executeDshx(args, exec, options)).then(async result => {
+    root = resolveHarnessRoot(options)
+    // No receipt is inferred from an empty/malformed subprocess response.
+    if ((result.stdout || args[0] === 'hot-reload') && ['activation-plan', 'check', 'hot-reload'].includes(args[0])) {
+      recordDelivery(root, args, result, exec.agent.id)
+    }
+    const port = options.hostPort ?? currentWebPort()
+    const receipt = readDelivery(root, exec.agent.id)
+    const delivery = deliveryStatus(receipt, { port })
+    if (args[0] === 'status' && delivery?.state === 'RUNTIME_VERIFICATION_REQUIRED') {
+      try { delivery.runtimeProof = await verifyDeliveryClient(receipt, port, options.getWebStartupUrl?.(port)) }
+      catch { delivery.runtimeProof = { state: 'RUNTIME_PROOF_FAILED', behavior: 'UNVERIFIED' } }
+    }
+    return delivery ? { ...result, delivery } : result
+  }).catch((error) => {
+    if (args[0] === 'hot-reload') {
+      root ??= resolveHarnessRoot(options)
+      recordDelivery(root, args, { exitCode: 1, stdout: '', stderr: '' }, exec.agent.id)
+    }
+    throw error
   })
 }
 
@@ -311,8 +349,27 @@ export function runClientFailureDshx(report, options = {}) {
 
 /** Refresh the session/plugin lease before every named plugin operation. */
 export async function runClaimedDshx(pluginId, args, exec, options = {}) {
-  const claim = await runDshx(['creator', 'claim', pluginId], exec, options)
-  if (claim.exitCode !== 0) return claim
+  let claim
+  try {
+    claim = await runDshx(['creator', 'claim', pluginId], exec, options)
+  } catch (error) {
+    if (args[0] === 'hot-reload') {
+      recordDelivery(resolveHarnessRoot(options), args, { exitCode: 1, stdout: '', stderr: '' }, exec.agent.id)
+    }
+    throw error
+  }
+  if (claim.exitCode !== 0) {
+    if (args[0] === 'hot-reload') {
+      const root = resolveHarnessRoot(options)
+      recordDelivery(root, args, claim, exec.agent.id)
+      const { delivery: _staleDelivery, ...withoutStaleDelivery } = claim
+      const delivery = deliveryStatus(readDelivery(root, exec.agent.id), {
+        port: options.hostPort ?? currentWebPort(),
+      })
+      return delivery ? { ...withoutStaleDelivery, delivery } : withoutStaleDelivery
+    }
+    return claim
+  }
   rememberCreatorClaim(exec, pluginId)
   const result = await runDshx(args, exec, options)
   return { ...result, claim: { sessionId: exec.agent.id, pluginId } }
@@ -363,6 +420,9 @@ export async function deliverCreatorRecovery(agent, options = {}) {
     const ack = await run(['creator', 'recovery', 'ack', incident.id, '--json'], exec, options)
     if (ack.exitCode !== 0) throw new Error(ack.stderr || ack.stdout || `Creator+ recovery ack failed for ${incident.id}`)
   }
+  const root = options.harnessRoot ?? (options.runDshx ? undefined : resolveHarnessRoot(options))
+  const delivery = root ? deliveryStatus(readDelivery(root, agent.id), { port: options.hostPort ?? currentWebPort() }) : undefined
+  if (delivery) agent.steer(pluginMessage(`[Creator+ pending delivery]\n${JSON.stringify(delivery)}\nContinue verification of this existing plugin; do not report delivery complete before its requested behavior works.`))
   return incidents
 }
 
