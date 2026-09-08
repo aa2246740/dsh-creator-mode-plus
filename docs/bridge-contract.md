@@ -372,3 +372,18 @@ This works with official CLI, App, and DSHX launchers. Without Creator or a
 DSHX-owned launcher, the user/launcher must privately bind the official startup
 URL once per Host lifetime. Never infer credentials from an open port or request
 a token in a conversation. Expired or changed-Host handoffs need refresh.
+
+
+## Installation routing and candidate scope
+
+Creator can install supported Web plugins through the fixed new-client operation;
+the managed shell does not need a `dsh` executable. Existing-plugin branch trials
+follow the bundled `existing-plugin-trials.md`: candidate preparation is separate
+from promotion to the claimed target. No arbitrary source-retargeting operation
+is added. Explicitly preserving the installed directory requires a scoped
+external handoff, not an inferred Host restart.
+
+Delivery output names the exact `sourcePath` and limits its evidence to that
+path. `SOURCE_BUILD_REQUIRED` requests a fixed check of that target; undecided
+server plans point to bounded hot reload only when unrelated plan gates passed.
+Host mismatches and failed gates cannot receive runtime-verification guidance.

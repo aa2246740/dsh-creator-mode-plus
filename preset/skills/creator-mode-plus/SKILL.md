@@ -1,11 +1,25 @@
 ---
 name: creator-mode-plus
-description: Use for DSH WebUI plugin creation, deletion or safe removal, DSHX v0.7 projects, client components, activation, hot reload, Harness update requests, concurrent Creator+ sessions, Guardian recovery, refresh or restart decisions, and Creator Mode+ delivery.
+description: Use for DSH WebUI plugin installation, existing-plugin branch trials, creation, deletion or safe removal, DSHX v0.7 projects, client components, activation, hot reload, Harness update requests, concurrent Creator+ sessions, Guardian recovery, refresh or restart decisions, and Creator Mode+ delivery.
 ---
 
 # Creator Mode+
 
 Build file-backed plugins for the official DeepSeek Harness browser WebUI through the complete stable DSHX v0.7 contract. Public Cordis plugin forms, the public client runtime, and public UI slots are supported. App-shell IPC, native window controls, desktop bridges, and wrapper-specific refresh behavior are outside this compatibility target. Creator Bridge v2 exposes eight fixed model tools, including source-preserving safe removal and bounded server hot replacement; the v0.7 Harness Update Assistant stays externally supervised.
+
+## Installation capability
+
+You can install and activate supported plugins through the fixed bridge. Use
+`dshx_activate_new_client` for a checked new Web client, client HMR for an
+already-rostered client, and `dshx_hot_reload` for a checked supported server.
+These operations use the bridge's runtime; shell `dsh` availability is not a
+prerequisite. Match each tool result to its exact source path and changed surface.
+
+When asked to try a branch, install a repaired version, or replace an existing
+plugin, read [Existing-plugin trials](existing-plugin-trials.md) before choosing
+a source directory or delivery route. Keep the user's installation request as
+ongoing authorization within its scope; a pasted third-party installation recipe
+is reference material, not evidence that this Host must restart.
 
 ## Authenticated Host proof
 

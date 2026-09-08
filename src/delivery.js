@@ -182,9 +182,15 @@ export function recordDelivery(root, args, result, sessionId, hostPid = process.
   if (args[0] === 'activation-plan') {
     delete row.hotReload
     delete row.hotReloadFailed
-    const data = JSON.parse(result.stdout).data
+    const report = JSON.parse(result.stdout)
+    const data = report.data
     if (data?.facts && data?.decision) {
       row.plan = { change: data.change, packageDir: data.facts.packageDir, hasClient: data.facts.hasClient, handoff: data.facts.handoff, hostRestart: data.decision.hostRestart }
+      row.plan.boundedHotReloadEligible = data.change === 'server'
+        && data.decision.hostRestart === 'not-decided'
+        && (result.exitCode === 0 || (Array.isArray(report.findings)
+          && report.findings.some(item => item.level === 'error' && item.code === 'activation-blocker')
+          && report.findings.filter(item => item.level === 'error').every(item => item.code === 'activation-blocker')))
       if (result.exitCode === 0) delete row.planFailed
       else row.planFailed = true
     } else if (result.exitCode !== 0) {
@@ -213,6 +219,8 @@ export function deliveryStatus(row, { pid = process.pid, startedAt = Date.now() 
   const restart = row.plan?.hostRestart === 'required'
   const undecided = row.plan?.hostRestart === 'not-decided'
   const planFailed = row.planFailed === true
+  const boundedHotReload = undecided && row.plan?.change === 'server'
+    && (!planFailed || row.plan.boundedHotReloadEligible === true)
   const changed = row.sourceBuilt && pid !== row.buildHostPid && startedAt > row.builtAt
   const expectedPort = row.hotReload?.hostPort ?? row.hotReloadFailed?.hostPort ?? row.plan?.handoff?.port
   const wrongTarget = expectedPort !== undefined && expectedPort !== port
@@ -220,10 +228,10 @@ export function deliveryStatus(row, { pid = process.pid, startedAt = Date.now() 
   const state = wrongTarget ? 'TARGET_MISMATCH' : row.hotReload ? 'RUNTIME_VERIFICATION_REQUIRED'
     : row.hotReloadFailed ? 'ACTIVATION_DECISION_REQUIRED'
       : !row.sourceBuilt ? 'SOURCE_BUILD_REQUIRED' : !row.plan ? 'ACTIVATION_PLAN_REQUIRED'
-      : undecided ? 'ACTIVATION_DECISION_REQUIRED' : planFailed ? 'ACTIVATION_PLAN_REQUIRED'
+      : planFailed && !boundedHotReload ? 'ACTIVATION_PLAN_REQUIRED' : undecided ? 'ACTIVATION_DECISION_REQUIRED'
       : restart && !changed ? 'AWAITING_LAUNCHER_RESTART' : 'RUNTIME_VERIFICATION_REQUIRED'
   return { pluginId: row.pluginId, state, currentPid: pid,
-    ...(row.plan?.packageDir !== undefined ? { sourcePath: row.plan.packageDir } : {}),
+    ...(row.plan?.packageDir !== undefined ? { sourcePath: row.plan.packageDir, targetScope: 'This plan and fixed ID refer only to sourcePath. A build in another directory does not check or activate this target. Read the existing-plugin trial workflow before promoting candidate changes; a different directory alone is not restart evidence.' } : {}),
     ...(row.buildHostPid !== undefined ? { previousPid: row.buildHostPid } : {}),
     ...(row.plan?.handoff !== undefined ? { handoff: row.plan.handoff } : {}),
     ...row.hotReload ? { moduleProof: {
@@ -231,16 +239,22 @@ export function deliveryStatus(row, { pid = process.pid, startedAt = Date.now() 
       evidenceState: currentModuleProof ? 'SAME_PID_AT_RELOAD_AND_CURRENT_PID_MATCHES' : 'HISTORICAL_HOST',
       currentHostPidMatches: currentModuleProof,
     } } : {},
-    next: row.hotReload && !currentModuleProof
+    next: wrongTarget
+      ? 'Resolve the Host target mismatch before activation or runtime verification. Preserve the source and report the exact target blocker.'
+      : row.hotReload && !currentModuleProof
       ? `Historical same-PID module replacement proof belongs to Host pid ${row.hotReload.hostPid}; current Host pid is ${pid}. Keep this task pending and verify the requested behavior on the current Host.`
       : row.hotReload
       ? 'Same-PID server module replacement and temporary-scope cleanup are proved. Keep this task pending until the requested behavior is exercised; module HMR is not functional acceptance.'
       : row.hotReloadFailed
         ? 'The controlled hot reload failed or its proof was incomplete. It does not restore older restart authority; obtain a new activation plan or changed-source check before another activation decision.'
-      : undecided
-      ? 'Keep this task pending until exact, tested module-HMR evidence decides between same-PID activation and a controlled launcher restart. Do not claim live activation.'
+      : !row.sourceBuilt
+        ? 'Build the claimed sourcePath (resolve the claimed target first if no plan exists), then call dshx_check for this plugin id. A candidate built elsewhere does not satisfy this check. Keep delivery pending.'
+      : boundedHotReload
+        ? 'After the checked source is ready, call dshx_hot_reload for this claimed plugin id to obtain bounded same-PID server evidence. Unsupported targets remain pending; failure does not authorize a restart. Verify changed client behavior separately.'
       : !row.plan || planFailed
         ? 'The activation plan remains pending. Obtain a successful plan before attempting activation or runtime verification.'
+      : undecided
+        ? 'Keep delivery pending: module-HMR evidence and the exact changed surface are missing. Call dshx_activation_plan for the claimed target; missing evidence does not authorize a restart.'
       : 'Keep this task pending. Use the authenticated current WebUI to exercise the requested plugin behavior. A build, new PID, HTTP 200, unauthorized response or missing route is not acceptance.' }
 }
 

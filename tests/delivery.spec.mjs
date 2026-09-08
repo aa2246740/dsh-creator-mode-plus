@@ -178,7 +178,7 @@ test('a failed undecided plan replaces a stale required receipt at the recordDel
   recordDelivery(root,['activation-plan','demo'],{exitCode:0,stdout:JSON.stringify(required)},'session-a',10)
   recordDelivery(root,['check','demo'],{exitCode:0},'session-a',10)
 
-  const undecided={data:{change:'server',facts:{packageDir:plugin,hasClient:false,handoff:{port:43127,launcher:'app'}},decision:{hostRestart:'not-decided'}}}
+  const undecided={findings:[{level:'error',code:'activation-blocker'}],data:{change:'server',facts:{packageDir:plugin,hasClient:false,handoff:{port:43127,launcher:'app'}},decision:{hostRestart:'not-decided'}}}
   recordDelivery(root,['activation-plan','demo'],{exitCode:1,stdout:JSON.stringify(undecided)},'session-a',11)
 
   const row=readDelivery(root,'session-a')
