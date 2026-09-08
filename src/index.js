@@ -325,6 +325,18 @@ export function apply(ctx) {
   })
 
   ctx.tools.register({
+    name: 'dshx_browser_open',
+    description: "Open the current authenticated DSH WebUI through this session's externally approved browser adapter. No URL, path, credential or command input. BROWSER_AUTHENTICATED proves browser access only; continue feature verification without a Host restart.",
+    parameters: { type: 'object', properties: {}, additionalProperties: false },
+    timeoutMs: 60_000,
+    output,
+    execute(_args, exec) {
+      return runDshx(['browser', 'open', '--json'], exec, { ...authOptions, hostPort: currentWebPort() })
+    },
+    presentCall: () => ({ card: 'generic', title: 'Open authenticated DSH browser', kind: 'edit', rawInput: {} }),
+  })
+
+  ctx.tools.register({
     name: 'dshx_status',
     description: 'Read the external DSHX v0.7 supervisor and Web Host status. The bridge also reports its pinned contract and capabilities; it never starts, stops, restarts, or updates DSH.',
     parameters: { type: 'object', properties: {}, additionalProperties: false },

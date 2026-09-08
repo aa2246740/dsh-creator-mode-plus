@@ -5,7 +5,7 @@ description: Use for DSH WebUI plugin installation, existing-plugin branch trial
 
 # Creator Mode+
 
-Build file-backed plugins for the official DeepSeek Harness browser WebUI through the complete stable DSHX v0.7 contract. Public Cordis plugin forms, the public client runtime, and public UI slots are supported. App-shell IPC, native window controls, desktop bridges, and wrapper-specific refresh behavior are outside this compatibility target. Creator Bridge v2 exposes eight fixed model tools, including source-preserving safe removal and bounded server hot replacement; the v0.7 Harness Update Assistant stays externally supervised.
+Build file-backed plugins for the official DeepSeek Harness browser WebUI through the complete stable DSHX v0.7 contract. Public Cordis plugin forms, the public client runtime, and public UI slots are supported. App-shell IPC, native window controls, desktop bridges, and wrapper-specific refresh behavior are outside this compatibility target. Creator Bridge v2 exposes nine fixed model tools, including source-preserving safe removal and bounded server hot replacement; the v0.7 Harness Update Assistant stays externally supervised.
 
 ## Installation capability
 
@@ -58,7 +58,7 @@ When the user asks to remove, uninstall, or delete a whole plugin, call `dshx_re
 
 Completion requires exit code `0`, `HOST_TREE_INACTIVE`, and `PROFILE_DEPENDENCY_REMOVED`. The tool removes or disables the watched row first, proves absence in the same Host PID, uses the official profile remover while its dependency exists, proves dependency/link absence, and detaches only target-verified plugin-owned symlinks. RC8 may remove the dependency while leaving its `node_modules` symlink: `detached-orphan-symlink` means DSHX proved the residual entry was a symlink targeting this claim's Harness/source path before unlinking it. A directory or outside target fails closed. A partial attempt resumes from durable quarantine without rerunning package removal for an already-absent dependency. The source directory remains preserved; `SOURCE_PRESERVED` is reported only when observed. This operation never restarts DSH or controls the browser.
 
-This fixed tool owns only watched-row plugins. If it reports boot-captured bundle evidence or no bounded watched row, stop the Creator branch and hand the operation to the external supervisor command `dshx plugin remove <package> --profile web --port <current-port>`. That command proves same-PID Loader absence before official profile removal and may retain one temporary disable until a later normal App boot. Creator Mode+ never runs that external command through bash or adds an eighth tool.
+This fixed tool owns only watched-row plugins. If it reports boot-captured bundle evidence or no bounded watched row, stop the Creator branch and hand the operation to the external supervisor command `dshx plugin remove <package> --profile web --port <current-port>`. That command proves same-PID Loader absence before official profile removal and may retain one temporary disable until a later normal App boot. Creator Mode+ never runs that external command through bash or exposes bundle removal.
 
 Deleting or renaming an ordinary file/component inside the claimed source remains normal editing. The protected boundary is teardown of the claimed plugin root or its DSH/Harness registration. If raw teardown is denied, do not retry through another shell or script; call `dshx_remove_plugin`. If Guardian reports `plugin-integrity-failed`, the registration has already been quarantined before cold boot: inspect preserved source and incident evidence, then use the fixed tool or repair the plugin.
 
@@ -90,10 +90,10 @@ undo quarantine and repeat unchanged bytes.
   per `DSH_HOME`. Creator Mode+ never starts a second port. Duplicate or unknown
   Host/Home visibility stops the branch; cold-boot verification uses a temporary
   Home and rejects `--keep`.
-- The inherited bash tool is not an external supervisor. Raw mutating `dshx` commands from a DSH-managed shell are rejected by DSHX v0.7; read-only `update plan` is the sole Harness-update exception. Use only the eight fixed tools for plugin mutation and never unset managed DSH environment markers to bypass that boundary.
+- The inherited bash tool is not an external supervisor. Raw mutating `dshx` commands from a DSH-managed shell are rejected by DSHX v0.7; read-only `update plan` is the sole Harness-update exception. Use only the nine fixed tools for plugin mutation and never unset managed DSH environment markers to bypass that boundary.
 - `dshx_hot_reload` accepts only one claimed plugin id. The bridge supplies Host/profile/port/session identity and never exposes process control. A failed attempt invalidates its previous module-activation receipt; successful replacement still requires functional verification.
 - For a server split across multiple source/build files, declare the exact package-relative files in `dshx.yml` under `hotReload.artifacts` before check. Include the runtime entry and changed server helpers; never use directory/glob watches. Entry replacement alone can leave an old helper loaded. Require equal before/after hashes for the complete declared set, then exercise the behavior that uses the helper.
-- The fixed tool is root-scope only and refuses Creator+/DSHX self-replacement. An external supervisor owns explicit `--scope preset` upgrades and their separate live proof; this grants no ninth tool or managed-shell exception. Such a replacement affects every mounted fiber of that exact preset module, so it must be verified on the existing session, not substituted with a newly created one.
+- The fixed tool is root-scope only and refuses Creator+/DSHX self-replacement. An external supervisor owns explicit `--scope preset` upgrades and their separate live proof; this grants no self-replacement tool or managed-shell exception. Such a replacement affects every mounted fiber of that exact preset module, so it must be verified on the existing session, not substituted with a newly created one.
 - A matching `0.7.x` string is insufficient if Creator, watched-plugin removal, safe profile-bundle removal, proactive integrity quarantine, Guardian, activation, managed-shell, Update Assistant, or their knowledge contract is missing. The bridge and installer fail before mutation on incomplete surfaces.
 - Guardian is armed for every Creator+ session and may perform one deterministic recovery outside DSH; a second failure inside 30 seconds opens the fuse.
 - Normal launcher exit disarms Guardian. The fixed browser sentry may recover an official Loader `FAILED` entry only after DSHX uniquely attributes and quarantines it; component render exceptions, visual defects, and functional defects remain outside automatic recovery.
@@ -105,6 +105,27 @@ undo quarantine and repeat unchanged bytes.
 - A failed, interrupted, or waiting turn is not a completed AI answer.
 - Client overlays remain click-through, honor `prefers-reduced-motion`, and do not depend on an App shell.
 
+## Open the browser and continue work
+
+When the current Host is ready but the browser shows authentication required,
+call `dshx_browser_open` with no arguments. It uses official Connection input
+and the external supervisor's reviewed adapter snapshot for this exact session.
+After `BROWSER_AUTHENTICATED`, continue the requested UI workflow immediately;
+there is no need to ask the user to run a terminal command or say "continue".
+Browser access is not feature acceptance. A shell process-visibility failure does
+not prove this Host-owned fixed tool is unavailable.
+
+`BROWSER_ADAPTER_REQUIRED` means one-time external adapter configuration remains
+necessary. Report that exact setup gap with the session identity; never install
+an arbitrary adapter through a managed shell. A changed adapter requires external
+review and reconfiguration. Adapter path, URL, profile, port and credentials are
+not model arguments. The raw managed-shell bind/open prohibition still applies.
+
+Use the browser runtime authorized for this task. A generic instruction to finish
+never authorizes another agent's browser or a different workspace. App-shell
+repairs are a separate surface: a browser authentication problem alone does not
+justify changing the App package or requesting another Host restart.
+
 ## Private browser access
 
 RC1 local Web authentication is independent of provider/account login. During
@@ -115,8 +136,9 @@ redacted. An older Connection without authenticatedUrl remains supported and
 must still pass the actual unauthenticated Web proof.
 
 Read `dshx kb cat contracts/browser-access` before browser testing. The managed
-shell may run read-only `dshx browser status`; bind/open belong to the external
-supervisor and add no ninth tool. A missing credential is `WEB_AUTH_REQUIRED`;
+shell may run read-only `dshx browser status`. Use the no-argument fixed
+`dshx_browser_open` to open this session's externally approved browser adapter.
+Adapter configuration and raw bind/open commands remain external-supervisor work. A missing credential is `WEB_AUTH_REQUIRED`;
 an unavailable permitted browser adapter is `BROWSER_ADAPTER_REQUIRED`. Do not
 restart the Host, open a second Host/port, request account login, or switch to
 another agent's browser to resolve either status. The external adapter uses its

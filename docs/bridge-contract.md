@@ -1,6 +1,6 @@
 # Creator Bridge v2
 
-Creator Mode+ is a user preset plus one DSH plugin. It brings eight fixed DSHX
+Creator Mode+ is a user preset plus one DSH plugin. It brings nine fixed DSHX
 operations into an ordinary DSH session without giving that session control of
 its Host process. Stable DSHX `>=0.7.5 <0.8.0` supplies atomic single-Home Host
 discovery/attachment, temporary-Home cold-boot verification, workspace-aware
@@ -23,18 +23,19 @@ arbitrary argv/path/profile/port, or Host start/stop/restart operation.
 The preset still inherits Standard's coding shell, but that shell is not the
 external supervisor. RC8 and RC2 inject `DSH_SHELL=1` into every model shell
 call; DSHX v0.7 rejects raw mutation/process commands at its CLI boundary. This
-keeps an old or mistaken Creator session from bypassing the eight fixed tools with
+keeps an old or mistaken Creator session from bypassing the nine fixed tools with
 `dshx start`, `restart`, `activate-new-client`, or profile shipping commands.
 The only Harness-update exception is read-only `dshx update plan`; the mutating
 update stages remain outside the Host.
 
 ## Fixed argv contract
 
-The eight model-facing tools map to exactly these child CLI shapes:
+The nine model-facing tools map to exactly these child CLI shapes:
 
 | Tool | Allowed child argv |
 |---|---|
 | `dshx_status` | `status` |
+| `dshx_browser_open` | `browser open --json` |
 | `dshx_claim_plugin` | `creator claim <plugin-id>` |
 | `dshx_scaffold` | `creator scaffold <plugin-id> <declared-kind>` |
 | `dshx_check` | `check <plugin-id>` |
@@ -43,7 +44,7 @@ The eight model-facing tools map to exactly these child CLI shapes:
 | `dshx_remove_plugin` | `creator remove <plugin-id>` |
 | `dshx_hot_reload` | `hot-reload <plugin-id> --profile web --port <Host-derived-port> --json` |
 
-The approved eighth operation performs bounded official module HMR, not Host restart. The bridge supplies JSON output and trusted session/Host context, refreshes the claim first, and accepts no model-controlled path, profile, port, argv or shell. A successful module receipt remains pending functional verification; a failed attempt cannot reuse an earlier successful replacement receipt. The fixed tool accepts only root-scope receipts. Explicit preset-private replacement stays external and requires its own runtime acceptance, never a ninth tool or managed-shell bypass.
+The approved eighth operation performs bounded official module HMR, not Host restart. The bridge supplies JSON output and trusted session/Host context, refreshes the claim first, and accepts no model-controlled path, profile, port, argv or shell. A successful module receipt remains pending functional verification; a failed attempt cannot reuse an earlier successful replacement receipt. The fixed tool accepts only root-scope receipts. Explicit preset-private replacement stays external and requires its own runtime acceptance, never a self-replacement tool or managed-shell bypass.
 
 Multi-file server implementations declare exact package-relative `hotReload.artifacts` in `dshx.yml`. The receipt binds before/after hashes for that complete set and its exact watch roots. This matters because an entry-only reload can leave an imported helper cached. Creator+ declares its five server files, excluding its browser client; a self-upgrade must replace those files together and prove that the existing session uses the new tools.
 
@@ -360,8 +361,9 @@ redacted. An older Connection without authenticatedUrl remains supported and
 must still pass the actual unauthenticated Web proof.
 
 Read `dshx kb cat contracts/browser-access` before browser testing. The managed
-shell may run read-only `dshx browser status`; bind/open belong to the external
-supervisor and add no ninth tool. A missing credential is `WEB_AUTH_REQUIRED`;
+shell may run read-only `dshx browser status`. Use the no-argument fixed
+`dshx_browser_open` to open this session's externally approved browser adapter.
+Adapter configuration and raw bind/open commands remain external-supervisor work. A missing credential is `WEB_AUTH_REQUIRED`;
 an unavailable permitted browser adapter is `BROWSER_ADAPTER_REQUIRED`. Do not
 restart the Host, open a second Host/port, request account login, or switch to
 another agent's browser to resolve either status. The external adapter uses its
@@ -387,3 +389,12 @@ Delivery output names the exact `sourcePath` and limits its evidence to that
 path. `SOURCE_BUILD_REQUIRED` requests a fixed check of that target; undecided
 server plans point to bounded hot reload only when unrelated plan gates passed.
 Host mismatches and failed gates cannot receive runtime-verification guidance.
+
+
+The ninth tool is session-bound browser opening, not process control. It requires
+`session-browser-open`: external setup pins a reviewed self-contained executable
+snapshot using `dshx browser configure <session-id> <absolute-adapter-path>`.
+The no-argument tool selects only that session's snapshot, supplies authentication
+privately, and returns whitelisted browser status. Raw managed-shell browser
+configure/bind/open remains denied. Setup never opens a browser; only the later
+fixed call does. A changed adapter requires external review and reconfiguration.

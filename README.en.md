@@ -29,10 +29,11 @@ Contracts: [Bridge v2](docs/bridge-contract.md) and [DSHX v0.7 alignment](docs/d
 
 ![Installer writing the user preset](docs/screenshots/install.png)
 
-## The eight tools
+## The nine tools
 
 | Tool | What |
 |---|---|
+| `dshx_browser_open` | Open the authenticated WebUI through the session-approved adapter, then continue UI verification |
 | `dshx_status` | Read supervisor and Host. No process changes |
 | `dshx_claim_plugin` | This session owns one plugin |
 | `dshx_scaffold` | Create a project in the session workspace. Does not overwrite |
@@ -46,7 +47,7 @@ Whole-plugin removal goes through `dshx_remove_plugin` only. Running the install
 
 ![Duplicate install refused](docs/screenshots/already-installed.png)
 
-Harness `update prepare` / `verify` / `apply` / `rollback` are not among the eight tools. They stay with an external DSHX supervisor. Inside the session, managed shell may only read `update plan`.
+Harness `update prepare` / `verify` / `apply` / `rollback` are not among the nine tools. They stay with an external DSHX supervisor. Inside the session, managed shell may only read `update plan`.
 
 ## Upgrade
 

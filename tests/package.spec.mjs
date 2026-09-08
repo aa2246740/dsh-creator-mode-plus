@@ -12,9 +12,9 @@ const root = join(import.meta.dirname, '..')
 const read = path => readFileSync(join(root, path), 'utf8')
 
 describe('Creator Mode+ 0.3 package contract', () => {
-  it('advertises all eight fixed tools and bounded same-PID hot reload in preset metadata', () => {
+  it('advertises all nine fixed tools and bounded same-PID hot reload in preset metadata', () => {
     const preset = read('preset/preset.yml')
-    assert.match(preset, /八工具固定桥/)
+    assert.match(preset, /九工具固定桥/)
     assert.match(preset, /受限同 PID 服务器模块热重载/)
     assert.doesNotMatch(preset, /七工具固定桥/)
   })
@@ -55,6 +55,7 @@ describe('Creator Mode+ 0.3 package contract', () => {
       'dshx_activate_new_client',
       'dshx_remove_plugin',
       'dshx_hot_reload',
+      'dshx_browser_open',
       'dshx_status',
     ])
     assert.match(manifest, /^id: dsh-creator-mode-plus$/m)
@@ -79,7 +80,7 @@ describe('Creator Mode+ 0.3 package contract', () => {
     const skill = read('preset/skills/creator-mode-plus/SKILL.md')
     assert.match(skill, /update plan → prepare → verify → apply/)
     assert.match(skill, /prepare.*verify.*apply.*rollback.*external DSHX supervisor/s)
-    assert.match(skill, /eight fixed model tools/)
+    assert.match(skill, /nine fixed model tools/)
     assert.match(skill, /dshx_hot_reload/)
     assert.match(skill, /dshx_remove_plugin/)
     assert.match(skill, /dshx plugin remove/)

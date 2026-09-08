@@ -2,9 +2,9 @@
 
 [English](README.en.md)
 
-在 DeepSeek Harness 的普通 Web 会话里选 Creator Mode+，用八个固定工具把一个文件化插件搭起来、检查、挂载，也能按安全顺序卸载。
+在 DeepSeek Harness 的普通 Web 会话里选 Creator Mode+，用九个固定工具把一个文件化插件搭起来、检查、挂载，也能按安全顺序卸载。
 
-不替代官方创造模式。需要 [DSHX](https://github.com/aa2246740/dsh-external-plugin-devkit) `>=0.7.5 <0.8.0`。兼容 DSH `dsh-v0.1.0-rc.8` 的 Creator/Guardian 合同，以及 `dsh-v0.1.1-rc.2` 和 `dsh-v0.1.2-rc.1` 的认证 Web 链路。第八个工具 `dshx_hot_reload` 是尚未发布的候选能力，必须配套具备该实现的 DSHX。
+不替代官方创造模式。需要 [DSHX](https://github.com/aa2246740/dsh-external-plugin-devkit) `>=0.7.5 <0.8.0`。兼容 DSH `dsh-v0.1.0-rc.8` 的 Creator/Guardian 合同，以及 `dsh-v0.1.1-rc.2` 和 `dsh-v0.1.2-rc.1` 的认证 Web 链路。第九个工具 `dshx_hot_reload` 是尚未发布的候选能力，必须配套具备该实现的 DSHX。
 
 ![在官方 WebUI 里打开 Creator Mode+](docs/screenshots/mode-picker.gif)
 
@@ -29,10 +29,11 @@ node tools/dsh-creator-mode-plus/scripts/install.mjs --harness "$PWD"
 
 ![安装器把 preset 写进用户目录](docs/screenshots/install.png)
 
-## 八个工具
+## 九个工具
 
 | 工具 | 做什么 |
 |---|---|
+| `dshx_browser_open` | 通过当前会话已批准的适配器完成私有认证交接，然后继续界面验收 |
 | `dshx_status` | 读 supervisor 和 Host，不动进程 |
 | `dshx_claim_plugin` | 这个会话独占一个插件 |
 | `dshx_scaffold` | 在会话工作区建项目，不覆盖已有的 |
@@ -46,7 +47,7 @@ node tools/dsh-creator-mode-plus/scripts/install.mjs --harness "$PWD"
 
 ![重复安装被拒绝](docs/screenshots/already-installed.png)
 
-Harness 更新的 `prepare` / `verify` / `apply` / `rollback` 不在这八个工具里，交给外部 DSHX supervisor。会话内只允许通过 managed shell 读 `update plan`。
+Harness 更新的 `prepare` / `verify` / `apply` / `rollback` 不在这九个工具里，交给外部 DSHX supervisor。会话内只允许通过 managed shell 读 `update plan`。
 
 ## 升级
 

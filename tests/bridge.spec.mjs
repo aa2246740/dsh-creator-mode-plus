@@ -57,7 +57,7 @@ afterEach(() => {
 })
 
 describe('Creator Bridge v2', () => {
-  it('registers only the eight fixed tools and rejects process control', () => {
+  it('registers only the nine fixed tools and rejects process control', () => {
     const registered = []
     apply({
       tools: { register(tool) { registered.push(tool) } },
@@ -124,6 +124,7 @@ describe('Creator Bridge v2', () => {
     }
     const operations = [
       ['status'],
+      ['browser', 'open', '--json'],
       ['creator', 'claim', 'demo'],
       ['creator', 'scaffold', 'demo', 'client'],
       ['check', 'demo'],

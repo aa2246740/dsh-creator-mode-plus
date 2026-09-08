@@ -93,3 +93,9 @@ identity-bound private storage, official Connection input, bounded authenticatio
 transport, and explicit browser-adapter execution. A version string alone does
 not prove these capabilities. `HTTP_AUTHENTICATED`, `BROWSER_AUTHENTICATED`, and
 feature acceptance remain separate evidence.
+
+
+`session-browser-open` adds the no-argument `dshx_browser_open` as the ninth
+standalone bridge tool. It requires DSHX's externally configured, session-bound
+adapter snapshot support. Browser authentication runs privately; Host/process
+control, arbitrary paths and credentials remain outside model input.

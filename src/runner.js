@@ -33,6 +33,7 @@ const CHANGES = new Set(['patch', 'manifest', 'preset', 'client', 'new-client', 
 function isAllowedArgs(args) {
   if (args.length === 1) return args[0] === 'status'
   if (args.length === 2) return args[0] === 'check' && PLUGIN_ID.test(args[1])
+  if (args.length === 3 && args[0] === 'browser' && args[1] === 'open' && args[2] === '--json') return true
   if (args.length === 3) {
     return args[0] === 'creator'
       && (((args[1] === 'claim' || args[1] === 'remove') && PLUGIN_ID.test(args[2]))
