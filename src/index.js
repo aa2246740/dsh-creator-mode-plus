@@ -128,19 +128,20 @@ function clientFailureHandler(webServer, options) {
     }
 }
 
-function acquireClientFailureRoute(webServer, handler) {
+function acquireClientFailureRoute(hostKey, webServer, handler) {
   const registry = clientFailureRouteRegistry()
-  let broker = registry.get(webServer)
+  let broker = registry.get(hostKey)
   const lease = { handler }
   if (broker === undefined) {
-    broker = { leases: new Set([lease]), current: lease, dispose: undefined }
+    broker = { port: webServer.port, leases: new Set([lease]), current: lease, dispose: undefined }
     broker.dispose = webServer.register({
       kind: 'exact',
       path: CLIENT_FAILURE_PATH,
       handler: (req, res) => broker.current.handler(req, res),
     })
-    registry.set(webServer, broker)
+    registry.set(hostKey, broker)
   } else {
+    if (broker.port !== webServer.port) throw new Error('Creator+ Web Host changed while route leases remain active')
     broker.leases.add(lease)
     broker.current = lease
   }
@@ -149,7 +150,7 @@ function acquireClientFailureRoute(webServer, handler) {
     if (!broker.leases.delete(lease)) return
     if (broker.leases.size === 0) {
       broker.dispose()
-      if (registry.get(webServer) === broker) registry.delete(webServer)
+      if (registry.get(hostKey) === broker) registry.delete(hostKey)
       return
     }
     if (broker.current !== lease) return
@@ -159,8 +160,13 @@ function acquireClientFailureRoute(webServer, handler) {
 
 /** Register one generation-safe same-origin browser sentry route per Web Host. */
 export function installClientFailureRoute(ctx, options = {}) {
+  const webServer = ctx.webServer
+  // Cordis returns scope-bound service proxies; their object identity is not a
+  // Host identity. The public root Context is shared by all preset generations.
+  // Raw-service fixtures without a Context retain their original identity.
+  const hostKey = ctx.root ?? webServer
   ctx.effect(
-    () => acquireClientFailureRoute(ctx.webServer, clientFailureHandler(ctx.webServer, options)),
+    () => acquireClientFailureRoute(hostKey, webServer, clientFailureHandler(webServer, options)),
     'Creator Mode+ browser failure route',
   )
 }

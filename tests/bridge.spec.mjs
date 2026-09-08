@@ -306,9 +306,12 @@ describe('Creator Bridge v2', () => {
       },
     }
     const context = {
-      webServer,
+      root: {},
+      // Real Cordis creates distinct service proxies for each scoped lookup.
+      get webServer() { return new Proxy(webServer, {}) },
       effect(callback) { releases.push(callback()) },
     }
+    assert.notEqual(context.webServer, context.webServer)
 
     first.installClientFailureRoute(context, {
       runClientFailureDshx: async () => {
