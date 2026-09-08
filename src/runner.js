@@ -1,3 +1,4 @@
+import { privateStartupUrl, redactStartupOutput } from './auth.js'
 /** Fixed-argument bridge from DSH tools to the external dshx CLI. */
 
 import { spawn } from 'node:child_process'
@@ -233,6 +234,7 @@ function executeDshx(args, exec, options = {}) {
   const spawnProcess = options.spawnProcess ?? spawn
   const hostPort = options.hostPort ?? currentWebPort()
   const creatorContext = contextFromExecution(exec, hostPort)
+  const startup = privateStartupUrl(options.getWebStartupUrl, hostPort)
   const signal = exec?.signal
   return new Promise((resolveResult, reject) => {
     const child = spawnProcess(process.execPath, argv, {
@@ -241,7 +243,7 @@ function executeDshx(args, exec, options = {}) {
         ...process.env,
         DSHX_HARNESS: runtime.root,
         DSHX_CREATOR_CONTEXT: JSON.stringify(creatorContext),
-        DSHX_WEB_STARTUP_URL: options.getWebStartupUrl?.(hostPort) ?? '',
+        DSHX_WEB_STARTUP_URL: startup,
       },
       stdio: ['ignore', 'pipe', 'pipe'],
     })
@@ -259,8 +261,8 @@ function executeDshx(args, exec, options = {}) {
       resolveResult({
         command: `dshx ${args.join(' ')}`,
         exitCode: code ?? 1,
-        stdout: stdout.trim(),
-        stderr: stderr.trim(),
+        stdout: redactStartupOutput(stdout.trim(), startup),
+        stderr: redactStartupOutput(stderr.trim(), startup),
         dshxVersion: runtime.dshxVersion,
         creatorBridgeVersion: runtime.bridgeVersion,
         dshxContract: runtime.contractId,
@@ -306,6 +308,7 @@ export function runClientFailureDshx(report, options = {}) {
   const runtime = resolveDshxRuntime(options)
   const argv = ['--import', runtime.loader, runtime.cli, 'creator', 'client-failure', '--json']
   const spawnProcess = options.spawnProcess ?? spawn
+  const startup = privateStartupUrl(options.getWebStartupUrl, report.hostPort)
   const { DSHX_CREATOR_CONTEXT: _discardContext, DSHX_CREATOR_CLIENT_FAILURE: _discardFailure, ...baseEnv } = process.env
   return new Promise((resolveResult, reject) => {
     const child = spawnProcess(process.execPath, argv, {
@@ -314,7 +317,7 @@ export function runClientFailureDshx(report, options = {}) {
         ...baseEnv,
         DSHX_HARNESS: runtime.root,
         DSHX_CREATOR_CLIENT_FAILURE: JSON.stringify(report),
-        DSHX_WEB_STARTUP_URL: options.getWebStartupUrl?.(report.hostPort) ?? '',
+        DSHX_WEB_STARTUP_URL: startup,
       },
       stdio: ['ignore', 'pipe', 'pipe'],
     })
@@ -336,8 +339,8 @@ export function runClientFailureDshx(report, options = {}) {
       resolveResult({
         command: 'dshx creator client-failure',
         exitCode: timedOut ? 124 : (code ?? 1),
-        stdout: stdout.trim(),
-        stderr: timedOut ? `${stderr.trim()}\nclient-failure recovery timed out`.trim() : stderr.trim(),
+        stdout: redactStartupOutput(stdout.trim(), startup),
+        stderr: redactStartupOutput(timedOut ? `${stderr.trim()}\nclient-failure recovery timed out`.trim() : stderr.trim(), startup),
         dshxVersion: runtime.dshxVersion,
         creatorBridgeVersion: runtime.bridgeVersion,
         dshxContract: runtime.contractId,

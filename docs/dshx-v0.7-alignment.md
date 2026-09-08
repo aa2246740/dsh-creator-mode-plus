@@ -87,3 +87,9 @@ composition bytes retain their stamp. Root Loader module HMR and preset-private
 bridge replacement are distinct scopes and need separate proof. A module or
 manifest receipt still requires exercising the changed feature. Use launcher
 handoff only after an evidence-backed and authorized restart decision.
+
+The local browser-access update additionally attests `private-browser-handoff`:
+identity-bound private storage, official Connection input, bounded authentication
+transport, and explicit browser-adapter execution. A version string alone does
+not prove these capabilities. `HTTP_AUTHENTICATED`, `BROWSER_AUTHENTICATED`, and
+feature acceptance remain separate evidence.

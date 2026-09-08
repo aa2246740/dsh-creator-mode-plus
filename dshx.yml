@@ -8,6 +8,7 @@ hotReload:
   artifacts:
     - src/index.js
     - src/runner.js
+    - src/auth.js
     - src/delivery.js
     - src/compatibility.js
     - src/safety.js

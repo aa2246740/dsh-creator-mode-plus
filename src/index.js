@@ -168,7 +168,7 @@ export function installClientFailureRoute(ctx, options = {}) {
 /** Register file-backed Creator Mode+ operations for one preset scope. */
 export function apply(ctx) {
   console.log('[dsh-creator-mode-plus] loaded')
-  const authOptions = { getWebStartupUrl: port => ctx.connection.authenticatedUrl(`http://127.0.0.1:${port}/`) }
+  const authOptions = { getWebStartupUrl: port => typeof ctx.connection.authenticatedUrl === 'function' ? ctx.connection.authenticatedUrl(`http://127.0.0.1:${port}/`) : undefined }
   installCreatorRecovery(ctx, authOptions)
   installClientFailureRoute(ctx, authOptions)
   installCreatorSafetyGuard(ctx)

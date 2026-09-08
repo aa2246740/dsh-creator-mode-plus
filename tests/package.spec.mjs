@@ -96,7 +96,7 @@ describe('Creator Mode+ 0.3 package contract', () => {
 
   it('declares only the exact server module set for external self-upgrade', () => {
     const files = [...read('dshx.yml').matchAll(/^    - (.+)$/gm)].map(match => match[1])
-    assert.deepEqual(files, ['src/index.js', 'src/runner.js', 'src/delivery.js', 'src/compatibility.js', 'src/safety.js'])
+    assert.deepEqual(files, ['src/index.js', 'src/runner.js', 'src/auth.js', 'src/delivery.js', 'src/compatibility.js', 'src/safety.js'])
     for (const file of files) {
       assert.doesNotThrow(() => read(file))
       for (const match of read(file).matchAll(/from ['"]\.\/([^'"]+)['"]/g)) {

@@ -349,3 +349,26 @@ behavior before claiming delivery. Managed upgrade preserves an unchanged
 `agent.cordis.yml` stamp: skill/metadata refresh alone neither creates a generation
 nor justifies an immediate restart. The approved eighth tool must traverse the
 same allowlist and provenance gates as the existing operations before release.
+
+## Private browser access
+
+RC1 local Web authentication is independent of provider/account login. During
+watch/claim, the bridge uses the official Connection startup URL to refresh an
+owner-only, expiring DSHX handoff bound to Home, checkout, PID, process start and
+port. The URL stays in private subprocess input; assembled stdout/stderr is
+redacted. An older Connection without authenticatedUrl remains supported and
+must still pass the actual unauthenticated Web proof.
+
+Read `dshx kb cat contracts/browser-access` before browser testing. The managed
+shell may run read-only `dshx browser status`; bind/open belong to the external
+supervisor and add no ninth tool. A missing credential is `WEB_AUTH_REQUIRED`;
+an unavailable permitted browser adapter is `BROWSER_ADAPTER_REQUIRED`. Do not
+restart the Host, open a second Host/port, request account login, or switch to
+another agent's browser to resolve either status. The external adapter uses its
+own permitted browser context and receives private JSON on stdin. Browser
+access does not prove the plugin feature works.
+
+This works with official CLI, App, and DSHX launchers. Without Creator or a
+DSHX-owned launcher, the user/launcher must privately bind the official startup
+URL once per Host lifetime. Never infer credentials from an open port or request
+a token in a conversation. Expired or changed-Host handoffs need refresh.

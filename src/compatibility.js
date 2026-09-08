@@ -13,6 +13,7 @@ export const DSHX_CONTRACT = Object.freeze({
     'workspace-scaffold',
     'bounded-new-client-activation',
     'authenticated-host-proof',
+    'private-browser-handoff',
     'safe-plugin-removal',
     'safe-profile-bundle-removal',
     'external-guardian-recovery',
@@ -42,6 +43,8 @@ export const CREATOR_MODEL_TOOLS = Object.freeze([
 ])
 
 export const DSHX_SURFACE_MARKERS = Object.freeze({
+  'src/internal/browser-access.ts': Object.freeze(['bindBrowserAccess', 'assertSameBrowserHost', 'BROWSER_ADAPTER_REQUIRED']),
+  'src/commands/browser.ts': Object.freeze(['cmdBrowser', 'HTTP_AUTHENTICATED']),
   'src/internal/web-proof-auth.ts': Object.freeze(['createWebProofRequest', 'WEB_AUTH_REQUIRED', 'WEB_AUTH_ORIGIN_MISMATCH']),
   'src/cli.ts': Object.freeze([
     "case 'check'",
@@ -50,6 +53,7 @@ export const DSHX_SURFACE_MARKERS = Object.freeze({
     "case 'activate-new-client'",
     "case 'hot-reload'",
     "case 'creator'",
+    "case 'browser'",
     "case 'plugin'",
     "case 'update'",
   ]),
