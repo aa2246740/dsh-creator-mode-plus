@@ -7,6 +7,10 @@ description: Use for DSH WebUI plugin installation, existing-plugin branch trial
 
 Build file-backed plugins for the official DeepSeek Harness browser WebUI through the complete stable DSHX v0.7 contract. Public Cordis plugin forms, the public client runtime, and public UI slots are supported. App-shell IPC, native window controls, desktop bridges, and wrapper-specific refresh behavior are outside this compatibility target. Creator Bridge v2 exposes nine fixed model tools, including source-preserving safe removal and bounded server hot replacement; the v0.7 Harness Update Assistant stays externally supervised.
 
+## Build failure routing
+
+For an existing plugin build failure, read [Repair build failures](existing-plugin-trials.md#repair-build-failures-without-changing-source-ownership). Repair package-local configuration within the authorized task; distinguish actual filesystem denial from an assumed need for user confirmation. An old bundle passing dshx_check does not establish a successful build.
+
 ## Installation capability
 
 You can install and activate supported plugins through the fixed bridge. Use
