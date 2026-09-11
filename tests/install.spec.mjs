@@ -46,12 +46,14 @@ function harnessAt(root, version = '0.7.5', presetLayout = 'legacy') {
     version,
   }))
   writeFileSync(join(standard, 'preset.yml'), 'name: Standard\n')
+  const persona = presetLayout === 'rc1'
+    ? `    text: >-\n      You are a coding agent powered by the {{model}} model. Your working directory is {{cwd}}.`
+    : `    suffix: Your working directory is {{cwd}}.\n    prefix: >-\n      You are a coding agent powered by the {{model}} model.`
   writeFileSync(join(standard, 'agent.cordis.yml'), `# The \`standard\` agent preset: the full coding agent, mounted once per process.
 - id: persona
   name: '@deepseek-ai/dsh-persona'
   config:
-    text: >-
-      You are a coding agent powered by the {{model}} model. Your working directory is {{cwd}}.
+${persona}
 - id: skill-filesystem
   name: '@deepseek-ai/dsh-skill-filesystem'
 - id: tool-skill
@@ -97,6 +99,9 @@ describe('Creator Mode+ installer', () => {
     assert.equal(readFileSync(source, 'utf8'), before)
     assert.match(composition, /You are Creator Mode\+/)
     assert.match(composition, /one long-lived Web Host per DSH_HOME/)
+    assert.match(composition, /prefix: \|-/)
+    assert.match(composition, /suffix: Your working directory is \{\{cwd\}\}\./)
+    assert.doesNotMatch(composition, /^\s+text: /m)
     assert.match(composition, /name: dsh-creator-mode-plus/)
     assert.equal(existsSync(join(result.target, 'skills/creator-mode-plus/SKILL.md')), true)
     assert.match(readFileSync(join(result.target, 'preset.yml'), 'utf8'), /Creator Mode\+/)
@@ -122,6 +127,20 @@ describe('Creator Mode+ installer', () => {
     assert.match(readFileSync(compositionPath, 'utf8'), /one long-lived Web Host per DSH_HOME/)
     assert.doesNotMatch(readFileSync(compositionPath, 'utf8'), /six-tool DSHX v0\.7 fixed bridge/)
     assert.match(readFileSync(skillPath, 'utf8'), /dshx_activate_new_client/)
+  })
+
+  it('migrates a leftover text persona to the 0.1.5 prefix field', () => {
+    const harnessRoot = harnessAt(temporaryDirectory('creator-mode-plus-persona-harness-'))
+    const dshHome = temporaryDirectory('creator-mode-plus-persona-home-')
+    const installed = installCreatorModePlus({ harnessRoot, dshHome })
+    const compositionPath = join(installed.target, 'agent.cordis.yml')
+    writeFileSync(compositionPath, readFileSync(compositionPath, 'utf8').replace('    prefix: |-', '    text: |-'))
+
+    const updated = installCreatorModePlus({ harnessRoot, dshHome, upgrade: true })
+    const composition = readFileSync(compositionPath, 'utf8')
+    assert.equal(updated.action, 'updated')
+    assert.match(composition, /prefix: \|-/)
+    assert.doesNotMatch(composition, /^\s+text: /m)
   })
 
   it('keeps the composition stamp stable when an upgrade changes only managed assets', () => {

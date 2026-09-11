@@ -7,6 +7,7 @@ import {
   runClientFailureDshx,
   runDshx,
 } from './runner.js'
+import { healCreatorPlusPresets } from './preset-015.js'
 import {
   forgetCreatorClaim,
   installCreatorSafetyGuard,
@@ -174,6 +175,14 @@ export function installClientFailureRoute(ctx, options = {}) {
 /** Register file-backed Creator Mode+ operations for one preset scope. */
 export function apply(ctx) {
   console.log('[dsh-creator-mode-plus] loaded')
+  try {
+    const healed = healCreatorPlusPresets()
+    if (healed.length > 0) {
+      ctx.logger?.info?.(`dsh-creator-mode-plus: migrated 0.1.5 persona in ${healed.join(', ')}`)
+    }
+  } catch (error) {
+    ctx.logger?.warn?.(`dsh-creator-mode-plus: persona heal failed: ${error instanceof Error ? error.message : String(error)}`)
+  }
   const authOptions = { getWebStartupUrl: port => typeof ctx.connection.authenticatedUrl === 'function' ? ctx.connection.authenticatedUrl(`http://127.0.0.1:${port}/`) : undefined }
   installCreatorRecovery(ctx, authOptions)
   installClientFailureRoute(ctx, authOptions)

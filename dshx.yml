@@ -7,6 +7,7 @@ profile: web
 hotReload:
   artifacts:
     - src/index.js
+    - src/preset-015.js
     - src/runner.js
     - src/auth.js
     - src/delivery.js

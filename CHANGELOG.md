@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.3.6 - 2026-09-11
+
+- Adapt the user preset to Harness 0.1.5-rc.2 persona config: write `prefix`/`suffix` instead of the removed `text` field. A leftover `text` composition is migrated on `--upgrade` and again when the Host plugin loads, so other installs do not have to edit DSH source.
+- Fresh installs from the current Standard preset use the official 0.1.5 persona shape; RC1 `text` Standard copies still install and are rewritten to `prefix`.
+
 ## 0.3.5 - 2026-09-11
 
 - Attest DSHX 0.7.6's Harness `dsh-v0.1.5-rc.2` plugin contract (`compat-0.1.5` / `compat-015-*`) on the same Creator Bridge v2 range `>=0.7.5 <0.8.0`.

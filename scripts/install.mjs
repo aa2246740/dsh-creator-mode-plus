@@ -14,6 +14,7 @@ import {
 import { homedir } from 'node:os'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
+import { migratePersona015 } from '../src/preset-015.js'
 import { inspectDshxCompatibility, resolveHarnessRoot } from '../src/runner.js'
 
 const packageRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..')
@@ -74,6 +75,22 @@ function exactRowCount(text, row) {
   return count
 }
 
+const PERSONA_PREFIX = `    prefix: |-\n      You are Creator Mode+, a coding agent powered by the {{model}} model.\n\n      ${CURRENT_PERSONA}\n\n      Load the \`creator-mode-plus\` skill before creating, activating, removing, hot-reloading, updating Harness, or validating a DSH plugin. Keep Harness core and shipped presets unchanged.`
+const PERSONA_RC2 = `    suffix: Your working directory is {{cwd}}.\n    prefix: >-\n      You are a coding agent powered by the {{model}} model.`
+const PERSONA_RC2_REPLACEMENT = `    suffix: Your working directory is {{cwd}}.\n${PERSONA_PREFIX}`
+const PERSONA_RC1 = `    text: >-\n      You are a coding agent powered by the {{model}} model. Your working directory is {{cwd}}.`
+const PERSONA_RC1_REPLACEMENT = `${PERSONA_PREFIX}\n    suffix: Your working directory is {{cwd}}.`
+
+function rewritePersona(standard) {
+  if (standard.includes(PERSONA_RC2)) {
+    return replaceOnce(standard, PERSONA_RC2, PERSONA_RC2_REPLACEMENT, 'persona')
+  }
+  if (standard.includes(PERSONA_RC1)) {
+    return replaceOnce(standard, PERSONA_RC1, PERSONA_RC1_REPLACEMENT, 'persona')
+  }
+  throw new Error('Creator Mode+ installer expected a 0.1.5 prefix/suffix or legacy text persona in the Standard preset')
+}
+
 function creatorComposition(standard) {
   let text = replaceOnce(
     standard,
@@ -81,12 +98,7 @@ function creatorComposition(standard) {
     '# Creator Mode+ starts from the shipped Standard preset and adds the fixed dshx bridge.',
     'preset heading',
   )
-  text = replaceOnce(
-    text,
-    `    text: >-\n      You are a coding agent powered by the {{model}} model. Your working directory is {{cwd}}.`,
-    `    text: |-\n      You are Creator Mode+, a coding agent powered by the {{model}} model. Your working directory is {{cwd}}.\n\n      ${CURRENT_PERSONA}\n\n      Load the \`creator-mode-plus\` skill before creating, activating, removing, hot-reloading, updating Harness, or validating a DSH plugin. Keep Harness core and shipped presets unchanged.`,
-    'persona',
-  )
+  text = rewritePersona(text)
   text = replaceOnce(
     text,
     `- id: skill-filesystem\n  name: '@deepseek-ai/dsh-skill-filesystem'`,
@@ -102,7 +114,7 @@ function creatorComposition(standard) {
 }
 
 function migrateManagedSafetyCopy(text) {
-  let next = text
+  let next = migratePersona015(text)
   for (const [before, after] of [
     [LEGACY_SIX_TOOL_PERSONA, SEVEN_TOOL_PERSONA],
     [SEVEN_TOOL_PERSONA, CURRENT_PERSONA],
