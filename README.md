@@ -4,7 +4,7 @@
 
 在 DeepSeek Harness 的普通 Web 会话里选 Creator Mode+，用九个固定工具把一个文件化插件搭起来、检查、挂载，也能按安全顺序卸载。
 
-不替代官方创造模式。需要 [DSHX](https://github.com/aa2246740/dsh-external-plugin-devkit) `>=0.7.5 <0.8.0`。兼容 DSH `dsh-v0.1.0-rc.8` 的 Creator/Guardian 合同，以及 `dsh-v0.1.1-rc.2` 和 `dsh-v0.1.2-rc.1` 的认证 Web 链路。第九个工具 `dshx_hot_reload` 是尚未发布的候选能力，必须配套具备该实现的 DSHX。
+不替代官方创造模式。需要 [DSHX](https://github.com/aa2246740/dsh-external-plugin-devkit) `>=0.7.5 <0.8.0`。兼容 DSH `dsh-v0.1.0-rc.8` 的 Creator/Guardian 合同，以及 `dsh-v0.1.1-rc.2`、`dsh-v0.1.2-rc.1` 到 `dsh-v0.1.5-rc.2` 的认证 Web 链路。第九个工具 `dshx_hot_reload` 是尚未发布的候选能力，必须配套具备该实现的 DSHX。
 
 ![在官方 WebUI 里打开 Creator Mode+](docs/screenshots/mode-picker.gif)
 

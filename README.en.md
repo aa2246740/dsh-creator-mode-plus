@@ -4,7 +4,7 @@
 
 Pick Creator Mode+ in a normal DeepSeek Harness Web session. Eight fixed tools scaffold, check, mount, and uninstall a file-backed plugin in a safe order.
 
-It does not replace official Creator Mode. It needs [DSHX](https://github.com/aa2246740/dsh-external-plugin-devkit) `>=0.7.5 <0.8.0`. Compatible with the Creator/Guardian contract on DSH `dsh-v0.1.0-rc.8`, and the authenticated Web line on `dsh-v0.1.1-rc.2` and `dsh-v0.1.2-rc.1`. The eighth tool `dshx_hot_reload` is still a candidate. It needs a DSHX that actually implements it.
+It does not replace official Creator Mode. It needs [DSHX](https://github.com/aa2246740/dsh-external-plugin-devkit) `>=0.7.5 <0.8.0`. Compatible with the Creator/Guardian contract on DSH `dsh-v0.1.0-rc.8`, and the authenticated Web line on `dsh-v0.1.1-rc.2`, `dsh-v0.1.2-rc.1`, and `dsh-v0.1.5-rc.2`. The eighth tool `dshx_hot_reload` is still a candidate. It needs a DSHX that actually implements it.
 
 ![Open Creator Mode+ in the official WebUI](docs/screenshots/mode-picker.gif)
 

@@ -1,6 +1,6 @@
 # DSHX v0.7 alignment
 
-Creator Mode+ 0.3.4 is aligned to stable DSHX `>=0.7.5 <0.8.0`, Creator Bridge
+Creator Mode+ 0.3.5 is aligned to stable DSHX `>=0.7.5 <0.8.0`, Creator Bridge
 v2, and the official browser WebUI lifecycle. DSHX v0.7.5 makes same-Home
 ownership atomic across checkouts and binds PID, process start time, Home,
 profile, and root before lifecycle or update mutation.
@@ -47,8 +47,9 @@ Creator receives status but never gains process or port input.
 ## Harness compatibility
 
 The source line covers the DSH `dsh-v0.1.0-rc.8` Creator/Guardian contracts and
-the DSHX v0.7 update path through `dsh-v0.1.1-rc.2` to `dsh-v0.1.2-rc.1`.
+the DSHX v0.7 update path through `dsh-v0.1.1-rc.2` and `dsh-v0.1.2-rc.1` to `dsh-v0.1.5-rc.2`.
 The RC1 line includes relocated Standard discovery and authenticated Host proof.
+`0.1.5-rc.2` is the current authenticated Web line; external plugins must pass `dshx check` with no `compat-015-*`.
 Release verification against the selected checkout must include:
 
 ```sh

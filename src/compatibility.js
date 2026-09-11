@@ -5,7 +5,7 @@ export const CREATOR_BRIDGE_VERSION = 2
 
 export const DSHX_CONTRACT = Object.freeze({
   id: 'dshx-v0.7/creator-bridge-v2',
-  release: 'v0.7.5',
+  release: 'v0.7.6',
   minimum: '0.7.5',
   maximumExclusive: '0.8.0',
   capabilities: Object.freeze([
@@ -172,6 +172,8 @@ export const DSHX_SURFACE_MARKERS = Object.freeze({
   'knowledge/contracts/creator-guardian.md': Object.freeze(['Creator+', 'crash-loop fuse', 'quarantine', 'plugin-integrity-failed']),
   'knowledge/contracts/harness-update.md': Object.freeze(['plan → prepare → verify → apply', 'rollback']),
   'knowledge/contracts/live-activation.md': Object.freeze(['SOURCE_BUILT', 'CLIENT_MANIFEST_PRESENT']),
+  'knowledge/contracts/compat-0.1.5.md': Object.freeze(['MarkdownText', 'createDrafts', 'assistant/attempt.stream']),
+  'src/internal/compat-015.ts': Object.freeze(['compat-015-message-text', 'compat-015-ctx-agent']),
   'knowledge/playbooks/verify-boot.md': Object.freeze(['临时 `DSH_HOME`', '`--keep` 会被拒绝']),
   'skill/dshx/SKILL.md': Object.freeze(['Treat DSH.app, direct `dsh web`', '`--keep` is unsafe and', 'PID-reused is reported as stale']),
 })

@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.3.5 - 2026-09-11
+
+- Attest DSHX 0.7.6's Harness `dsh-v0.1.5-rc.2` plugin contract (`compat-0.1.5` / `compat-015-*`) on the same Creator Bridge v2 range `>=0.7.5 <0.8.0`.
+- Document the authenticated Web line through `0.1.5-rc.2`. Live Host, page-load, and visual acceptance remain separate evidence.
+
 ## 0.3.4 - 2026-09-06
 
 - Require DSHX `>=0.7.5 <0.8.0` and attest the atomic same-Home operation lock, PID/start-time/Home/profile/root binding, post-spawn discovery, and apply/rollback live-Host guard.

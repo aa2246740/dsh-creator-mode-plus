@@ -327,7 +327,7 @@ production activated as separate states.
 
 Supported: the official DSH browser WebUI, public Cordis plugin forms, public
 client runtime, and public UI slots across the RC8 Creator/Guardian contract and
-the RC2 package/update line and the 0.1.2-rc.1 authenticated Web line.
+the RC2 package/update line and the authenticated Web line through 0.1.5-rc.2.
 
 Outside acceptance: native menus, window chrome, App IPC, desktop bridges, and
 shell-specific refresh behavior. A wrapper may work when it embeds the same
