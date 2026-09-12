@@ -2,9 +2,13 @@
 
 [中文](README.md)
 
-Pick Creator Mode+ in a normal DeepSeek Harness Web session. Eight fixed tools scaffold, check, mount, and uninstall a file-backed plugin in a safe order.
+**This is not a stock DSH Host feature plugin.** Do not run `dsh plugin --profile web add github:aa2246740/dsh-creator-mode-plus`. That command is not enough, and it will not install this package.
 
-It does not replace official Creator Mode. It needs [DSHX](https://github.com/aa2246740/dsh-external-plugin-devkit) `>=0.7.5 <0.8.0`. Compatible with the Creator/Guardian contract on DSH `dsh-v0.1.0-rc.8`, and the authenticated Web line on `dsh-v0.1.1-rc.2`, `dsh-v0.1.2-rc.1`, and `dsh-v0.1.5-rc.2`. The eighth tool `dshx_hot_reload` is still a candidate. It needs a DSHX that actually implements it.
+If you only run official DeepSeek Harness (for example **0.1.5-rc.2**): **skip this repository.** Stock DSH has no Creator Mode and no DSHX. The installer here needs a Harness checkout and DSHX already set up.
+
+This repo is for **authors who already have a [Harness checkout](https://github.com/deepseek-ai/deepseek-harness) and [DSHX](https://github.com/aa2246740/dsh-external-plugin-devkit) `>=0.7.5 <0.8.0`**. Pick Creator Mode+ in a normal Web session. Nine fixed tools scaffold, check, mount, and uninstall a file-backed plugin in a safe order.
+
+It does not replace official Creator Mode. Compatible with the Creator/Guardian contract on DSH `dsh-v0.1.0-rc.8`, and the authenticated Web line on `dsh-v0.1.1-rc.2`, `dsh-v0.1.2-rc.1`, and `dsh-v0.1.5-rc.2`. The ninth tool `dshx_hot_reload` is still a candidate. It needs a DSHX that actually implements it.
 
 ![Open Creator Mode+ in the official WebUI](docs/screenshots/mode-picker.gif)
 
@@ -12,9 +16,9 @@ It does not replace official Creator Mode. It needs [DSHX](https://github.com/aa
 
 ![Creator Mode+ selected](docs/screenshots/mode-selected.png)
 
-## Install
+## Authors: Harness checkout + installer
 
-Do this outside an Agent session, in your Harness checkout:
+Start with a local Harness checkout that already has [DSHX](https://github.com/aa2246740/dsh-external-plugin-devkit) in `tools/dshx`. Outside an Agent session, clone this repo into `tools/dsh-creator-mode-plus`, then use **that checkout's** `pnpm dsh` to add a **local `link:`** (not `github:`), then run the installer to write the user preset.
 
 ```sh
 cd /path/to/deepseek-harness
@@ -23,7 +27,7 @@ pnpm dsh plugin --profile web add link:./tools/dsh-creator-mode-plus
 node tools/dsh-creator-mode-plus/scripts/install.mjs --harness "$PWD"
 ```
 
-The installer writes a user preset. It leaves the shipped Standard and Creator presets alone. Open the official WebUI, confirm Creator Mode+ is in the mode list, and try it in a new session. Adding a profile dependency is not by itself a reason to restart the Host.
+The `link:` step only attaches the bridge to this checkout's Web profile. The installer writes a user preset. It leaves the shipped Standard and Creator presets alone. Open the official WebUI, confirm Creator Mode+ is in the mode list, and try it in a new session. Adding a profile dependency is not by itself a reason to restart the Host.
 
 Contracts: [Bridge v2](docs/bridge-contract.md) and [DSHX v0.7 alignment](docs/dshx-v0.7-alignment.md).
 
