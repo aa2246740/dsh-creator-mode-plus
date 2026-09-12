@@ -2,9 +2,13 @@
 
 [English](README.en.md)
 
-在 DeepSeek Harness 的普通 Web 会话里选 Creator Mode+，用九个固定工具把一个文件化插件搭起来、检查、挂载，也能按安全顺序卸载。
+**这不是官方原装 DSH 的 Host 功能插件。** 不要用 `dsh plugin --profile web add github:aa2246740/dsh-creator-mode-plus`。那条命令不够，也装不上。
 
-不替代官方创造模式。需要 [DSHX](https://github.com/aa2246740/dsh-external-plugin-devkit) `>=0.7.5 <0.8.0`。兼容 DSH `dsh-v0.1.0-rc.8` 的 Creator/Guardian 合同，以及 `dsh-v0.1.1-rc.2`、`dsh-v0.1.2-rc.1` 到 `dsh-v0.1.5-rc.2` 的认证 Web 链路。第九个工具 `dshx_hot_reload` 是尚未发布的候选能力，必须配套具备该实现的 DSHX。
+只跑官方 DeepSeek Harness（例如 **0.1.5-rc.2**）的人：**跳过这个仓库。** 原装 DSH 没有 Creator Mode，也没有 DSHX；这里的安装器要一份 Harness checkout，以及已经装好的 DSHX。
+
+本仓库给**手里已有 [Harness checkout](https://github.com/deepseek-ai/deepseek-harness) 和 [DSHX](https://github.com/aa2246740/dsh-external-plugin-devkit) `>=0.7.5 <0.8.0`** 的作者用。在普通 Web 会话里选 Creator Mode+，用九个固定工具把一个文件化插件搭起来、检查、挂载，也能按安全顺序卸载。
+
+不替代官方创造模式。兼容 DSH `dsh-v0.1.0-rc.8` 的 Creator/Guardian 合同，以及 `dsh-v0.1.1-rc.2`、`dsh-v0.1.2-rc.1` 到 `dsh-v0.1.5-rc.2` 的认证 Web 链路。第九个工具 `dshx_hot_reload` 是尚未发布的候选能力，必须配套具备该实现的 DSHX。
 
 ![在官方 WebUI 里打开 Creator Mode+](docs/screenshots/mode-picker.gif)
 
@@ -12,9 +16,9 @@
 
 ![已选中 Creator Mode+](docs/screenshots/mode-selected.png)
 
-## 安装
+## 作者：Harness checkout + 安装器
 
-在 Agent 会话外面做。进你的 Harness 仓库：
+先有一份本机 Harness checkout，并且已经按 [DSHX](https://github.com/aa2246740/dsh-external-plugin-devkit) 把工作台装进 `tools/dshx`。然后在 Agent 会话外面，把本仓库 clone 进 `tools/dsh-creator-mode-plus`，用这份 checkout 里的 `pnpm dsh` 做**本地 `link:`**（不是 `github:`），再跑安装器写用户 preset。
 
 ```sh
 cd /path/to/deepseek-harness
@@ -23,7 +27,7 @@ pnpm dsh plugin --profile web add link:./tools/dsh-creator-mode-plus
 node tools/dsh-creator-mode-plus/scripts/install.mjs --harness "$PWD"
 ```
 
-安装器只写用户 preset，不动随仓库带的 Standard / Creator。打开官方 WebUI，检查 Creator Mode+ 是否出现在模式列表，并在新会话验收。不要仅因增加 profile 依赖就重启 Host。
+`link:` 只把桥接到这份 checkout 的 Web profile。安装器才写用户 preset，不动随仓库带的 Standard / Creator。打开官方 WebUI，检查 Creator Mode+ 是否出现在模式列表，并在新会话验收。不要仅因增加 profile 依赖就重启 Host。
 
 合同见 [Bridge v2](docs/bridge-contract.md) 和 [DSHX v0.7 alignment](docs/dshx-v0.7-alignment.md)。
 
