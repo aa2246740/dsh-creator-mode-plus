@@ -52,8 +52,10 @@ export function verifyHarnessInstall(harnessRoot) {
     const skill = readFileSync(skillPath, 'utf8')
     if (!composition.includes('You are Creator Mode+')) throw new Error('isolated preset is missing the Creator Mode+ persona')
     if (!composition.includes('name: dsh-creator-mode-plus')) throw new Error('isolated preset is missing the standalone bridge row')
-    if (!skill.includes('dshx-v0.7/creator-bridge-v2')) throw new Error('isolated preset is missing the DSHX v0.7 skill')
-    if (!skill.includes('update plan → prepare → verify → apply')) throw new Error('isolated preset is missing the Harness Update Assistant boundary')
+    if (!skill.includes('dshx_status') || !skill.includes('dshx_hot_reload')) throw new Error('isolated preset is missing the Creator delivery workflow')
+    const maintenance = readFileSync(join(installed.target, 'skills/creator-mode-plus/maintenance.md'), 'utf8')
+    if (!skill.includes('(maintenance.md#harness-and-launcher-maintenance)') || !maintenance.includes('update plan → prepare → verify → apply')) throw new Error('isolated preset is missing the referenced Harness maintenance branch')
+    if (!existsSync(join(installed.target, 'skills/creator-mode-plus/verification-recovery.md'))) throw new Error('isolated preset is missing the referenced verification branch')
 
     const firstStamp = statSync(compositionPath)
     const updated = installCreatorModePlus({ harnessRoot, dshHome, upgrade: true })

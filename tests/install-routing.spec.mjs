@@ -55,9 +55,9 @@ test('server HMR exception never waives an unrelated failed plan gate', () => {
         { exitCode: 1, stdout: JSON.stringify(report) }, 'session-gate', 42)
       row.sourceBuilt = true
       const status = deliveryStatus(row, { pid: 42, port: 43127 })
-      assert.equal(status.state, extraError ? 'ACTIVATION_PLAN_REQUIRED' : 'ACTIVATION_DECISION_REQUIRED')
-      if (extraError) assert.doesNotMatch(status.next, /call dshx_hot_reload/)
-      else assert.match(status.next, /call dshx_hot_reload/)
+      assert.equal(status.state, extraError ? 'ACTIVATION_PLAN_REQUIRED' : 'HOT_RELOAD_READY')
+      if (extraError) assert.doesNotMatch(status.next, /call dshx_hot_reload/i)
+      else assert.match(status.next, /call dshx_hot_reload/i)
     }
   } finally { rmSync(root, { recursive: true, force: true }) }
 })

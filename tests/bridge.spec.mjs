@@ -31,6 +31,69 @@ import {
 
 const temporaryRoots = []
 
+describe('Creator delivery continuation', () => {
+  it('continues a checked server activation after a missing browser adapter in the same session', async () => {
+    const harness = harnessAt(temporaryDirectory('creator-continuation-'))
+    const plugin = join(harness, 'my-plugins/demo')
+    mkdirSync(plugin, { recursive: true })
+    writeFileSync(join(plugin, 'index.js'), 'export const value = 1')
+    const commands = []
+    const plan = { command: 'activation-plan', ok: false,
+      findings: [{ level: 'error', code: 'activation-blocker' }],
+      data: { change: 'server', facts: { packageDir: plugin, hasClient: true, handoff: { port: 43127 } },
+        decision: { hostRestart: 'not-decided' } } }
+    const options = { harnessRoot: harness, loaderPath: '/fake/tsx-loader.mjs', hostPort: 43127,
+      spawnProcess(_command, argv) {
+        const operation = argv[3]
+        commands.push(operation)
+        const child = new EventEmitter()
+        child.stdout = new PassThrough(); child.stderr = new PassThrough(); child.kill = () => true
+        queueMicrotask(() => {
+          child.stdout.write(operation === 'activation-plan' ? JSON.stringify(plan)
+            : operation === 'browser' ? JSON.stringify({ command: 'browser', ok: false,
+              findings: [{ level: 'error', code: 'browser-access', message: 'BROWSER_ADAPTER_REQUIRED: configure this session' }] })
+            : 'dshx check\nOK manifest')
+          child.emit('close', operation === 'check' ? 0 : 1)
+        })
+        return child
+      } }
+    const exec = { agent: { id: 'continuation-session' }, callId: 'call-a', signal: new AbortController().signal }
+    const planned = await runDshx(['activation-plan', 'demo', '--change', 'server'], exec, options)
+    assert.equal(planned.outcome.status, 'ACTION_REQUIRED')
+    assert.equal(planned.commandExitCode, 1)
+    assert.equal(planned.exitCode, 0, 'a successful planning result is not an operation failure')
+    const checked = await runDshx(['check', 'demo'], exec, options)
+    assert.equal(checked.delivery.state, 'HOT_RELOAD_READY')
+    assert.deepEqual(checked.delivery.nextAction, { tool: 'dshx_hot_reload', arguments: { name: 'demo' } })
+    const browser = await runDshx(['browser', 'open', '--json'], exec, options)
+    assert.equal(browser.exitCode, 1)
+    assert.equal(browser.outcome.status, 'BLOCKED')
+    assert.equal(browser.outcome.scope, 'browser')
+    assert.equal(browser.delivery.state, 'HOT_RELOAD_READY')
+    assert.deepEqual(browser.outcome.continueWith, [checked.delivery.nextAction])
+    assert.deepEqual(commands, ['activation-plan', 'check', 'browser'])
+  })
+
+  it('keeps an unrelated server-plan error blocking and offers no hot-reload action', async () => {
+    const harness = harnessAt(temporaryDirectory('creator-continuation-error-'))
+    const plan = { command: 'activation-plan', ok: false,
+      findings: [{ level: 'error', code: 'activation-blocker' }, { level: 'error', code: 'offline-composition' }],
+      data: { change: 'server', facts: { packageDir: '/not-checked' }, decision: { hostRestart: 'not-decided' } } }
+    const result = await runDshx(['activation-plan', 'demo', '--change', 'server'], { agent: { id: 'plan-error' } }, {
+      harnessRoot: harness, loaderPath: '/fake/tsx-loader.mjs', hostPort: 43127,
+      spawnProcess() {
+        const child = new EventEmitter(); child.stdout = new PassThrough(); child.stderr = new PassThrough(); child.kill = () => true
+        queueMicrotask(() => { child.stdout.write(JSON.stringify(plan)); child.emit('close', 1) })
+        return child
+      },
+    })
+    assert.equal(result.exitCode, 1)
+    assert.equal(result.outcome.status, 'BLOCKED')
+    assert.equal(result.outcome.scope, 'activation')
+    assert.equal(result.outcome.continueWith.some(action => action.tool === 'dshx_hot_reload'), false)
+  })
+})
+
 function temporaryDirectory(label) {
   const path = mkdtempSync(join(tmpdir(), label))
   temporaryRoots.push(path)

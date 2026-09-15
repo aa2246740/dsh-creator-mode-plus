@@ -14,7 +14,7 @@ import {
   inspectDshxCompatibility,
 } from './compatibility.js'
 import { forgetCreatorClaim, rememberCreatorClaim } from './safety.js'
-import { deliveryStatus, readDelivery, recordDelivery, verifyDeliveryClient } from './delivery.js'
+import { deliveryStatus, readDelivery, recordDelivery, verifyDeliveryClient, withOperationOutcome } from './delivery.js'
 
 export {
   CREATOR_BRIDGE_VERSION,
@@ -294,7 +294,7 @@ export function runDshx(args, exec, options = {}) {
       try { delivery.runtimeProof = await verifyDeliveryClient(receipt, port, options.getWebStartupUrl?.(port)) }
       catch { delivery.runtimeProof = { state: 'RUNTIME_PROOF_FAILED', behavior: 'UNVERIFIED' } }
     }
-    return delivery ? { ...result, delivery } : result
+    return withOperationOutcome(args, result, delivery)
   }).catch((error) => {
     if (args[0] === 'hot-reload') {
       root ??= resolveHarnessRoot(options)

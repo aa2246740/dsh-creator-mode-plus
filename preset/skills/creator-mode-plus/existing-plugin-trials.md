@@ -34,7 +34,7 @@ meets the user's scope, preserving an exact rollback point and the Host PID.
 
 If the user explicitly requires keeping the installed directory untouched and
 switching its registration to a different same-name candidate, preserve that
-constraint. The eight fixed tools do not expose arbitrary source retargeting.
+constraint. The fixed tools do not expose arbitrary source retargeting.
 Report SOURCE_RETARGET_REQUIRED for this specific operation and provide the
 prepared candidate, old target and rollback evidence to the external supervisor.
 Do not uninstall first to manufacture a new scaffold or hand-edit profile links.

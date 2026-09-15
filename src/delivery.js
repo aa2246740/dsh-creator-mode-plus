@@ -228,10 +228,14 @@ export function deliveryStatus(row, { pid = process.pid, startedAt = Date.now() 
   const state = wrongTarget ? 'TARGET_MISMATCH' : row.hotReload ? 'RUNTIME_VERIFICATION_REQUIRED'
     : row.hotReloadFailed ? 'ACTIVATION_DECISION_REQUIRED'
       : !row.sourceBuilt ? 'SOURCE_BUILD_REQUIRED' : !row.plan ? 'ACTIVATION_PLAN_REQUIRED'
-      : planFailed && !boundedHotReload ? 'ACTIVATION_PLAN_REQUIRED' : undecided ? 'ACTIVATION_DECISION_REQUIRED'
+      : planFailed && !boundedHotReload ? 'ACTIVATION_PLAN_REQUIRED' : boundedHotReload ? 'HOT_RELOAD_READY' : undecided ? 'ACTIVATION_DECISION_REQUIRED'
       : restart && !changed ? 'AWAITING_LAUNCHER_RESTART' : 'RUNTIME_VERIFICATION_REQUIRED'
+  const nextAction = state === 'HOT_RELOAD_READY'
+    ? { tool: 'dshx_hot_reload', arguments: { name: row.pluginId } }
+    : undefined
   return { pluginId: row.pluginId, state, currentPid: pid,
-    ...(row.plan?.packageDir !== undefined ? { sourcePath: row.plan.packageDir, targetScope: 'This plan and fixed ID refer only to sourcePath. A build in another directory does not check or activate this target. Read the existing-plugin trial workflow before promoting candidate changes; a different directory alone is not restart evidence.' } : {}),
+    ...nextAction ? { nextAction } : {},
+    ...(row.plan?.packageDir !== undefined ? { sourcePath: row.plan.packageDir, targetScope: 'This plan and fixed ID refer only to sourcePath. A build in another directory does not check or activate this target. Read the existing-plugin trial workflow before promoting candidate changes.' } : {}),
     ...(row.buildHostPid !== undefined ? { previousPid: row.buildHostPid } : {}),
     ...(row.plan?.handoff !== undefined ? { handoff: row.plan.handoff } : {}),
     ...row.hotReload ? { moduleProof: {
@@ -242,20 +246,53 @@ export function deliveryStatus(row, { pid = process.pid, startedAt = Date.now() 
     next: wrongTarget
       ? 'Resolve the Host target mismatch before activation or runtime verification. Preserve the source and report the exact target blocker.'
       : row.hotReload && !currentModuleProof
-      ? `Historical same-PID module replacement proof belongs to Host pid ${row.hotReload.hostPid}; current Host pid is ${pid}. Keep this task pending and verify the requested behavior on the current Host.`
+      ? 'The previous activation evidence belongs to an earlier runtime. Verify the requested behavior in the current session before marking the plugin complete.'
       : row.hotReload
-      ? 'Same-PID server module replacement and temporary-scope cleanup are proved. Keep this task pending until the requested behavior is exercised; module HMR is not functional acceptance.'
+      ? 'The implementation is active. Exercise the requested behavior before marking the plugin complete; activation alone is not functional acceptance.'
       : row.hotReloadFailed
-        ? 'The controlled hot reload failed or its proof was incomplete. It does not restore older restart authority; obtain a new activation plan or changed-source check before another activation decision.'
+        ? 'Activation failed or its evidence was incomplete. Resolve the failure, then obtain a new activation plan or changed-source check before retrying.'
       : !row.sourceBuilt
         ? 'Build the claimed sourcePath (resolve the claimed target first if no plan exists), then call dshx_check for this plugin id. A candidate built elsewhere does not satisfy this check. Keep delivery pending.'
       : boundedHotReload
-        ? 'After the checked source is ready, call dshx_hot_reload for this claimed plugin id to obtain bounded same-PID server evidence. Unsupported targets remain pending; failure does not authorize a restart. Verify changed client behavior separately.'
+        ? 'Call dshx_hot_reload now for this checked plugin, then exercise the changed feature. Browser-adapter readiness is independent.'
       : !row.plan || planFailed
         ? 'The activation plan remains pending. Obtain a successful plan before attempting activation or runtime verification.'
       : undecided
-        ? 'Keep delivery pending: module-HMR evidence and the exact changed surface are missing. Call dshx_activation_plan for the claimed target; missing evidence does not authorize a restart.'
-      : 'Keep this task pending. Use the authenticated current WebUI to exercise the requested plugin behavior. A build, new PID, HTTP 200, unauthorized response or missing route is not acceptance.' }
+        ? 'Keep delivery pending: the changed component and activation method are unresolved. Call dshx_activation_plan for the claimed target.'
+      : 'Exercise the requested plugin behavior in the current application. Mark it complete only when the requested features work; otherwise report the remaining work.' }
+}
+
+/** Bridge outcomes describe the next operation; raw CLI exit codes remain auditable. */
+export function withOperationOutcome(args, result, delivery) {
+  let report
+  try { report = JSON.parse(result.stdout) } catch { /* Text commands have no JSON report. */ }
+  const errors = Array.isArray(report?.findings) ? report.findings.filter(item => item.level === 'error') : []
+  // DSHX 0.7.6 used exit 1 for an evidence request. Adapt only that exact
+  // planning case; authentication, composition and contract errors stay errors.
+  const evidenceRequest = args[0] === 'activation-plan' && report?.command === 'activation-plan'
+    && report?.data?.change === 'server' && report?.data?.decision?.hostRestart === 'not-decided'
+    && typeof report?.data?.facts?.packageDir === 'string'
+    && result.exitCode === 1 && errors.length > 0 && errors.every(item => item.code === 'activation-blocker')
+  const code = evidenceRequest ? 0 : result.exitCode
+  const browser = args[0] === 'browser'
+  const errorText = errors.map(item => String(item.message ?? '')).join('\n')
+  const browserOnly = browser && /\bBROWSER_[A-Z_]+\b/.test(errorText) && !/\bWEB_[A-Z_]+\b/.test(errorText)
+  const scope = browser ? (code !== 0 && !browserOnly ? 'host' : 'browser')
+    : args[0] === 'check' ? 'source'
+    : ['activation-plan', 'hot-reload', 'activate-new-client'].includes(args[0]) ? 'activation' : 'operation'
+  const continueWith = delivery?.nextAction && (code === 0 || browserOnly) ? [delivery.nextAction] : []
+  const outcome = {
+    status: code !== 0 ? 'BLOCKED' : evidenceRequest || continueWith.length > 0 ? 'ACTION_REQUIRED' : 'SUCCEEDED',
+    scope,
+    continueWith,
+    ...browserOnly ? { message: 'This browser adapter is unavailable. Continue independent build/check/activation work. Verify through an authorized, already-authenticated UI or the plugin service/tool when applicable; record only the verification that actually ran.' } : {},
+  }
+  return {
+    outcome,
+    ...result,
+    ...evidenceRequest ? { exitCode: 0, commandExitCode: result.exitCode } : {},
+    ...delivery ? { delivery } : {},
+  }
 }
 
 /** Read-only, same-origin proof through Connection authentication; no credential leaves this function. */

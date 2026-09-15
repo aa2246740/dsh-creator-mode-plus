@@ -1,6 +1,6 @@
 # DSHX v0.7 alignment
 
-Creator Mode+ 0.3.5 is aligned to stable DSHX `>=0.7.5 <0.8.0`, Creator Bridge
+Creator Mode+ 0.3.7 is aligned to stable DSHX `>=0.7.5 <0.8.0`, Creator Bridge
 v2, and the official browser WebUI lifecycle. DSHX v0.7.5 makes same-Home
 ownership atomic across checkouts and binds PID, process start time, Home,
 profile, and root before lifecycle or update mutation.
@@ -9,6 +9,8 @@ This is a contract alignment, not a version-number exception. Before the bridge
 or installer mutates anything, it verifies the DSHX package identity, stable
 version range, CLI and Creator/Guardian implementation, seven-surface activation
 contract, managed-shell gate, and transactional Harness Update Assistant.
+
+The 0.3.7 delivery is verified with DSHX 0.7.7, including corrected client scaffolds, bounded recovery of unmounted failed imports, and explicit external mixed-mount self-upgrades.
 
 ## Ownership matrix
 
@@ -81,8 +83,9 @@ VISUAL_BEHAVIOR_VERIFIED
 ## Upgrade activation
 
 Server changes across these versions need live activation evidence, not a blanket
-restart instruction. A server plan with `hostRestart: not-decided` keeps delivery
-at `ACTIVATION_DECISION_REQUIRED`. It does not authorize process control.
+restart instruction. A checked server plan with `hostRestart: not-decided` returns `HOT_RELOAD_READY`
+and names `dshx_hot_reload` as its next action. Unknown/failed evidence remains
+pending. Planning does not authorize process control.
 Run the installer with `--upgrade` outside the Agent session; unchanged preset
 composition bytes retain their stamp. Root Loader module HMR and preset-private
 bridge replacement are distinct scopes and need separate proof. A module or

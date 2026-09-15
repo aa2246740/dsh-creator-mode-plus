@@ -12,11 +12,11 @@ const root = join(import.meta.dirname, '..')
 const read = path => readFileSync(join(root, path), 'utf8')
 
 describe('Creator Mode+ 0.3 package contract', () => {
-  it('advertises all nine fixed tools and bounded same-PID hot reload in preset metadata', () => {
+  it('describes the user workflow in preset metadata', () => {
     const preset = read('preset/preset.yml')
-    assert.match(preset, /九工具固定桥/)
-    assert.match(preset, /受限同 PID 服务器模块热重载/)
-    assert.doesNotMatch(preset, /七工具固定桥/)
+    assert.match(preset, /DSH 对话/)
+    assert.match(preset, /实际功能/)
+    assert.doesNotMatch(preset, /九工具固定桥|七工具固定桥/)
   })
 
   it('does not teach agents to convert missing server HMR evidence into a restart', () => {
@@ -26,7 +26,7 @@ describe('Creator Mode+ 0.3 package contract', () => {
       const source = read(path)
       assert.doesNotMatch(source, /because the profile changed|A profile dependency is a manifest change|因为加了 profile 依赖|still (?:needs|requires) one controlled/i, path)
     }
-    const skill = read('preset/skills/creator-mode-plus/SKILL.md')
+    const skill = ['SKILL.md','maintenance.md','verification-recovery.md'].map(name => read(`preset/skills/creator-mode-plus/${name}`)).join('\n')
     assert.match(skill, /ACTIVATION_DECISION_REQUIRED/)
     assert.match(skill, /not that a restart is required/)
     assert.match(skill, /Root Loader module replacement does not prove preset-private/)
@@ -38,7 +38,7 @@ describe('Creator Mode+ 0.3 package contract', () => {
     const manifest = read('dshx.yml')
     const verifier = read('scripts/verify-dshx.mjs')
 
-    assert.equal(metadata.version, '0.3.6')
+    assert.equal(metadata.version, '0.3.7')
     assert.match(verifier, /DSHX_V075_COMPATIBILITY_PASS/)
     assert.doesNotMatch(verifier, /DSHX_V072_COMPATIBILITY_PASS/)
     assert.equal(metadata.files.includes('dshx.yml'), true)
@@ -77,18 +77,17 @@ describe('Creator Mode+ 0.3 package contract', () => {
       assert.doesNotMatch(source, />=0\.6\.2 <0\.7\.0/, path)
       assert.match(source, /0\.7/, path)
     }
-    const skill = read('preset/skills/creator-mode-plus/SKILL.md')
+    const skill = ['SKILL.md','maintenance.md','verification-recovery.md'].map(name => read(`preset/skills/creator-mode-plus/${name}`)).join('\n')
     assert.match(skill, /update plan → prepare → verify → apply/)
     assert.match(skill, /prepare.*verify.*apply.*rollback.*external DSHX supervisor/s)
-    assert.match(skill, /nine fixed model tools/)
     assert.match(skill, /dshx_hot_reload/)
     assert.match(skill, /dshx_remove_plugin/)
     assert.match(skill, /dshx plugin remove/)
     assert.match(skill, /detached-orphan-symlink/)
     assert.doesNotMatch(skill, /Do not implement until the plan/)
     assert.doesNotMatch(skill, /activation_plan.*before implementation/)
-    assert.match(skill, /fresh `new-client`.*before activation planning/s)
-    assert.match(skill, /fresh `new-client`.*only after `dshx_check` exits `0`/s)
+    assert.match(skill, /fresh `new-client`.*before\s+activation planning/s)
+    assert.match(skill, /fresh `new-client`.*only after\s+`dshx_check` exits `0`/s)
     const alignment = read('docs/dshx-v0.7-alignment.md')
     assert.match(alignment, /DSHX v0\.7\.3/)
     assert.match(alignment, /safe profile bundle removal|external bundle/i)

@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.3.7 - 2026-09-15
+
+- Verify the conversational create, activate, server hot-reload and remove flow with DSHX 0.7.7 on the live RC2 Host. Pair new-client cache recovery with that DSHX version.
+
+- Pair self-upgrade with the explicit external DSHX mixed-mount transaction when root and session instances share the Creator module.
+
+- Continue checked server activation through an explicit HOT_RELOAD_READY state and fixed next action; preserve the original CLI code for old evidence-only plans.
+- Scope browser-adapter failures to verification and retain independent activation actions.
+- Rewrite the Agent workflow with branch references, persistent installation authorization and concrete feature acceptance.
+- Preserve the established fixed bridge and native approval guards for ordinary Creator sessions.
+
 ## 0.3.6 - 2026-09-11
 
 - Adapt the user preset to Harness 0.1.5-rc.2 persona config: write `prefix`/`suffix` instead of the removed `text` field. A leftover `text` composition is migrated on `--upgrade` and again when the Host plugin loads, so other installs do not have to edit DSH source.

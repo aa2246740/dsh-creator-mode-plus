@@ -4,13 +4,21 @@
 
 在 DeepSeek Harness 的普通 Web 会话里选 Creator Mode+，用九个固定工具把一个文件化插件搭起来、检查、挂载，也能按安全顺序卸载。
 
-不替代官方创造模式。需要 [DSHX](https://github.com/aa2246740/dsh-external-plugin-devkit) `>=0.7.5 <0.8.0`。兼容 DSH `dsh-v0.1.0-rc.8` 的 Creator/Guardian 合同，以及 `dsh-v0.1.1-rc.2`、`dsh-v0.1.2-rc.1` 到 `dsh-v0.1.5-rc.2` 的认证 Web 链路。第九个工具 `dshx_hot_reload` 是尚未发布的候选能力，必须配套具备该实现的 DSHX。
+Creator Mode+ 0.3.7 配套 DSHX 0.7.7，已在 DSH `dsh-v0.1.5-rc.2` 上验证新插件加载、同一会话内服务端热更新和卸载。底层桥接兼容范围为 [DSHX](https://github.com/aa2246740/dsh-external-plugin-devkit) `>=0.7.5 <0.8.0`；本次修复的新插件导入恢复需要 0.7.7。
 
 ![在官方 WebUI 里打开 Creator Mode+](docs/screenshots/mode-picker.gif)
 
 ![模式列表里的 Creator Mode+](docs/screenshots/mode-picker.png)
 
 ![已选中 Creator Mode+](docs/screenshots/mode-selected.png)
+
+## 在对话里使用
+
+选择工作区和 **Creator Mode+**，直接说明功能和安装目标，例如：
+
+> 做一个页面计数按钮插件，装到当前 DSH；完成后继续给它加一个服务端工具。
+
+Agent 会创建源码、构建检查、选择激活方式并继续执行。服务端修改使用同进程热更新；新客户端首次加载需要刷新页面。构建失败后先修复再重试，浏览器适配器缺失只影响对应的界面验收。明确的安装请求会沿用到这些步骤。
 
 ## 安装
 
@@ -37,11 +45,11 @@ node tools/dsh-creator-mode-plus/scripts/install.mjs --harness "$PWD"
 | `dshx_status` | 读 supervisor 和 Host，不动进程 |
 | `dshx_claim_plugin` | 这个会话独占一个插件 |
 | `dshx_scaffold` | 在会话工作区建项目，不覆盖已有的 |
-| `dshx_check` | 静态检查。过了只证明源码能建起来 |
-| `dshx_activation_plan` | 分类这次改动要不要重载或重启 |
-| `dshx_activate_new_client` | 按固定顺序挂新 client。不刷新浏览器，不重启 DSH |
+| `dshx_check` | 检查接口、构建产物和激活前置条件 |
+| `dshx_activation_plan` | 确定本次修改的激活方式 |
+| `dshx_activate_new_client` | 安装并验证新客户端插件的入口 |
 | `dshx_remove_plugin` | 先让当前 Host 脱载，再清 profile；只断开链接，保留源码 |
-| `dshx_hot_reload` | 对受支持的服务端插件做同 PID 热替换 |
+| `dshx_hot_reload` | 激活服务端代码修改 |
 
 整插件删除只走 `dshx_remove_plugin`。已经装着再跑安装器，它不会覆盖。
 

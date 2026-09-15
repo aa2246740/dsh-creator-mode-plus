@@ -46,7 +46,7 @@ The nine model-facing tools map to exactly these child CLI shapes:
 
 The approved eighth operation performs bounded official module HMR, not Host restart. The bridge supplies JSON output and trusted session/Host context, refreshes the claim first, and accepts no model-controlled path, profile, port, argv or shell. A successful module receipt remains pending functional verification; a failed attempt cannot reuse an earlier successful replacement receipt. The fixed tool accepts only root-scope receipts. Explicit preset-private replacement stays external and requires its own runtime acceptance, never a self-replacement tool or managed-shell bypass.
 
-Multi-file server implementations declare exact package-relative `hotReload.artifacts` in `dshx.yml`. The receipt binds before/after hashes for that complete set and its exact watch roots. This matters because an entry-only reload can leave an imported helper cached. Creator+ declares its five server files, excluding its browser client; a self-upgrade must replace those files together and prove that the existing session uses the new tools.
+Multi-file server implementations declare exact package-relative `hotReload.artifacts` in `dshx.yml`. The receipt binds before/after hashes for that complete set and its exact watch roots. This matters because an entry-only reload can leave an imported helper cached. Creator+ declares its complete server file set in `dshx.yml`, excluding its browser client; a self-upgrade must replace those files together and prove that the existing session uses the new tools.
 
 The bridge appends a fixed `--json` output flag to activation-plan (not model input). Its session-local delivery journal stores plan/check metadata and validated hot-replacement receipts under the selected Harness `.dshx/creator-plus/deliveries`; credentials and conversation content are excluded. Status and session recovery expose pending delivery across normal launcher restarts. A new Host does not mark the feature accepted, and old module proof is labeled historical when its PID no longer matches. Status uses Connection authentication for same-origin manifest and bundle proof; actual behavior remains a separate required check.
 
@@ -342,8 +342,8 @@ independent: `SOURCE_BUILT`, `ARTIFACT_SYNCED`, `NEXT_BOOT_REGISTERED`,
 
 Changes to safe removal, the bash guard, Connection authentication or preflight
 are server changes and need live activation evidence. They are not automatically
-restart-required. An unproved server activation remains
-`ACTIVATION_DECISION_REQUIRED`; a launcher handoff supplies identity, not approval.
+restart-required. A checked server plan returns `HOT_RELOAD_READY` with a fixed `nextAction`.
+Unknown or failed target evidence remains `ACTIVATION_DECISION_REQUIRED`; a launcher handoff supplies identity, not approval.
 Official HMR of a root Loader entry does not prove replacement of a preset-private
 bridge. Keep that scope distinction explicit and verify the actual fixed-tool
 behavior before claiming delivery. Managed upgrade preserves an unchanged
@@ -398,3 +398,24 @@ The no-argument tool selects only that session's snapshot, supplies authenticati
 privately, and returns whitelisted browser status. Raw managed-shell browser
 configure/bind/open remains denied. Setup never opens a browser; only the later
 fixed call does. A changed adapter requires external review and reconfiguration.
+
+
+## Delivery continuation (0.3.7)
+
+Fixed results lead with `outcome`: status, scope and `continueWith` actions.
+A checked server plan produces `delivery.nextAction` for `dshx_hot_reload`.
+For DSHX 0.7.6, only the exact evidence-only server plan is adapted to bridge
+exit code 0, retaining its original `commandExitCode: 1`; unrelated errors remain
+blocking. DSHX 0.7.7 returns a successful plan directly and grants no activation
+or restart proof merely by planning.
+
+Browser adapter failure retains the server delivery state and permitted next
+action. Current-Host authentication errors still block dependent live proof.
+An already-authenticated, task-authorized UI or a plugin command/service can
+supply feature evidence without configuring this optional browser adapter.
+
+The sealed executor code is a development integration, enabled only by an
+explicit `developmentExecution: true` composition. The ordinary preset keeps
+the established nine fixed tools and native approval/guard stack. Enabling the
+experimental path retains its strict executor/provenance requirements; absence
+of that optional service is not a default-mode prerequisite.

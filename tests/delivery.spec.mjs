@@ -38,7 +38,7 @@ test('same-PID hot reload stores bounded module proof but remains behavior-unver
   assert.equal(afterRestart.state,'RUNTIME_VERIFICATION_REQUIRED')
   assert.equal(afterRestart.moduleProof.evidenceState,'HISTORICAL_HOST')
   assert.equal(afterRestart.moduleProof.currentHostPidMatches,false)
-  assert.match(afterRestart.next,/Historical.*Host pid 42.*current Host pid is 43/i)
+  assert.match(afterRestart.next,/previous activation evidence.*earlier runtime/i)
 
   recordDelivery(root,['hot-reload','demo','--profile','web','--port','43127','--json'],{exitCode:0,stdout:hotReloadOutput()},'session-b',42)
   assert.equal(deliveryStatus(readDelivery(root,'session-b'),{pid:42,port:43127}).state,'RUNTIME_VERIFICATION_REQUIRED')
@@ -78,7 +78,7 @@ test('a failed hot reload cannot revive an older restart-required plan', () => {
   const status=deliveryStatus(readDelivery(root,'session-a'),{pid:42,port:43127})
   assert.equal(status.state,'ACTIVATION_DECISION_REQUIRED')
   assert.notEqual(status.state,'AWAITING_LAUNCHER_RESTART')
-  assert.match(status.next,/does not restore older restart authority/i)
+  assert.match(status.next,/new activation plan or changed-source check/i)
  } finally {rmSync(root,{recursive:true,force:true})}
 })
 
@@ -166,7 +166,7 @@ test('an undecided server activation remains pending instead of advancing to run
  }
  const status=deliveryStatus(row,{pid:11,port:43127,startedAt:101})
  assert.equal(status.state,'ACTIVATION_DECISION_REQUIRED')
- assert.match(status.next,/pending.*module-HMR evidence/i)
+ assert.match(status.next,/pending.*activation method/i)
  assert.notEqual(status.state,'RUNTIME_VERIFICATION_REQUIRED')
 })
 
@@ -186,7 +186,8 @@ test('a failed undecided plan replaces a stale required receipt at the recordDel
   assert.equal(row.plan.hostRestart,'not-decided')
   assert.equal(row.planFailed,true)
   const status=deliveryStatus(row,{pid:11,port:43127,startedAt:row.builtAt+1})
-  assert.equal(status.state,'ACTIVATION_DECISION_REQUIRED')
+  assert.equal(status.state,'HOT_RELOAD_READY')
+  assert.deepEqual(status.nextAction,{tool:'dshx_hot_reload',arguments:{name:'demo'}})
   assert.notEqual(status.state,'RUNTIME_VERIFICATION_REQUIRED')
  } finally {rmSync(root,{recursive:true,force:true})}
 })

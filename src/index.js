@@ -252,7 +252,7 @@ export function apply(ctx) {
 
   ctx.tools.register({
     name: 'dshx_activation_plan',
-    description: 'Classify one change as patch, manifest, preset, client, new-client, server, or artifact before any new-session, reload, or restart decision.',
+    description: 'Select the activation method for one changed component: patch, manifest, preset, client, new-client, server, or artifact.',
     parameters: {
       type: 'object',
       properties: {
@@ -275,7 +275,7 @@ export function apply(ctx) {
 
   ctx.tools.register({
     name: 'dshx_activate_new_client',
-    description: 'Activate one checked my-plugins Web client in the DSHX v0.7 safe order: profile link, resolution proof, watched-patch transaction, then current-Host manifest proof. It never reloads the browser or restarts DSH.',
+    description: 'Activate one checked my-plugins Web client in the DSHX v0.7 safe order: profile link, resolution proof, watched-patch transaction, then current-Host manifest proof.',
     parameters: {
       type: 'object',
       properties: { name: { type: 'string', description: 'Plugin id under my-plugins' } },
@@ -317,7 +317,7 @@ export function apply(ctx) {
 
   ctx.tools.register({
     name: 'dshx_hot_reload',
-    description: 'Replace one already-loaded, checked Web-profile server plugin through DSHX controlled same-PID module HMR. Success proves module replacement and temporary-scope cleanup only; the requested behavior remains RUNTIME_VERIFICATION_REQUIRED. It never accepts paths, ports, arbitrary commands, or Host process control.',
+    description: 'Activate the code changes of one already-loaded, checked server plugin. The requested behavior remains RUNTIME_VERIFICATION_REQUIRED until exercised. Use the fixed plugin ID; runtime provenance and cleanup are checked internally.',
     parameters: {
       type: 'object',
       properties: { name: { type: 'string', description: 'Existing checked plugin id under my-plugins' } },
