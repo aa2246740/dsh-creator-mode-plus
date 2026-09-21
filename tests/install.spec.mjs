@@ -29,7 +29,7 @@ function temporaryDirectory(label) {
   return path
 }
 
-function harnessAt(root, version = '0.7.5', presetLayout = 'legacy') {
+function harnessAt(root, version = '0.7.8', presetLayout = 'legacy') {
   const standard = presetLayout === 'rc1'
     ? join(root, 'packages/preset/agent-presets/presets/standard')
     : join(root, 'apps/cli/config/agent-presets/standard')
@@ -68,7 +68,7 @@ afterEach(() => {
 
 describe('Creator Mode+ installer', () => {
   it('installs and upgrades from the RC1 Standard preset location without changing it', () => {
-    const harnessRoot = harnessAt(temporaryDirectory('creator-mode-plus-rc1-harness-'), '0.7.5', 'rc1')
+    const harnessRoot = harnessAt(temporaryDirectory('creator-mode-plus-rc1-harness-'), '0.7.8', 'rc1')
     const dshHome = temporaryDirectory('creator-mode-plus-rc1-home-')
     const source = join(harnessRoot, 'packages/preset/agent-presets/presets/standard/agent.cordis.yml')
     const before = readFileSync(source, 'utf8')
@@ -92,7 +92,7 @@ describe('Creator Mode+ installer', () => {
     const composition = readFileSync(join(result.target, 'agent.cordis.yml'), 'utf8')
 
     assert.equal(result.action, 'installed')
-    assert.equal(result.dshxVersion, '0.7.5')
+    assert.equal(result.dshxVersion, '0.7.8')
     assert.equal(result.creatorBridgeVersion, 2)
     assert.equal(result.dshxContract, 'dshx-v0.7/creator-bridge-v2')
     assert.match(result.target, /creator-mode-plus$/)

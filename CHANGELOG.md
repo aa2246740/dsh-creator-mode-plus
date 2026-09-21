@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.3.8 - 2026-09-21
+
+- Add `dshx_request_takeover`: show the actual claim owner in the current conversation and transfer only after an explicit answer through the native user-question service. Cancellation is the default.
+- Stop and await the old session, its runtime-owned children, jobs and terminals before atomic DSHX transfer; keep durable old-session fences across preset reloads.
+- Bind each confirmation to one claim snapshot and one short-lived private CLI grant; reject stale confirmation, grant replay, unknown owners and incomplete stopping.
+- Require DSHX `>=0.7.8 <0.8.0` and attest its takeover capability. Keep all ten model tools schema-bounded.
+- Verify native questions, Core guards, jobs and actual CLI processes with `npm run test:native` against an explicit Harness checkout. Human UI click-through acceptance remains unverified; automated answers are not human acceptance.
+
 ## 0.3.7 - 2026-09-15
 
 - Verify the conversational create, activate, server hot-reload and remove flow with DSHX 0.7.7 on the live RC2 Host. Pair new-client cache recovery with that DSHX version.

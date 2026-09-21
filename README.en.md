@@ -2,9 +2,9 @@
 
 [中文](README.md)
 
-Pick Creator Mode+ in a normal DeepSeek Harness Web session. Nine fixed tools scaffold, check, mount, and uninstall a file-backed plugin in a safe order.
+Pick Creator Mode+ in a normal DeepSeek Harness Web session. Ten fixed tools scaffold, check, mount, and uninstall a file-backed plugin in a safe order.
 
-Creator Mode+ 0.3.7 is paired with DSHX 0.7.7. New-client activation, server hot reload within the same conversation, and removal have been verified on DSH `dsh-v0.1.5-rc.2`. The bridge compatibility range remains [DSHX](https://github.com/aa2246740/dsh-external-plugin-devkit) `>=0.7.5 <0.8.0`; the corrected new-client import recovery requires 0.7.7.
+Creator Mode+ 0.3.8 is paired with DSHX 0.7.8 and adds user-confirmed claim takeover in the current conversation. New-client activation, server hot reload within the same conversation, and removal have been verified on DSH `dsh-v0.1.5-rc.2`. The bridge compatibility range remains [DSHX](https://github.com/aa2246740/dsh-external-plugin-devkit) `>=0.7.8 <0.8.0`; both the version range and the human-confirmed takeover capability are checked before use.
 
 ![Open Creator Mode+ in the official WebUI](docs/screenshots/mode-picker.gif)
 
@@ -37,7 +37,7 @@ Contracts: [Bridge v2](docs/bridge-contract.md) and [DSHX v0.7 alignment](docs/d
 
 ![Installer writing the user preset](docs/screenshots/install.png)
 
-## The nine tools
+## The ten tools
 
 | Tool | What |
 |---|---|
@@ -55,7 +55,7 @@ Whole-plugin removal goes through `dshx_remove_plugin` only. Running the install
 
 ![Duplicate install refused](docs/screenshots/already-installed.png)
 
-Harness `update prepare` / `verify` / `apply` / `rollback` are not among the nine tools. They stay with an external DSHX supervisor. Inside the session, managed shell may only read `update plan`.
+Harness `update prepare` / `verify` / `apply` / `rollback` are not among the ten tools. They stay with an external DSHX supervisor. Inside the session, managed shell may only read `update plan`.
 
 ## Upgrade
 
@@ -71,6 +71,7 @@ npm run verify:dshx -- --harness /path/to/deepseek-harness
 ```sh
 npm test
 npm run check
+DSHX_HARNESS=/absolute/path/to/deepseek-harness npm run test:native
 npm run verify:dshx -- --harness /absolute/path/to/deepseek-harness
 npm run verify:harness-install -- --harness /absolute/path/to/deepseek-harness
 ```
@@ -78,3 +79,5 @@ npm run verify:harness-install -- --harness /absolute/path/to/deepseek-harness
 ## License
 
 MIT.
+
+`dshx_request_takeover({name})` asks through the current conversation’s user-question UI, then drains old work and atomically transfers ownership. This requires the `human-confirmed-creator-takeover` capability in addition to the version range.

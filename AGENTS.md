@@ -6,9 +6,9 @@ Read [docs/bridge-contract.md](docs/bridge-contract.md) and [docs/dshx-v0.7-alig
 
 ## Change gates
 
-- Keep the model-facing surface to the nine named tools, including `dshx_hot_reload` and the session-bound `dshx_browser_open`. Every argument must remain schema-bounded and independently allowlisted in `src/runner.js`. Test the exact argv behind all nine tools; a registration-only test is insufficient.
+- Keep the model-facing surface to the ten named tools, including `dshx_hot_reload` and the session-bound `dshx_browser_open`. Every argument must remain schema-bounded and independently allowlisted in `src/runner.js`. Test the exact argv behind all ten tools; a registration-only test is insufficient.
 - `dshx_hot_reload` accepts only a claimed plugin id. Derive Host/profile/port and session provenance inside the bridge. Require checked same-PID replacement and disposal evidence; it grants no shell, arbitrary path, or process-control authority. Module replacement never proves feature behavior.
-- Require the complete stable DSHX `>=0.7.5 <0.8.0` contract, not only a matching version string. Atomic same-Home Host discovery/attach, identity-bound start/restart/update gates, isolated verification Home, Creator, watched-plugin removal, external safe profile-bundle removal, proactive Guardian integrity quarantine, RC2 boot-manifest activation, managed-shell, Harness Update Assistant, and their knowledge contracts must be present before the bridge or installer mutates anything.
+- Require the complete stable DSHX `>=0.7.8 <0.8.0` contract, not only a matching version string. Atomic same-Home Host discovery/attach, identity-bound start/restart/update gates, isolated verification Home, Creator, watched-plugin removal, external safe profile-bundle removal, proactive Guardian integrity quarantine, RC2 boot-manifest activation, managed-shell, Harness Update Assistant, and their knowledge contracts must be present before the bridge or installer mutates anything.
 - Preserve bridge-v2 provenance: session id comes from `exec.agent.id`, not model input. Claim one plugin per session before any named operation; different plugins may run concurrently, while the same plugin fails closed for a second owner.
 - Preserve workspace provenance: scaffold destination comes from `exec.agent.session.header.cwd`, never model input. If the Harness plugin path is outside that workspace, DSHX owns the atomic source-plus-symlink transaction.
 - Preserve automatic session-start Guardian arm, agent-dispose claim release, adopted-launcher lifetime tracking, exact-session recovery steering, and incident acknowledgement. Never register or wrap Host signal handlers.
@@ -17,7 +17,7 @@ Read [docs/bridge-contract.md](docs/bridge-contract.md) and [docs/dshx-v0.7-alig
 - Keep Harness `update prepare`, `verify`, `apply`, and `rollback` outside the Creator session. DSHX v0.7 permits only read-only `update plan` from a managed shell; this does not become a bridge update tool.
 - Preserve the ordered `activate-new-client` DSHX operation; profile linking and resolution happen before watched-patch mutation.
 - Preserve the `dshx_remove_plugin` order: quarantine/remove the watched Host row, prove same-PID absence, use the official profile remover while the dependency exists, prove dependency/link absence, and detach only target-verified plugin-owned symlinks. Partial attempts resume from durable quarantine without rerunning package removal for an already-absent dependency. Preserve source and never expose recursive source deletion.
-- Keep boot-captured bundle removal outside the nine-tool bridge. Creator Mode+ may hand it to external `dshx plugin remove`, but must never expose that command through the managed shell or reinterpret it as `dshx_remove_plugin` watched-row success.
+- Keep boot-captured bundle removal outside the ten-tool bridge. Creator Mode+ may hand it to external `dshx plugin remove`, but must never expose that command through the managed shell or reinterpret it as `dshx_remove_plugin` watched-row success.
 - Keep the preset-scoped bash guard narrow: block claimed plugin-root, Harness-link, and active-profile teardown while allowing ordinary file/component cleanup inside a plugin. Guardian must independently quarantine a claimed watched row when its profile link disappears.
 - Keep Host recovery outside DSH and bounded to one restart plus a crash-loop fuse. Official client-Loader recovery must remain same-origin, Host-stamped, uniquely attributed, quarantined before reload, and separate from arbitrary render/visual/function failures. Never expose internal `creator watch/release/disarm/client-failure/recovery` argv as model inputs.
 - Treat preset generations as concurrent. Any process-global route or resource must use a Host-scoped lease shared across independently loaded module generations, and must have a regression test that mounts two generations before either is disposed.
@@ -28,4 +28,13 @@ Read [docs/bridge-contract.md](docs/bridge-contract.md) and [docs/dshx-v0.7-alig
 
 ## Release gate
 
-Run `npm run check`, `npm run verify:dshx -- --harness <absolute-checkout>`, `npm run verify:harness-install -- --harness <absolute-checkout>`, DSHX `check <absolute-package-path> --harness <absolute-checkout>`, and `npm pack --dry-run`. Inspect the exact staged paths before committing. A release is ready only when every fixed-tool argv and internal lifecycle hook traverses the allowlist, and provenance, cross-generation route leasing, same-origin Loader recovery, recovery steering, full v0.7 capability attestation, real shipped-Standard install, fresh-install, stamp-stable managed-upgrade, legacy-migration, and package-contract tests pass. Report RC2 static/package acceptance separately from live Host, page-load, and visual acceptance.
+Run `npm run check`, `DSHX_HARNESS=<absolute-checkout> npm run test:native`, `npm run verify:dshx -- --harness <absolute-checkout>`, `npm run verify:harness-install -- --harness <absolute-checkout>`, DSHX `check <absolute-package-path> --harness <absolute-checkout>`, and `npm pack --dry-run`. Inspect the exact staged paths before committing. A release is ready only when every fixed-tool argv and internal lifecycle hook traverses the allowlist, and provenance, cross-generation route leasing, same-origin Loader recovery, recovery steering, full v0.7 capability attestation, real shipped-Standard install, fresh-install, stamp-stable managed-upgrade, legacy-migration, and package-contract tests pass. Report RC2 static/package acceptance separately from live Host, page-load, and visual acceptance.
+
+## User-confirmed takeover
+
+`dshx_request_takeover({name})` is the only model-facing handoff entry. It uses
+the public `userQuestions` service; an approval/request auto-allow or model
+boolean is not confirmation. A Host-lifetime, durable ownership fence blocks
+all tools in revoked old sessions except status and a new takeover request;
+this is separate from the narrow destructive-shell guard. It persists across
+preset generations, and never deletes session locks or restarts the Host.

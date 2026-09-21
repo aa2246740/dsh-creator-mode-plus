@@ -2,9 +2,9 @@
 
 [English](README.en.md)
 
-在 DeepSeek Harness 的普通 Web 会话里选 Creator Mode+，用九个固定工具把一个文件化插件搭起来、检查、挂载，也能按安全顺序卸载。
+在 DeepSeek Harness 的普通 Web 会话里选 Creator Mode+，用十个固定工具把一个文件化插件搭起来、检查、挂载，也能按安全顺序卸载。
 
-Creator Mode+ 0.3.7 配套 DSHX 0.7.7，已在 DSH `dsh-v0.1.5-rc.2` 上验证新插件加载、同一会话内服务端热更新和卸载。底层桥接兼容范围为 [DSHX](https://github.com/aa2246740/dsh-external-plugin-devkit) `>=0.7.5 <0.8.0`；本次修复的新插件导入恢复需要 0.7.7。
+Creator Mode+ 0.3.8 配套 DSHX 0.7.8，新增当前对话内的用户确认接管。此前已在 DSH `dsh-v0.1.5-rc.2` 上验证新插件加载、同一会话内服务端热更新和卸载。底层桥接兼容范围为 [DSHX](https://github.com/aa2246740/dsh-external-plugin-devkit) `>=0.7.8 <0.8.0`，并在使用前核对用户确认接管能力。
 
 ![在官方 WebUI 里打开 Creator Mode+](docs/screenshots/mode-picker.gif)
 
@@ -37,13 +37,14 @@ node tools/dsh-creator-mode-plus/scripts/install.mjs --harness "$PWD"
 
 ![安装器把 preset 写进用户目录](docs/screenshots/install.png)
 
-## 九个工具
+## 十个工具
 
 | 工具 | 做什么 |
 |---|---|
 | `dshx_browser_open` | 通过当前会话已批准的适配器完成私有认证交接，然后继续界面验收 |
 | `dshx_status` | 读 supervisor 和 Host，不动进程 |
 | `dshx_claim_plugin` | 这个会话独占一个插件 |
+| `dshx_request_takeover` | 在当前对话请用户确认，停止旧任务后接管认领 |
 | `dshx_scaffold` | 在会话工作区建项目，不覆盖已有的 |
 | `dshx_check` | 检查接口、构建产物和激活前置条件 |
 | `dshx_activation_plan` | 确定本次修改的激活方式 |
@@ -55,7 +56,7 @@ node tools/dsh-creator-mode-plus/scripts/install.mjs --harness "$PWD"
 
 ![重复安装被拒绝](docs/screenshots/already-installed.png)
 
-Harness 更新的 `prepare` / `verify` / `apply` / `rollback` 不在这九个工具里，交给外部 DSHX supervisor。会话内只允许通过 managed shell 读 `update plan`。
+Harness 更新的 `prepare` / `verify` / `apply` / `rollback` 不在这十个工具里，交给外部 DSHX supervisor。会话内只允许通过 managed shell 读 `update plan`。
 
 ## 升级
 
@@ -71,6 +72,7 @@ npm run verify:dshx -- --harness /path/to/deepseek-harness
 ```sh
 npm test
 npm run check
+DSHX_HARNESS=/absolute/path/to/deepseek-harness npm run test:native
 npm run verify:dshx -- --harness /absolute/path/to/deepseek-harness
 npm run verify:harness-install -- --harness /absolute/path/to/deepseek-harness
 ```

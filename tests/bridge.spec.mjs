@@ -100,7 +100,7 @@ function temporaryDirectory(label) {
   return path
 }
 
-function harnessAt(root, version = '0.7.5') {
+function harnessAt(root, version = '0.7.8') {
   mkdirSync(join(root, 'apps/cli/src'), { recursive: true })
   writeFileSync(join(root, 'apps/cli/src/bin.ts'), '')
   for (const path of REQUIRED_DSHX_PATHS) {
@@ -120,7 +120,7 @@ afterEach(() => {
 })
 
 describe('Creator Bridge v2', () => {
-  it('registers only the nine fixed tools and rejects process control', () => {
+  it('registers only the ten fixed tools and rejects process control', () => {
     const registered = []
     apply({
       tools: { register(tool) { registered.push(tool) } },
@@ -189,6 +189,7 @@ describe('Creator Bridge v2', () => {
       ['status'],
       ['browser', 'open', '--json'],
       ['creator', 'claim', 'demo'],
+      ['creator', 'takeover', 'demo', '--json'],
       ['creator', 'scaffold', 'demo', 'client'],
       ['check', 'demo'],
       ['activation-plan', 'demo', '--change', 'new-client'],
@@ -432,7 +433,10 @@ describe('Creator Bridge v2', () => {
     assert.equal(supportsDshxVersion('0.7.2'), false)
     assert.equal(supportsDshxVersion('0.7.3'), false)
     assert.equal(supportsDshxVersion('0.7.4'), false)
-    assert.equal(supportsDshxVersion('0.7.5'), true)
+    assert.equal(supportsDshxVersion('0.7.5'), false)
+    assert.equal(supportsDshxVersion('0.7.6'), false)
+    assert.equal(supportsDshxVersion('0.7.7'), false)
+    assert.equal(supportsDshxVersion('0.7.8'), true)
     assert.equal(supportsDshxVersion('0.7.9+build.4'), true)
     assert.equal(supportsDshxVersion('0.8.0'), false)
     assert.equal(supportsDshxVersion('invalid'), false)
@@ -453,9 +457,9 @@ describe('Creator Bridge v2', () => {
   })
 
   it('resolves a compatible DSHX runtime and fails closed on drift', () => {
-    const compatible = harnessAt(temporaryDirectory('creator-mode-plus-compatible-'), '0.7.5')
+    const compatible = harnessAt(temporaryDirectory('creator-mode-plus-compatible-'), '0.7.8')
     const runtime = resolveDshxRuntime({ harnessRoot: compatible, loaderPath: '/fake/tsx-loader.mjs' })
-    assert.equal(runtime.dshxVersion, '0.7.5')
+    assert.equal(runtime.dshxVersion, '0.7.8')
     assert.equal(runtime.bridgeVersion, 2)
     assert.equal(runtime.loader, '/fake/tsx-loader.mjs')
     assert.equal(runtime.contractId, 'dshx-v0.7/creator-bridge-v2')
@@ -482,8 +486,8 @@ describe('Creator Bridge v2', () => {
     )
   })
 
-  it('does not accept a version-only 0.7.5 checkout without hot-reload command, observer, and journal surfaces', () => {
-    const legacy = harnessAt(temporaryDirectory('creator-mode-plus-legacy-'), '0.7.5')
+  it('does not accept a version-only 0.7.8 checkout without hot-reload command, observer, and journal surfaces', () => {
+    const legacy = harnessAt(temporaryDirectory('creator-mode-plus-legacy-'), '0.7.8')
     rmSync(join(legacy, 'tools/dshx/src/commands/hot-reload.ts'))
     rmSync(join(legacy, 'tools/dshx/src/runtime/hot-reload-observer.mjs'))
     rmSync(join(legacy, 'tools/dshx/src/internal/hot-reload-journal.ts'))

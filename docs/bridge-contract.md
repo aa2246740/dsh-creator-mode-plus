@@ -1,8 +1,8 @@
 # Creator Bridge v2
 
-Creator Mode+ is a user preset plus one DSH plugin. It brings nine fixed DSHX
+Creator Mode+ is a user preset plus one DSH plugin. It brings ten fixed DSHX
 operations into an ordinary DSH session without giving that session control of
-its Host process. Stable DSHX `>=0.7.5 <0.8.0` supplies atomic single-Home Host
+its Host process. Stable DSHX `>=0.7.8 <0.8.0` supplies atomic single-Home Host
 discovery/attachment, temporary-Home cold-boot verification, workspace-aware
 scaffolding, source-preserving watched-plugin removal, external safe profile-bundle
 removal, proactive integrity quarantine, the external Guardian, durable recovery state, the seven-surface
@@ -23,20 +23,21 @@ arbitrary argv/path/profile/port, or Host start/stop/restart operation.
 The preset still inherits Standard's coding shell, but that shell is not the
 external supervisor. RC8 and RC2 inject `DSH_SHELL=1` into every model shell
 call; DSHX v0.7 rejects raw mutation/process commands at its CLI boundary. This
-keeps an old or mistaken Creator session from bypassing the nine fixed tools with
+keeps an old or mistaken Creator session from bypassing the ten fixed tools with
 `dshx start`, `restart`, `activate-new-client`, or profile shipping commands.
 The only Harness-update exception is read-only `dshx update plan`; the mutating
 update stages remain outside the Host.
 
 ## Fixed argv contract
 
-The nine model-facing tools map to exactly these child CLI shapes:
+The ten model-facing tools map to exactly these child CLI shapes:
 
 | Tool | Allowed child argv |
 |---|---|
 | `dshx_status` | `status` |
 | `dshx_browser_open` | `browser open --json` |
 | `dshx_claim_plugin` | `creator claim <plugin-id>` |
+| `dshx_request_takeover` | Host user question, then private-grant `creator takeover <plugin-id> --json` |
 | `dshx_scaffold` | `creator scaffold <plugin-id> <declared-kind>` |
 | `dshx_check` | `check <plugin-id>` |
 | `dshx_activation_plan` | `activation-plan <plugin-id> --change <declared-branch>` |
@@ -110,7 +111,7 @@ for that exact persisted session. Once a plugin id is known, the session calls
 - Build/check work remains concurrent. Only the watched live-activation section
   uses a global inter-process lock.
 - Claim and incident registries use atomic locks and rename; `agent/disposed`
-  releases the lease, with a 24-hour expiry as the abnormal-exit fallback.
+  releases the lease. A 24-hour expiry requires revalidation; it does not authorize another writer.
 
 ## Complete DSHX v0.7 preflight
 
@@ -118,7 +119,7 @@ The standalone package does not accept `0.7.x` by string alone. Before any fixed
 operation or installer mutation it requires:
 
 - package identity `dsh-external-plugin-devkit` and stable version
-  `>=0.7.5 <0.8.0`;
+  `>=0.7.8 <0.8.0`;
 - same-Home Web Host discovery/attach, three-state PID/port probes, and
   temporary-Home verification teardown;
 - Creator claim/scaffold commands and Bridge v2 context validation;
@@ -414,8 +415,17 @@ action. Current-Host authentication errors still block dependent live proof.
 An already-authenticated, task-authorized UI or a plugin command/service can
 supply feature evidence without configuring this optional browser adapter.
 
-The sealed executor code is a development integration, enabled only by an
-explicit `developmentExecution: true` composition. The ordinary preset keeps
-the established nine fixed tools and native approval/guard stack. Enabling the
-experimental path retains its strict executor/provenance requirements; absence
-of that optional service is not a default-mode prerequisite.
+This release uses the ten fixed tools and the native approval/guard stack.
+Separate local sealed-executor experiments are not part of this package.
+
+## 用户确认后接管
+
+插件已被别的对话认领时，调用 `dshx_request_takeover({name})`。当前对话会展示原对话的实际标题、会话 ID、工作区、认领刷新时间和运行状态。用户选择“接管到当前对话”或“停止旧任务并接管”后，固定 bridge 才会暂停旧对话及其子任务的工具权限，停止并等待其后台命令和终端结束，再由 DSHX 原子转移认领。默认选择“取消”。无需找回旧对话，也无需等待 24 小时。
+
+确认走官方 `userQuestions` UI，独立于 `approval/request`。Approve for me 的自动允许、模型传入的布尔值和自由文本“已批准”都不能替代选项确认。确认绑定原认领快照，五分钟后失效；提交凭据只在 Host 闭包和固定 CLI 环境中传递，一次使用、有效期一分钟。原认领刷新、另一次接管或 Host 身份变化都会使旧确认失效。
+
+旧对话及已存在子任务的撤销记录独立于租约保存，所有普通工具调用都被拦截，保留 `dshx_status` 与重新申请接管的入口。该保护属于 Host 生命周期，跨 preset 卸载、HMR 和认领释放继续生效；不会修改会话日志锁。后台任务依照官方 jobs/terminals 的完成与资源释放约定等待，不能把“取消已请求”当成“已经停止”。
+
+正在激活、持有者状态无法核实、停止失败、确认取消或超时，都不会授予新会话权限。已开始的停止操作不会被自动恢复。可用外部 `dshx creator inspect <plugin> --json` 查看原认领及待处理交接；不要手删 claims 或 session.lock。`creator takeover` 是固定桥内部提交协议，缺少一次性凭据会拒绝，不能通过 `--force` 调用。
+
+租约到期只表示认领需要重新核验，不再自动授权第二个写入者。正常 `agent/disposed` 仍释放认领；移交中的 dispose 不得破坏正在比较的原认领。

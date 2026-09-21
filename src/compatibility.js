@@ -5,11 +5,12 @@ export const CREATOR_BRIDGE_VERSION = 2
 
 export const DSHX_CONTRACT = Object.freeze({
   id: 'dshx-v0.7/creator-bridge-v2',
-  release: 'v0.7.6',
-  minimum: '0.7.5',
+  release: 'v0.7.8',
+  minimum: '0.7.8',
   maximumExclusive: '0.8.0',
   capabilities: Object.freeze([
     'creator-session-claims',
+    'human-confirmed-creator-takeover',
     'workspace-scaffold',
     'bounded-new-client-activation',
     'authenticated-host-proof',
@@ -34,6 +35,7 @@ export const SUPPORTED_DSHX = Object.freeze({
 
 export const CREATOR_MODEL_TOOLS = Object.freeze([
   'dshx_claim_plugin',
+  'dshx_request_takeover',
   'dshx_scaffold',
   'dshx_check',
   'dshx_activation_plan',
@@ -45,6 +47,8 @@ export const CREATOR_MODEL_TOOLS = Object.freeze([
 ])
 
 export const DSHX_SURFACE_MARKERS = Object.freeze({
+  'src/internal/creator-claims.mjs': Object.freeze(['beginTakeover', 'commitTakeover', 'CREATOR_TAKEOVER_GRANT_REQUIRED', 'revocations']),
+  'src/creator-plus/takeover.js': Object.freeze(['userQuestions', 'ensureTakeoverFence', 'CREATOR_OWNER_NOT_QUIESCENT']),
   'src/internal/browser-access.ts': Object.freeze(['bindBrowserAccess', 'assertSameBrowserHost', 'BROWSER_ADAPTER_REQUIRED', 'configureSessionBrowserAdapter', 'sessionBrowserAdapter']),
   'src/commands/browser.ts': Object.freeze(['cmdBrowser', 'HTTP_AUTHENTICATED']),
   'src/internal/web-proof-auth.ts': Object.freeze(['createWebProofRequest', 'WEB_AUTH_REQUIRED', 'WEB_AUTH_ORIGIN_MISMATCH']),

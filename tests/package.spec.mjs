@@ -38,8 +38,8 @@ describe('Creator Mode+ 0.3 package contract', () => {
     const manifest = read('dshx.yml')
     const verifier = read('scripts/verify-dshx.mjs')
 
-    assert.equal(metadata.version, '0.3.7')
-    assert.match(verifier, /DSHX_V075_COMPATIBILITY_PASS/)
+    assert.equal(metadata.version, '0.3.8')
+    assert.match(verifier, /DSHX_V078_COMPATIBILITY_PASS/)
     assert.doesNotMatch(verifier, /DSHX_V072_COMPATIBILITY_PASS/)
     assert.equal(metadata.files.includes('dshx.yml'), true)
     assert.equal(metadata.files.includes('scripts'), true)
@@ -49,6 +49,7 @@ describe('Creator Mode+ 0.3 package contract', () => {
     assert.equal(DSHX_CONTRACT.id, 'dshx-v0.7/creator-bridge-v2')
     assert.deepEqual(CREATOR_MODEL_TOOLS, [
       'dshx_claim_plugin',
+      'dshx_request_takeover',
       'dshx_scaffold',
       'dshx_check',
       'dshx_activation_plan',
@@ -96,7 +97,7 @@ describe('Creator Mode+ 0.3 package contract', () => {
 
   it('declares only the exact server module set for external self-upgrade', () => {
     const files = [...read('dshx.yml').matchAll(/^    - (.+)$/gm)].map(match => match[1])
-    assert.deepEqual(files, ['src/index.js', 'src/preset-015.js', 'src/runner.js', 'src/auth.js', 'src/delivery.js', 'src/compatibility.js', 'src/safety.js'])
+    assert.deepEqual(files, ['src/index.js', 'src/preset-015.js', 'src/runner.js', 'src/auth.js', 'src/delivery.js', 'src/compatibility.js', 'src/safety.js', 'src/takeover.js'])
     for (const file of files) {
       assert.doesNotThrow(() => read(file))
       for (const match of read(file).matchAll(/from ['"]\.\/([^'"]+)['"]/g)) {

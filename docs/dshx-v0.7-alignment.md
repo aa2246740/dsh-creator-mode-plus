@@ -1,6 +1,6 @@
 # DSHX v0.7 alignment
 
-Creator Mode+ 0.3.7 is aligned to stable DSHX `>=0.7.5 <0.8.0`, Creator Bridge
+Creator Mode+ 0.3.8 is aligned to stable DSHX `>=0.7.8 <0.8.0`, Creator Bridge
 v2, and the official browser WebUI lifecycle. DSHX v0.7.5 makes same-Home
 ownership atomic across checkouts and binds PID, process start time, Home,
 profile, and root before lifecycle or update mutation.
@@ -10,7 +10,7 @@ or installer mutates anything, it verifies the DSHX package identity, stable
 version range, CLI and Creator/Guardian implementation, seven-surface activation
 contract, managed-shell gate, and transactional Harness Update Assistant.
 
-The 0.3.7 delivery is verified with DSHX 0.7.7, including corrected client scaffolds, bounded recovery of unmounted failed imports, and explicit external mixed-mount self-upgrades.
+The 0.3.8 release requires DSHX 0.7.8 for user-confirmed takeover, durable old-session fencing, and atomic ownership transfer. It retains the corrected client scaffolds, bounded import recovery, and external mixed-mount self-upgrades from 0.3.7 / 0.7.7.
 
 ## Ownership matrix
 
@@ -56,6 +56,7 @@ Release verification against the selected checkout must include:
 
 ```sh
 npm run check
+DSHX_HARNESS=/absolute/path/to/deepseek-harness npm run test:native
 npm run verify:dshx -- --harness /absolute/path/to/deepseek-harness
 npm run verify:harness-install -- --harness /absolute/path/to/deepseek-harness
 /absolute/path/to/deepseek-harness/tools/dshx/skill/dshx/scripts/dshx.sh \
@@ -103,3 +104,5 @@ feature acceptance remain separate evidence.
 standalone bridge tool. It requires DSHX's externally configured, session-bound
 adapter snapshot support. Browser authentication runs privately; Host/process
 control, arbitrary paths and credentials remain outside model input.
+
+`dshx_request_takeover({name})` asks through the current conversation’s user-question UI, then drains old work and atomically transfers ownership. This requires the `human-confirmed-creator-takeover` capability in addition to the version range.

@@ -13,3 +13,4 @@ hotReload:
     - src/delivery.js
     - src/compatibility.js
     - src/safety.js
+    - src/takeover.js
