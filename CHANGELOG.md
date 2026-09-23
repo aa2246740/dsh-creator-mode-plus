@@ -6,6 +6,7 @@
 - Deliver recovery on `agent/created`. The listener stays fire-and-forget so a recovery failure cannot reject session creation. `agent/session-start` is gone.
 - Install the user preset as a Web profile include of an `@deepseek-ai/dsh-agent-preset` declaration derived from `packages/bundle/web-app/presets/standard.patch.yml`. Leave the shipped patch unchanged. `$DSH_HOME/.agent-presets` is no longer the install target.
 - Keep managed upgrades stamp-stable when `agent.cordis.yml` bytes do not change. Read-only `dshx update plan` passes `--target dsh-v0.1.7-rc.1`.
+- Address background jobs by session id. Harness 0.1.7-rc.1 lists, kills, and waits with a session id, and a job view names its owner as `owner`.
 
 ## 0.3.8 - 2026-09-21
 

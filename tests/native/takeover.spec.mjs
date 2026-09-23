@@ -85,7 +85,7 @@ test('background process is stopped and exit awaited before transfer, unowned jo
  t.after(()=>child.kill())
  let exited=false, stopped=0, unownedStops=0
  const done=new Promise(resolve=>child.once('close',()=>{exited=true;resolve({status:'killed'})}))
- h.ctx.jobs.start({kind:'bash',label:'owned process',owner:h.old,run:()=>({cancel(){stopped++;child.kill()},done})})
+ h.ctx.jobs.start({kind:'bash',label:'owned process',owner:h.old.id,run:()=>({cancel(){stopped++;child.kill()},done})})
  const unownedDone=Promise.withResolvers()
  h.ctx.jobs.start({kind:'bash',label:'unowned process',run:()=>({cancel(){unownedStops++;unownedDone.resolve({status:'killed'})},done:unownedDone.promise})})
  t.after(()=>unownedDone.resolve({status:'completed'}))
@@ -96,7 +96,7 @@ test('background process is stopped and exit awaited before transfer, unowned jo
 test('stopping failure retains original claim and removes pending transfer',async t=>{
  const h=await fixture(t)
  const done=Promise.withResolvers();t.after(()=>done.resolve({status:'completed'}))
- h.ctx.jobs.start({kind:'bash',label:'failed stop',owner:h.old,run:()=>({cancel(){throw new Error('cannot stop producer')},done:done.promise})})
+ h.ctx.jobs.start({kind:'bash',label:'failed stop',owner:h.old.id,run:()=>({cancel(){throw new Error('cannot stop producer')},done:done.promise})})
  await assert.rejects(requestTakeover(h.ctx,'demo',h.exec,h.options),/cannot stop producer/)
  assert.equal(store.inspectClaim(h.root,'demo').claim.sessionId,'old')
  assert.equal(store.readClaimState(h.root).takeovers.length,0)
