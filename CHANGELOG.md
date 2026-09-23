@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.3.9 - 2026-09-23
+
+- Align Creator Mode+ with Harness `dsh-v0.1.7-rc.1` and DSHX `>=0.7.9 <0.8.0`. Declare optional peer `@deepseek-ai/dsh` `>=0.1.7-rc.1 <0.1.8`.
+- Deliver recovery on `agent/created`. The listener stays fire-and-forget so a recovery failure cannot reject session creation. `agent/session-start` is gone.
+- Install the user preset as a Web profile include of an `@deepseek-ai/dsh-agent-preset` declaration derived from `packages/bundle/web-app/presets/standard.patch.yml`. Leave the shipped patch unchanged. `$DSH_HOME/.agent-presets` is no longer the install target.
+- Keep managed upgrades stamp-stable when `agent.cordis.yml` bytes do not change. Read-only `dshx update plan` passes `--target dsh-v0.1.7-rc.1`.
+- Address background jobs by session id. Harness 0.1.7-rc.1 lists, kills, and waits with a session id, and a job view names its owner as `owner`.
+- Replace the official empty `[]` web profile patch with the Creator Mode+ include. A sequence item after that array is not a patch entry.
+
 ## 0.3.8 - 2026-09-21
 
 - Add `dshx_request_takeover`: show the actual claim owner in the current conversation and transfer only after an explicit answer through the native user-question service. Cancellation is the default.

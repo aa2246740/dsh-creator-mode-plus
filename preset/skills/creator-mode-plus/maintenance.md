@@ -22,7 +22,9 @@ Ordinary client/server updates follow the main activation table.
 
 Read `dshx kb cat contracts/harness-update`. The sequence is
 `update plan → prepare → verify → apply`, with exact `rollback` available.
-The managed shell may run the read-only plan. Preserve target tag/SHA, current
+The managed shell may run the read-only plan. Pass `--target dsh-v0.1.7-rc.1`.
+DSHX 0.7.9 keeps an omitted target on that desk tag and does not follow a later alpha.
+Preserve target tag/SHA, current
 checkout, local changes, plugin inventory, compatibility errors and rollback
 requirements. Finish authorized source preparation and independent checks.
 

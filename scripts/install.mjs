@@ -35,6 +35,16 @@ const STANDARD_PRESET_PATHS = [
   'packages/preset/agent-presets/presets/standard',
   'apps/cli/config/agent-presets/standard',
 ]
+const STANDARD_PATCH_PATH = 'packages/bundle/web-app/presets/standard.patch.yml'
+const WEB_PROFILE = 'web'
+const PROFILE_INCLUDE_PATH = 'creator-mode-plus/agent.cordis.yml'
+const PROFILE_INCLUDE = `# Creator Mode+ preset include. The installer owns this block.
+- insert:
+    - id: creator-mode-plus-preset
+      name: cordis:include
+      config:
+        path: ${PROFILE_INCLUDE_PATH}
+`
 
 export function standardPresetAt(root) {
   for (const relative of STANDARD_PRESET_PATHS) {
@@ -42,6 +52,139 @@ export function standardPresetAt(root) {
     if (existsSync(join(path, 'agent.cordis.yml')) && existsSync(join(path, 'preset.yml'))) return path
   }
   throw new Error(`Creator Mode+ installer cannot find the shipped Standard preset under ${root}`)
+}
+
+/** Shipped Standard composition. 0.1.7 stores it as a bundle patch; older lines use a preset directory. */
+export function standardSourceAt(root) {
+  const patch = join(root, STANDARD_PATCH_PATH)
+  if (existsSync(patch)) return Object.freeze({ kind: 'patch', path: patch })
+  return Object.freeze({ kind: 'directory', path: standardPresetAt(root) })
+}
+
+function escapeRegExp(value) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
+
+function countManagedRow(text, row) {
+  const exact = exactRowCount(text, row)
+  if (exact > 0) return exact
+  const [idLine, nameLine] = row.split('\n')
+  const pattern = new RegExp(
+    `^[ \\t]*${escapeRegExp(idLine)}\\n[ \\t]*${escapeRegExp(nameLine.trim())}(?=\\n|$)`,
+    'gm',
+  )
+  return [...text.matchAll(pattern)].length
+}
+
+function reindentPlugins(plugins) {
+  const body = plugins.split('\n').map(line => (line.startsWith('    ') ? line.slice(4) : line)).join('\n')
+  return body.endsWith('\n') ? body : `${body}\n`
+}
+
+function rewritePatchPersona(plugins) {
+  const match = /^([ \t]*)prefix: You are a coding agent powered by the \{\{model\}\} model\.$/m.exec(plugins)
+  if (!match) {
+    throw new Error('Creator Mode+ installer expected the shipped Standard persona prefix')
+  }
+  const indent = match[1]
+  const lines = [
+    'You are Creator Mode+, a coding agent powered by the {{model}} model.',
+    '',
+    CURRENT_PERSONA,
+    '',
+    'Load the `creator-mode-plus` skill before creating, activating, removing, hot-reloading, updating Harness, or validating a DSH plugin. Keep Harness core and shipped presets unchanged.',
+  ]
+  const body = lines.map(line => (line.length === 0 ? '' : `${indent}  ${line}`)).join('\n')
+  const replacement = `${indent}prefix: |-\n${body}`
+  return plugins.slice(0, match.index) + replacement + plugins.slice(match.index + match[0].length)
+}
+
+function deriveCreatorDeclaration(standardPatch) {
+  const marker = '\n        plugins:\n'
+  const index = standardPatch.indexOf(marker)
+  if (index < 0 || standardPatch.indexOf(marker, index + marker.length) >= 0) {
+    throw new Error('Creator Mode+ installer expected exactly one Standard preset plugin list')
+  }
+  let plugins = rewritePatchPersona(reindentPlugins(standardPatch.slice(index + marker.length)))
+  plugins = replaceOnce(
+    plugins,
+    `      - id: skill-filesystem\n        name: '@deepseek-ai/dsh-skill-filesystem'`,
+    `      - id: skill-filesystem\n        name: '@deepseek-ai/dsh-skill-filesystem'\n        config:\n          customSkillDirs:\n            - !!js "process.getBuiltinModule('node:url').fileURLToPath(new URL('skills/', baseUrl))"`,
+    'skill filesystem',
+  )
+  plugins = replaceOnce(
+    plugins,
+    `      - id: tool-skill\n        name: '@deepseek-ai/dsh-tool-skill'`,
+    `      - id: tool-skill\n        name: '@deepseek-ai/dsh-tool-skill'\n\n      # Bridge v2: seven fixed dshx tools plus external Guardian lifecycle hooks; no arbitrary argv, raw plugin teardown, or model process control.\n      - id: dsh-creator-mode-plus\n        name: dsh-creator-mode-plus`,
+    'tool skill',
+  )
+  const description = '在 DSH 对话中创建、修改并加载插件，继续验证实际功能；支持保留当前会话的热更新和故障恢复。'
+  return `# Creator Mode+ starts from the shipped Standard preset and adds the fixed dshx bridge.
+- id: preset-creator-mode-plus
+  name: '@deepseek-ai/dsh-agent-preset'
+  config:
+    id: creator-mode-plus
+    name: Creator Mode+
+    description: ${JSON.stringify(description)}
+    order: 20
+    plugins:
+${plugins}`
+}
+
+function profilePresetDir(dshHome) {
+  return join(dshHome, 'profiles', WEB_PROFILE, 'creator-mode-plus')
+}
+
+function withoutPatchComments(text) {
+  return text.replace(/^[ \t]*#.*$/gm, '').trim()
+}
+
+function ensureProfileInclude(profileDir) {
+  mkdirSync(profileDir, { recursive: true })
+  const patchPath = join(profileDir, 'cordis.patch.yml')
+  const existing = existsSync(patchPath) ? readFileSync(patchPath, 'utf8') : ''
+  const body = withoutPatchComments(existing)
+  // Official profile init writes a comment header plus an empty array. A later
+  // sequence item after `[]` is not a patch entry, so replace that array.
+  if (body === '[]' || body.startsWith('[]\n')) {
+    const repaired = existing.replace(/^[ \t]*\[\][ \t]*\r?\n/m, '')
+    const next = repaired.includes(`path: ${PROFILE_INCLUDE_PATH}`)
+      ? repaired
+      : `${repaired.endsWith('\n') || repaired.length === 0 ? repaired : `${repaired}\n`}${PROFILE_INCLUDE}`
+    if (next !== existing) writeFileSync(patchPath, next)
+    return patchPath
+  }
+  if (existing.includes(`path: ${PROFILE_INCLUDE_PATH}`)) return patchPath
+  const prefix = existing.length === 0 || existing.endsWith('\n') ? existing : `${existing}\n`
+  writeFileSync(patchPath, `${prefix}${PROFILE_INCLUDE}`)
+  return patchPath
+}
+
+function writeProfilePreset(target, composition) {
+  const root = dirname(target)
+  mkdirSync(root, { recursive: true })
+  const temporaryRoot = mkdtempSync(join(root, '.dsh-creator-mode-plus-install-'))
+  const staging = join(temporaryRoot, 'creator-mode-plus')
+  try {
+    mkdirSync(staging, { recursive: true })
+    writeFileSync(join(staging, 'agent.cordis.yml'), composition)
+    cpSync(join(packageRoot, 'preset/preset.yml'), join(staging, 'preset.yml'))
+    cpSync(join(packageRoot, 'preset/skills'), join(staging, 'skills'), { recursive: true })
+    tightenTree(staging)
+    renameSync(staging, target)
+  } finally {
+    rmSync(temporaryRoot, { recursive: true, force: true })
+  }
+  ensureProfileInclude(root)
+}
+
+function recognizedLegacyRow(composition) {
+  const matches = LEGACY_ROWS.filter(row => countManagedRow(composition, row) === 1)
+  const legacyCount = LEGACY_ROWS.reduce((count, row) => count + countManagedRow(composition, row), 0)
+  if (legacyCount !== 1 || matches.length !== 1) {
+    throw new Error('Creator Mode+ preset does not contain exactly one recognized managed plugin row; refusing an unsafe update')
+  }
+  return matches[0]
 }
 
 function replaceOnce(text, search, replacement, label) {
@@ -135,9 +278,9 @@ function refreshManagedAssets(target, root, migrateLegacy) {
   const compositionPath = join(target, 'agent.cordis.yml')
   const originalComposition = existsSync(compositionPath) ? readFileSync(compositionPath, 'utf8') : ''
   let composition = originalComposition
-  const currentCount = exactRowCount(composition, CURRENT_ROW)
-  const matchingLegacyRows = LEGACY_ROWS.filter(row => exactRowCount(composition, row) === 1)
-  const legacyCount = LEGACY_ROWS.reduce((count, row) => count + exactRowCount(composition, row), 0)
+  const currentCount = countManagedRow(composition, CURRENT_ROW)
+  const matchingLegacyRows = LEGACY_ROWS.filter(row => countManagedRow(composition, row) === 1)
+  const legacyCount = LEGACY_ROWS.reduce((count, row) => count + countManagedRow(composition, row), 0)
 
   if (currentCount === 1 && legacyCount === 0) {
     // Current composition remains user-owned; only managed assets are refreshed.
@@ -185,6 +328,70 @@ function refreshManagedAssets(target, root, migrateLegacy) {
   }
 }
 
+function installFromStandardPatch({ sourcePath, dshHome, compatibility, upgrade, migrateLegacy }) {
+  const target = profilePresetDir(dshHome)
+  const legacyDirs = [
+    join(dshHome, '.agent-presets', CURRENT_PRESET_ID),
+    join(dshHome, '.agent-presets', LEGACY_PRESET_ID),
+  ].filter(path => existsSync(path))
+  const currentExists = existsSync(target)
+  const result = (action) => ({
+    target,
+    action,
+    dshxVersion: compatibility.dshxVersion,
+    creatorBridgeVersion: compatibility.creatorBridgeVersion,
+    dshxContract: compatibility.contractId,
+    layout: 'profile-include',
+  })
+
+  if (currentExists && legacyDirs.length > 0) {
+    throw new Error(`both ${target} and a legacy .agent-presets Creator Mode+ exist; refusing to choose or overwrite either preset`)
+  }
+  if (currentExists) {
+    if (!upgrade && !migrateLegacy) {
+      throw new Error(`Creator Mode+ already exists at ${target}; pass --upgrade to refresh only managed assets`)
+    }
+    refreshManagedAssets(target, dirname(target), false)
+    ensureProfileInclude(dirname(target))
+    return result('updated')
+  }
+  if (legacyDirs.length > 0) {
+    if (!migrateLegacy) {
+      throw new Error(`legacy Creator Mode+ exists at ${legacyDirs[0]}; pass --migrate-legacy after adding the standalone package`)
+    }
+    if (legacyDirs.length > 1) {
+      throw new Error(`both ${legacyDirs[0]} and ${legacyDirs[1]} exist; refusing to choose or overwrite either preset`)
+    }
+    const compositionPath = join(legacyDirs[0], 'agent.cordis.yml')
+    let composition = readFileSync(compositionPath, 'utf8')
+    if (countManagedRow(composition, CURRENT_ROW) !== 1) {
+      composition = composition.replace(recognizedLegacyRow(composition), CURRENT_ROW)
+    }
+    composition = migrateManagedSafetyCopy(composition)
+    const indented = composition.replace(/[ \t]+$/gm, '').replace(/\n$/, '').split('\n')
+      .map(line => (line.length === 0 ? '' : `      ${line}`))
+      .join('\n')
+    const description = '在 DSH 对话中创建、修改并加载插件，继续验证实际功能；支持保留当前会话的热更新和故障恢复。'
+    writeProfilePreset(target, `# Creator Mode+ preset migrated from .agent-presets. The legacy directory is preserved.
+- id: preset-creator-mode-plus
+  name: '@deepseek-ai/dsh-agent-preset'
+  config:
+    id: creator-mode-plus
+    name: Creator Mode+
+    description: ${JSON.stringify(description)}
+    order: 20
+    plugins:
+${indented}
+`)
+    return result('migrated')
+  }
+  if (upgrade || migrateLegacy) {
+    throw new Error('no existing Creator Mode+ preset found to update or migrate')
+  }
+  writeProfilePreset(target, deriveCreatorDeclaration(readFileSync(sourcePath, 'utf8')))
+  return result('installed')
+}
+
 /** Install or safely refresh the user-owned Creator Mode+ preset. */
 export function installCreatorModePlus(options = {}) {
   const harnessRoot = resolveHarnessRoot({
@@ -195,8 +402,18 @@ export function installCreatorModePlus(options = {}) {
     moduleDir: options.moduleDir,
   })
   const compatibility = inspectDshxCompatibility(harnessRoot)
-  const source = standardPresetAt(harnessRoot)
+  const sourceInfo = standardSourceAt(harnessRoot)
   const dshHome = resolve(options.dshHome || process.env.DSH_HOME || join(homedir(), '.dsh'))
+  if (sourceInfo.kind === 'patch') {
+    return installFromStandardPatch({
+      sourcePath: sourceInfo.path,
+      dshHome,
+      compatibility,
+      upgrade: options.upgrade,
+      migrateLegacy: options.migrateLegacy,
+    })
+  }
+  const source = sourceInfo.path
   const root = join(dshHome, '.agent-presets')
   const currentTarget = join(root, CURRENT_PRESET_ID)
   const legacyTarget = join(root, LEGACY_PRESET_ID)

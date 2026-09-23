@@ -76,7 +76,7 @@ function titleOf(session) {
   for (let i = events.length - 1; i >= 0; i--) if (events[i].type === 'session/title' && typeof events[i].data?.title === 'string') return events[i].data.title
   return '未命名对话'
 }
-function ownedJobs(jobs, agent) { return jobs?.list(agent).filter(job => job.ownerSession === agent.id && liveJob(job)) ?? [] }
+function ownedJobs(jobs, agent) { return jobs?.list(agent.id).filter(job => job.owner === agent.id && liveJob(job)) ?? [] }
 function busy(ctx, agents, broker) {
   const jobs = get(ctx, 'jobs'), terminals = get(ctx, 'terminals')
   return agents.some(agent => agent.status !== 'idle' || broker.active.has(agent.id) || ownedJobs(jobs, agent).length || terminals?.hasOwned(agent))
@@ -100,8 +100,8 @@ async function drain(ctx, owner, broker, signal) {
     const waits = []
     for (const agent of group) {
       for (const job of ownedJobs(jobs, agent)) {
-        jobs.kill(job.id, agent, 'Creator+ user-confirmed takeover')
-        waits.push(jobs.wait(job.id, 20_000, agent, signal).then(result => { if (liveJob(result)) throw new Error('CREATOR_BACKGROUND_JOB_STILL_RUNNING') }))
+        jobs.kill(job.id, agent.id, 'Creator+ user-confirmed takeover')
+        waits.push(jobs.wait(job.id, 20_000, agent.id, signal).then(result => { if (liveJob(result)) throw new Error('CREATOR_BACKGROUND_JOB_STILL_RUNNING') }))
       }
       for (const terminal of terminals?.list(agent) ?? []) waits.push(terminals.kill(agent, terminal.id, 'Creator+ user-confirmed takeover'))
       waits.push(agent.whenIdle())

@@ -4,7 +4,7 @@
 
 Pick Creator Mode+ in a normal DeepSeek Harness Web session. Ten fixed tools scaffold, check, mount, and uninstall a file-backed plugin in a safe order.
 
-Creator Mode+ 0.3.8 is paired with DSHX 0.7.8 and adds user-confirmed claim takeover in the current conversation. New-client activation, server hot reload within the same conversation, and removal have been verified on DSH `dsh-v0.1.5-rc.2`. The bridge compatibility range remains [DSHX](https://github.com/aa2246740/dsh-external-plugin-devkit) `>=0.7.8 <0.8.0`; both the version range and the human-confirmed takeover capability are checked before use.
+Creator Mode+ 0.3.9 is paired with DSHX 0.7.9 and Harness `dsh-v0.1.7-rc.1`. The plugin peer range is `>=0.1.7-rc.1 <0.1.8`. The bridge compatibility range is [DSHX](https://github.com/aa2246740/dsh-external-plugin-devkit) `>=0.7.9 <0.8.0`; the desk pin, peer range, and human-confirmed takeover capability are checked before use. Session recovery listens on `agent/created`.
 
 ![Open Creator Mode+ in the official WebUI](docs/screenshots/mode-picker.gif)
 
@@ -31,7 +31,7 @@ pnpm dsh plugin --profile web add link:./tools/dsh-creator-mode-plus
 node tools/dsh-creator-mode-plus/scripts/install.mjs --harness "$PWD"
 ```
 
-The installer writes a user preset. It leaves the shipped Standard and Creator presets alone. Open the official WebUI, confirm Creator Mode+ is in the mode list, and try it in a new session. Adding a profile dependency is not by itself a reason to restart the Host.
+The installer derives a user preset from the shipped Standard patch, writes `profiles/web/creator-mode-plus/agent.cordis.yml`, and includes that file from the Web profile `cordis.patch.yml`. It leaves the shipped Standard and Creator presets alone and does not write `.agent-presets`. Open the official WebUI, confirm Creator Mode+ is in the mode list, and try it in a new session. Adding a profile dependency is not by itself a reason to restart the Host.
 
 Contracts: [Bridge v2](docs/bridge-contract.md) and [DSHX v0.7 alignment](docs/dshx-v0.7-alignment.md).
 

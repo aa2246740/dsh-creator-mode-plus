@@ -4,7 +4,7 @@
 
 在 DeepSeek Harness 的普通 Web 会话里选 Creator Mode+，用十个固定工具把一个文件化插件搭起来、检查、挂载，也能按安全顺序卸载。
 
-Creator Mode+ 0.3.8 配套 DSHX 0.7.8，新增当前对话内的用户确认接管。此前已在 DSH `dsh-v0.1.5-rc.2` 上验证新插件加载、同一会话内服务端热更新和卸载。底层桥接兼容范围为 [DSHX](https://github.com/aa2246740/dsh-external-plugin-devkit) `>=0.7.8 <0.8.0`，并在使用前核对用户确认接管能力。
+Creator Mode+ 0.3.9 配套 DSHX 0.7.9 和 Harness `dsh-v0.1.7-rc.1`。插件 peer 范围是 `>=0.1.7-rc.1 <0.1.8`。底层桥接兼容范围为 [DSHX](https://github.com/aa2246740/dsh-external-plugin-devkit) `>=0.7.9 <0.8.0`，并在使用前核对桌面钉、peer 范围和用户确认接管能力。会话恢复挂在 `agent/created` 上。
 
 ![在官方 WebUI 里打开 Creator Mode+](docs/screenshots/mode-picker.gif)
 
@@ -31,7 +31,7 @@ pnpm dsh plugin --profile web add link:./tools/dsh-creator-mode-plus
 node tools/dsh-creator-mode-plus/scripts/install.mjs --harness "$PWD"
 ```
 
-安装器只写用户 preset，不动随仓库带的 Standard / Creator。打开官方 WebUI，检查 Creator Mode+ 是否出现在模式列表，并在新会话验收。不要仅因增加 profile 依赖就重启 Host。
+安装器从仓库自带的 Standard patch 派生用户 preset，写入 `profiles/web/creator-mode-plus/agent.cordis.yml`，并在 Web profile 的 `cordis.patch.yml` 里 include 它。它不改随仓库带的 Standard / Creator，也不再写 `.agent-presets`。打开官方 WebUI，检查 Creator Mode+ 是否出现在模式列表，并在新会话验收。不要仅因增加 profile 依赖就重启 Host。
 
 合同见 [Bridge v2](docs/bridge-contract.md) 和 [DSHX v0.7 alignment](docs/dshx-v0.7-alignment.md)。
 

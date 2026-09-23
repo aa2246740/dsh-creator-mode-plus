@@ -9,7 +9,7 @@ import {
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
-import { installCreatorModePlus, standardPresetAt } from './install.mjs'
+import { installCreatorModePlus, standardSourceAt } from './install.mjs'
 
 function digest(path) {
   return createHash('sha256').update(readFileSync(path)).digest('hex')
@@ -36,12 +36,11 @@ function parseArguments(argv) {
 
 /** Exercise the real shipped Standard preset in an isolated disposable DSH_HOME. */
 export function verifyHarnessInstall(harnessRoot) {
-  const standardPreset = standardPresetAt(harnessRoot)
-  const sourceComposition = join(standardPreset, 'agent.cordis.yml')
-  const sourcePreset = join(standardPreset, 'preset.yml')
+  const standard = standardSourceAt(harnessRoot)
+  const sourcePreset = standard.kind === 'directory' ? join(standard.path, 'preset.yml') : undefined
   const before = {
-    composition: digest(sourceComposition),
-    preset: digest(sourcePreset),
+    composition: digest(standard.path),
+    ...(sourcePreset ? { preset: digest(sourcePreset) } : {}),
   }
   const dshHome = mkdtempSync(join(tmpdir(), 'creator-mode-plus-rc2-install-'))
   try {
@@ -64,7 +63,10 @@ export function verifyHarnessInstall(harnessRoot) {
       throw new Error('managed asset refresh changed the unchanged agent.cordis.yml stamp')
     }
     if (!existsSync(skillPath)) throw new Error('managed upgrade removed the Creator Mode+ skill')
-    if (digest(sourceComposition) !== before.composition || digest(sourcePreset) !== before.preset) {
+    if (digest(standard.path) !== before.composition) {
+      throw new Error('isolated install changed a shipped Harness preset')
+    }
+    if (sourcePreset && digest(sourcePreset) !== before.preset) {
       throw new Error('isolated install changed a shipped Harness preset')
     }
 

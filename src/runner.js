@@ -444,10 +444,14 @@ export async function releaseCreatorClaim(agent, options = {}) {
   forgetCreatorClaim({ agent })
 }
 
-/** Register fail-contained recovery delivery on the preset-scoped Agent lifecycle. */
+/**
+ * Register fail-contained recovery delivery on the preset-scoped Agent lifecycle.
+ * `agent/created` replaced `agent/session-start`. The listener stays synchronous:
+ * a recovery failure must not reject serial session creation.
+ */
 export function installCreatorRecovery(ctx, options = {}) {
   if (typeof ctx.on !== 'function') return
-  ctx.on('agent/session-start', ({ agent }) => {
+  ctx.on('agent/created', ({ agent }) => {
     void deliverCreatorRecovery(agent, options).catch((error) => {
       const message = `dsh-creator-mode-plus: recovery delivery failed: ${error instanceof Error ? error.message : String(error)}`
       if (ctx.logger?.warn) ctx.logger.warn(message)

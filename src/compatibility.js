@@ -5,8 +5,8 @@ export const CREATOR_BRIDGE_VERSION = 2
 
 export const DSHX_CONTRACT = Object.freeze({
   id: 'dshx-v0.7/creator-bridge-v2',
-  release: 'v0.7.8',
-  minimum: '0.7.8',
+  release: 'v0.7.9',
+  minimum: '0.7.9',
   maximumExclusive: '0.8.0',
   capabilities: Object.freeze([
     'creator-session-claims',
@@ -90,6 +90,13 @@ export const DSHX_SURFACE_MARKERS = Object.freeze({
     'dshx update plan|prepare|verify|apply|rollback',
     "action === 'apply' || action === 'rollback'",
   ]),
+  'src/internal/types.ts': Object.freeze([
+    'DESK_HARNESS_TAG',
+    'dsh-v0.1.7-rc.1',
+    'DSH_PEER_RANGE',
+    '>=0.1.7-rc.1 <0.1.8',
+  ]),
+  'src/creator-plus/runner.js': Object.freeze(["ctx.on('agent/created'"]),
   'src/internal/creator.ts': Object.freeze(['bridgeVersion !== 2', 'workspaceRoot']),
   'src/internal/guardian.ts': Object.freeze([
     'export function armGuardian',
