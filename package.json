@@ -1,6 +1,6 @@
 {
   "name": "dsh-creator-mode-plus",
-  "version": "0.3.8",
+  "version": "0.3.9",
   "description": "Develop, activate and verify DeepSeek Harness plugins from a Creator Mode+ conversation.",
   "type": "module",
   "license": "MIT",
@@ -31,6 +31,14 @@
   },
   "dependencies": {
     "yaml": "2.9.0"
+  },
+  "peerDependencies": {
+    "@deepseek-ai/dsh": ">=0.1.7-rc.1 <0.1.8"
+  },
+  "peerDependenciesMeta": {
+    "@deepseek-ai/dsh": {
+      "optional": true
+    }
   },
   "repository": {
     "type": "git",

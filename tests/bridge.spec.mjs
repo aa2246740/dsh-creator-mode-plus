@@ -11,6 +11,7 @@ import {
   CREATOR_BRIDGE_VERSION,
   currentWebPort,
   deliverCreatorRecovery,
+  installCreatorRecovery,
   releaseCreatorClaim,
   resolveDshxRuntime,
   resolveHarnessRoot,
@@ -100,7 +101,7 @@ function temporaryDirectory(label) {
   return path
 }
 
-function harnessAt(root, version = '0.7.8') {
+function harnessAt(root, version = '0.7.9') {
   mkdirSync(join(root, 'apps/cli/src'), { recursive: true })
   writeFileSync(join(root, 'apps/cli/src/bin.ts'), '')
   for (const path of REQUIRED_DSHX_PATHS) {
@@ -436,7 +437,8 @@ describe('Creator Bridge v2', () => {
     assert.equal(supportsDshxVersion('0.7.5'), false)
     assert.equal(supportsDshxVersion('0.7.6'), false)
     assert.equal(supportsDshxVersion('0.7.7'), false)
-    assert.equal(supportsDshxVersion('0.7.8'), true)
+    assert.equal(supportsDshxVersion('0.7.8'), false)
+    assert.equal(supportsDshxVersion('0.7.9'), true)
     assert.equal(supportsDshxVersion('0.7.9+build.4'), true)
     assert.equal(supportsDshxVersion('0.8.0'), false)
     assert.equal(supportsDshxVersion('invalid'), false)
@@ -457,9 +459,9 @@ describe('Creator Bridge v2', () => {
   })
 
   it('resolves a compatible DSHX runtime and fails closed on drift', () => {
-    const compatible = harnessAt(temporaryDirectory('creator-mode-plus-compatible-'), '0.7.8')
+    const compatible = harnessAt(temporaryDirectory('creator-mode-plus-compatible-'), '0.7.9')
     const runtime = resolveDshxRuntime({ harnessRoot: compatible, loaderPath: '/fake/tsx-loader.mjs' })
-    assert.equal(runtime.dshxVersion, '0.7.8')
+    assert.equal(runtime.dshxVersion, '0.7.9')
     assert.equal(runtime.bridgeVersion, 2)
     assert.equal(runtime.loader, '/fake/tsx-loader.mjs')
     assert.equal(runtime.contractId, 'dshx-v0.7/creator-bridge-v2')
@@ -486,8 +488,8 @@ describe('Creator Bridge v2', () => {
     )
   })
 
-  it('does not accept a version-only 0.7.8 checkout without hot-reload command, observer, and journal surfaces', () => {
-    const legacy = harnessAt(temporaryDirectory('creator-mode-plus-legacy-'), '0.7.8')
+  it('does not accept a version-only 0.7.9 checkout without hot-reload command, observer, and journal surfaces', () => {
+    const legacy = harnessAt(temporaryDirectory('creator-mode-plus-legacy-'), '0.7.9')
     rmSync(join(legacy, 'tools/dshx/src/commands/hot-reload.ts'))
     rmSync(join(legacy, 'tools/dshx/src/runtime/hot-reload-observer.mjs'))
     rmSync(join(legacy, 'tools/dshx/src/internal/hot-reload-journal.ts'))
@@ -569,5 +571,19 @@ describe('Creator Bridge v2', () => {
 
     await releaseCreatorClaim({ id: 'session-a' }, { runDshx: run, hostPort: 43127 })
     assert.deepEqual(calls[3], ['creator', 'release', '--json'])
+  })
+
+  it('arms recovery on agent/created and does not reject session creation when recovery fails', async () => {
+    const events = []
+    installCreatorRecovery({
+      on(name, listener) { events.push({ name, listener }) },
+      logger: { warn() {} },
+    }, {
+      runDshx: async () => { throw new Error('watch failed') },
+    })
+    assert.deepEqual(events.map(event => event.name), ['agent/created', 'agent/disposed'])
+    const returned = events[0].listener({ agent: { id: 'session-a', steer() {} } })
+    assert.equal(returned, undefined)
+    await new Promise(resolve => setTimeout(resolve, 0))
   })
 })

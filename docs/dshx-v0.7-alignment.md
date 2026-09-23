@@ -1,16 +1,19 @@
 # DSHX v0.7 alignment
 
-Creator Mode+ 0.3.8 is aligned to stable DSHX `>=0.7.8 <0.8.0`, Creator Bridge
-v2, and the official browser WebUI lifecycle. DSHX v0.7.5 makes same-Home
+Creator Mode+ 0.3.9 is aligned to stable DSHX `>=0.7.9 <0.8.0`, Creator Bridge
+v2, and the official browser WebUI lifecycle on Harness `dsh-v0.1.7-rc.1`.
+DSHX v0.7.5 makes same-Home
 ownership atomic across checkouts and binds PID, process start time, Home,
-profile, and root before lifecycle or update mutation.
+profile, and root before lifecycle or update mutation. DSHX 0.7.9 pins omitted
+`update plan` targets to `dsh-v0.1.7-rc.1` and declares peer range
+`>=0.1.7-rc.1 <0.1.8`.
 
 This is a contract alignment, not a version-number exception. Before the bridge
 or installer mutates anything, it verifies the DSHX package identity, stable
 version range, CLI and Creator/Guardian implementation, seven-surface activation
 contract, managed-shell gate, and transactional Harness Update Assistant.
 
-The 0.3.8 release requires DSHX 0.7.8 for user-confirmed takeover, durable old-session fencing, and atomic ownership transfer. It retains the corrected client scaffolds, bounded import recovery, and external mixed-mount self-upgrades from 0.3.7 / 0.7.7.
+The 0.3.9 release requires DSHX 0.7.9 for the desk Harness pin, the `>=0.1.7-rc.1 <0.1.8` peer range, and Creator+ recovery on `agent/created`. It retains user-confirmed takeover from 0.3.8 / 0.7.8, plus the corrected client scaffolds, bounded import recovery, and external mixed-mount self-upgrades from 0.3.7 / 0.7.7.
 
 ## Ownership matrix
 
@@ -49,9 +52,10 @@ Creator receives status but never gains process or port input.
 ## Harness compatibility
 
 The source line covers the DSH `dsh-v0.1.0-rc.8` Creator/Guardian contracts and
-the DSHX v0.7 update path through `dsh-v0.1.1-rc.2` and `dsh-v0.1.2-rc.1` to `dsh-v0.1.5-rc.2`.
+the DSHX v0.7 update path through `dsh-v0.1.1-rc.2`, `dsh-v0.1.2-rc.1`, and `dsh-v0.1.5-rc.2` to `dsh-v0.1.7-rc.1`.
 The RC1 line includes relocated Standard discovery and authenticated Host proof.
-`0.1.5-rc.2` is the current authenticated Web line; external plugins must pass `dshx check` with no `compat-015-*`.
+`dsh-v0.1.7-rc.1` is the current authenticated Web line. Its peer range is `>=0.1.7-rc.1 <0.1.8` (`^0.1.5-rc.3` does not accept it). Shipped Standard is `packages/bundle/web-app/presets/standard.patch.yml`. The installer derives a user-owned `profiles/web/creator-mode-plus/agent.cordis.yml` and includes it from the web profile patch; it does not edit the shipped patch, and nothing reads `$DSH_HOME/.agent-presets`. External plugins must pass `dshx check` with no `compat-015-*`.
+Read-only `dshx update plan` must pass `--target dsh-v0.1.7-rc.1`. DSHX 0.7.9 uses that tag when `--target` is omitted and does not follow a later alpha.
 Release verification against the selected checkout must include:
 
 ```sh

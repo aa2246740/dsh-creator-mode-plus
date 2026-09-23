@@ -29,7 +29,7 @@ function temporaryDirectory(label) {
   return path
 }
 
-function harnessAt(root, version = '0.7.8', presetLayout = 'legacy') {
+function harnessAt(root, version = '0.7.9', presetLayout = 'legacy') {
   const standard = presetLayout === 'rc1'
     ? join(root, 'packages/preset/agent-presets/presets/standard')
     : join(root, 'apps/cli/config/agent-presets/standard')
@@ -68,7 +68,7 @@ afterEach(() => {
 
 describe('Creator Mode+ installer', () => {
   it('installs and upgrades from the RC1 Standard preset location without changing it', () => {
-    const harnessRoot = harnessAt(temporaryDirectory('creator-mode-plus-rc1-harness-'), '0.7.8', 'rc1')
+    const harnessRoot = harnessAt(temporaryDirectory('creator-mode-plus-rc1-harness-'), '0.7.9', 'rc1')
     const dshHome = temporaryDirectory('creator-mode-plus-rc1-home-')
     const source = join(harnessRoot, 'packages/preset/agent-presets/presets/standard/agent.cordis.yml')
     const before = readFileSync(source, 'utf8')
@@ -92,7 +92,7 @@ describe('Creator Mode+ installer', () => {
     const composition = readFileSync(join(result.target, 'agent.cordis.yml'), 'utf8')
 
     assert.equal(result.action, 'installed')
-    assert.equal(result.dshxVersion, '0.7.8')
+    assert.equal(result.dshxVersion, '0.7.9')
     assert.equal(result.creatorBridgeVersion, 2)
     assert.equal(result.dshxContract, 'dshx-v0.7/creator-bridge-v2')
     assert.match(result.target, /creator-mode-plus$/)
@@ -267,5 +267,60 @@ describe('Creator Mode+ installer', () => {
       () => installCreatorModePlus({ harnessRoot, dshHome, upgrade: true }),
       /refusing an unsafe update/,
     )
+  })
+
+  it('installs a 0.1.7 Standard patch as a web profile include without editing it', () => {
+    const harnessRoot = harnessAt(temporaryDirectory('creator-mode-plus-patch-harness-'))
+    const patchPath = join(harnessRoot, 'packages/bundle/web-app/presets/standard.patch.yml')
+    mkdirSync(join(harnessRoot, 'packages/bundle/web-app/presets'), { recursive: true })
+    const shipped = `- insert:
+    - id: preset-standard
+      name: '@deepseek-ai/dsh-agent-preset'
+      config:
+        id: standard
+        order: 1
+        plugins:
+          - id: persona
+            name: '@deepseek-ai/dsh-persona'
+            config:
+              suffix: Your working directory is {{cwd}}.
+              prefix: You are a coding agent powered by the {{model}} model.
+          - id: skill-filesystem
+            name: '@deepseek-ai/dsh-skill-filesystem'
+          - id: tool-skill
+            name: '@deepseek-ai/dsh-tool-skill'
+          - id: tool-bash
+            name: '@deepseek-ai/dsh-tool-bash'
+            disabled: !!js process.platform === 'win32'
+`
+    writeFileSync(patchPath, shipped)
+    const dshHome = temporaryDirectory('creator-mode-plus-patch-home-')
+    const installed = installCreatorModePlus({ harnessRoot, dshHome })
+    const compositionPath = join(installed.target, 'agent.cordis.yml')
+    const composition = readFileSync(compositionPath, 'utf8')
+    const profilePatch = readFileSync(join(dshHome, 'profiles/web/cordis.patch.yml'), 'utf8')
+
+    assert.equal(installed.action, 'installed')
+    assert.equal(installed.layout, 'profile-include')
+    assert.equal(readFileSync(patchPath, 'utf8'), shipped)
+    assert.equal(existsSync(join(dshHome, '.agent-presets')), false)
+    assert.match(composition, /id: creator-mode-plus/)
+    assert.match(composition, /You are Creator Mode\+/)
+    assert.match(composition, /name: dsh-creator-mode-plus/)
+    assert.match(composition, /customSkillDirs:/)
+    assert.match(composition, /disabled: !!js process.platform === 'win32'/)
+    assert.match(profilePatch, /name: cordis:include/)
+    assert.match(profilePatch, /path: creator-mode-plus\/agent\.cordis\.yml/)
+    assert.equal(existsSync(join(installed.target, 'skills/creator-mode-plus/SKILL.md')), true)
+
+    const before = statSync(compositionPath)
+    const patchBefore = statSync(join(dshHome, 'profiles/web/cordis.patch.yml'))
+    const updated = installCreatorModePlus({ harnessRoot, dshHome, upgrade: true })
+    const after = statSync(compositionPath)
+    assert.equal(updated.action, 'updated')
+    assert.equal(after.size, before.size)
+    assert.equal(after.mtimeMs, before.mtimeMs)
+    assert.equal(statSync(join(dshHome, 'profiles/web/cordis.patch.yml')).mtimeMs, patchBefore.mtimeMs)
+    assert.equal(readFileSync(patchPath, 'utf8'), shipped)
   })
 })

@@ -2,7 +2,7 @@
 
 Creator Mode+ is a user preset plus one DSH plugin. It brings ten fixed DSHX
 operations into an ordinary DSH session without giving that session control of
-its Host process. Stable DSHX `>=0.7.8 <0.8.0` supplies atomic single-Home Host
+its Host process. Stable DSHX `>=0.7.9 <0.8.0` supplies atomic single-Home Host
 discovery/attachment, temporary-Home cold-boot verification, workspace-aware
 scaffolding, source-preserving watched-plugin removal, external safe profile-bundle
 removal, proactive integrity quarantine, the external Guardian, durable recovery state, the seven-surface
@@ -101,7 +101,7 @@ exec.agent.id + callId + rootCallId
   + Host pid + Host parent pid + current Web port + bridge version
 ```
 
-At `agent/session-start`, the bridge arms Guardian and pulls recovery incidents
+At `agent/created` (the session-start event; `agent/session-start` is gone), the bridge arms Guardian and pulls recovery incidents. The listener does not return that promise, so a recovery failure cannot reject serial session creation.
 for that exact persisted session. Once a plugin id is known, the session calls
 `dshx_claim_plugin`; every other named-plugin operation refreshes the claim.
 
@@ -119,7 +119,7 @@ The standalone package does not accept `0.7.x` by string alone. Before any fixed
 operation or installer mutation it requires:
 
 - package identity `dsh-external-plugin-devkit` and stable version
-  `>=0.7.8 <0.8.0`;
+  `>=0.7.9 <0.8.0`;
 - same-Home Web Host discovery/attach, three-state PID/port probes, and
   temporary-Home verification teardown;
 - Creator claim/scaffold commands and Bridge v2 context validation;
@@ -289,7 +289,7 @@ A stale Host identity, unknown id, or multiple candidates is ambiguous and
 changes no plugin row. After quarantine, the bridge waits for the current Host
 manifest to prove the id absent. Only then does the browser reload once. The
 incident remains durable and is steered to its owning session. A failed report
-gets one delayed retry to cover session-start/Guardian arm races; the browser
+gets one delayed retry to cover `agent/created`/Guardian arm races; the browser
 fuse prevents an unbounded reload loop.
 
 The POST route is a Host-scoped leased resource, not a generation-scoped side
@@ -328,7 +328,7 @@ production activated as separate states.
 
 Supported: the official DSH browser WebUI, public Cordis plugin forms, public
 client runtime, and public UI slots across the RC8 Creator/Guardian contract and
-the RC2 package/update line and the authenticated Web line through 0.1.5-rc.2.
+the RC2 package/update line and the authenticated Web line through `dsh-v0.1.7-rc.1`. The plugin peer range is `>=0.1.7-rc.1 <0.1.8`. User presets are profile includes of an `@deepseek-ai/dsh-agent-preset` declaration derived from the shipped Standard patch; `$DSH_HOME/.agent-presets` is not read.
 
 Outside acceptance: native menus, window chrome, App IPC, desktop bridges, and
 shell-specific refresh behavior. A wrapper may work when it embeds the same
