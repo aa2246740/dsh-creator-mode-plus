@@ -7,6 +7,7 @@
 - Install the user preset as a Web profile include of an `@deepseek-ai/dsh-agent-preset` declaration derived from `packages/bundle/web-app/presets/standard.patch.yml`. Leave the shipped patch unchanged. `$DSH_HOME/.agent-presets` is no longer the install target.
 - Keep managed upgrades stamp-stable when `agent.cordis.yml` bytes do not change. Read-only `dshx update plan` passes `--target dsh-v0.1.7-rc.1`.
 - Address background jobs by session id. Harness 0.1.7-rc.1 lists, kills, and waits with a session id, and a job view names its owner as `owner`.
+- Replace the official empty `[]` web profile patch with the Creator Mode+ include. A sequence item after that array is not a patch entry.
 
 ## 0.3.8 - 2026-09-21
 

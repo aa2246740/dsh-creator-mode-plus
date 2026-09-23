@@ -135,10 +135,25 @@ function profilePresetDir(dshHome) {
   return join(dshHome, 'profiles', WEB_PROFILE, 'creator-mode-plus')
 }
 
+function withoutPatchComments(text) {
+  return text.replace(/^[ \t]*#.*$/gm, '').trim()
+}
+
 function ensureProfileInclude(profileDir) {
   mkdirSync(profileDir, { recursive: true })
   const patchPath = join(profileDir, 'cordis.patch.yml')
   const existing = existsSync(patchPath) ? readFileSync(patchPath, 'utf8') : ''
+  const body = withoutPatchComments(existing)
+  // Official profile init writes a comment header plus an empty array. A later
+  // sequence item after `[]` is not a patch entry, so replace that array.
+  if (body === '[]' || body.startsWith('[]\n')) {
+    const repaired = existing.replace(/^[ \t]*\[\][ \t]*\r?\n/m, '')
+    const next = repaired.includes(`path: ${PROFILE_INCLUDE_PATH}`)
+      ? repaired
+      : `${repaired.endsWith('\n') || repaired.length === 0 ? repaired : `${repaired}\n`}${PROFILE_INCLUDE}`
+    if (next !== existing) writeFileSync(patchPath, next)
+    return patchPath
+  }
   if (existing.includes(`path: ${PROFILE_INCLUDE_PATH}`)) return patchPath
   const prefix = existing.length === 0 || existing.endsWith('\n') ? existing : `${existing}\n`
   writeFileSync(patchPath, `${prefix}${PROFILE_INCLUDE}`)

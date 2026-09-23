@@ -323,4 +323,39 @@ describe('Creator Mode+ installer', () => {
     assert.equal(statSync(join(dshHome, 'profiles/web/cordis.patch.yml')).mtimeMs, patchBefore.mtimeMs)
     assert.equal(readFileSync(patchPath, 'utf8'), shipped)
   })
+
+  it('replaces an official empty profile patch array with the include', () => {
+    const harnessRoot = harnessAt(temporaryDirectory('creator-mode-plus-empty-patch-harness-'))
+    const patchPath = join(harnessRoot, 'packages/bundle/web-app/presets/standard.patch.yml')
+    mkdirSync(dirname(patchPath), { recursive: true })
+    writeFileSync(patchPath, `- insert:
+    - id: preset-standard
+      name: '@deepseek-ai/dsh-agent-preset'
+      config:
+        id: standard
+        plugins:
+          - id: persona
+            name: '@deepseek-ai/dsh-persona'
+            config:
+              prefix: You are a coding agent powered by the {{model}} model.
+          - id: skill-filesystem
+            name: '@deepseek-ai/dsh-skill-filesystem'
+          - id: tool-skill
+            name: '@deepseek-ai/dsh-tool-skill'
+`)
+    const dshHome = temporaryDirectory('creator-mode-plus-empty-patch-home-')
+    const profileDir = join(dshHome, 'profiles/web')
+    mkdirSync(profileDir, { recursive: true })
+    const official = '# Your patch layer for this dsh profile.\n[]\n'
+    writeFileSync(join(profileDir, 'cordis.patch.yml'), official)
+    installCreatorModePlus({ harnessRoot, dshHome })
+    const profilePatch = readFileSync(join(profileDir, 'cordis.patch.yml'), 'utf8')
+    assert.match(profilePatch, /# Your patch layer/)
+    assert.doesNotMatch(profilePatch, /^\[\]$/m)
+    assert.match(profilePatch, /path: creator-mode-plus\/agent\.cordis\.yml/)
+    const before = statSync(join(profileDir, 'cordis.patch.yml'))
+    installCreatorModePlus({ harnessRoot, dshHome, upgrade: true })
+    assert.equal(statSync(join(profileDir, 'cordis.patch.yml')).mtimeMs, before.mtimeMs)
+    assert.equal(readFileSync(join(profileDir, 'cordis.patch.yml'), 'utf8'), profilePatch)
+  })
 })
