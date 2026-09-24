@@ -2,7 +2,7 @@
 
 Creator Mode+ is a user preset plus one DSH plugin. It brings ten fixed DSHX
 operations into an ordinary DSH session without giving that session control of
-its Host process. Stable DSHX `>=0.7.9 <0.8.0` supplies atomic single-Home Host
+its Host process. Stable DSHX `>=0.9.1 <0.10.0` supplies atomic single-Home Host
 discovery/attachment, temporary-Home cold-boot verification, workspace-aware
 scaffolding, source-preserving watched-plugin removal, external safe profile-bundle
 removal, proactive integrity quarantine, the external Guardian, durable recovery state, the seven-surface
@@ -119,7 +119,7 @@ The standalone package does not accept `0.7.x` by string alone. Before any fixed
 operation or installer mutation it requires:
 
 - package identity `dsh-external-plugin-devkit` and stable version
-  `>=0.7.9 <0.8.0`;
+  `>=0.9.1 <0.10.0` (0.9.0 and 0.7.9 are rejected; the desk pin must be `dsh-v0.1.7-rc.2`);
 - same-Home Web Host discovery/attach, three-state PID/port probes, and
   temporary-Home verification teardown;
 - Creator claim/scaffold commands and Bridge v2 context validation;
@@ -328,7 +328,7 @@ production activated as separate states.
 
 Supported: the official DSH browser WebUI, public Cordis plugin forms, public
 client runtime, and public UI slots across the RC8 Creator/Guardian contract and
-the RC2 package/update line and the authenticated Web line through `dsh-v0.1.7-rc.1`. The plugin peer range is `>=0.1.7-rc.1 <0.1.8`. User presets are profile includes of an `@deepseek-ai/dsh-agent-preset` declaration derived from the shipped Standard patch; `$DSH_HOME/.agent-presets` is not read.
+the RC2 package/update line and the authenticated Web line through `dsh-v0.1.7-rc.2` (SHA `477b4f420553e8a52c2fbccc464d7561b239c443`). The plugin peer range stays `>=0.1.7-rc.1 <0.1.8` and accepts `0.1.7-rc.2`. User presets are profile includes of an `@deepseek-ai/dsh-agent-preset` declaration derived from the shipped Standard patch; `$DSH_HOME/.agent-presets` is not read.
 
 Outside acceptance: native menus, window chrome, App IPC, desktop bridges, and
 shell-specific refresh behavior. A wrapper may work when it embeds the same

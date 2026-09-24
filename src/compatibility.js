@@ -5,9 +5,9 @@ export const CREATOR_BRIDGE_VERSION = 2
 
 export const DSHX_CONTRACT = Object.freeze({
   id: 'dshx-v0.7/creator-bridge-v2',
-  release: 'v0.7.9',
-  minimum: '0.7.9',
-  maximumExclusive: '0.8.0',
+  release: 'v0.9.1',
+  minimum: '0.9.1',
+  maximumExclusive: '0.10.0',
   capabilities: Object.freeze([
     'creator-session-claims',
     'human-confirmed-creator-takeover',
@@ -92,7 +92,9 @@ export const DSHX_SURFACE_MARKERS = Object.freeze({
   ]),
   'src/internal/types.ts': Object.freeze([
     'DESK_HARNESS_TAG',
-    'dsh-v0.1.7-rc.1',
+    'dsh-v0.1.7-rc.2',
+    'DESK_HARNESS_SHA',
+    '477b4f420553e8a52c2fbccc464d7561b239c443',
     'DSH_PEER_RANGE',
     '>=0.1.7-rc.1 <0.1.8',
   ]),

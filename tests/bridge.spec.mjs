@@ -101,7 +101,7 @@ function temporaryDirectory(label) {
   return path
 }
 
-function harnessAt(root, version = '0.7.9') {
+function harnessAt(root, version = '0.9.1') {
   mkdirSync(join(root, 'apps/cli/src'), { recursive: true })
   writeFileSync(join(root, 'apps/cli/src/bin.ts'), '')
   for (const path of REQUIRED_DSHX_PATHS) {
@@ -438,9 +438,14 @@ describe('Creator Bridge v2', () => {
     assert.equal(supportsDshxVersion('0.7.6'), false)
     assert.equal(supportsDshxVersion('0.7.7'), false)
     assert.equal(supportsDshxVersion('0.7.8'), false)
-    assert.equal(supportsDshxVersion('0.7.9'), true)
-    assert.equal(supportsDshxVersion('0.7.9+build.4'), true)
+    assert.equal(supportsDshxVersion('0.7.9'), false)
     assert.equal(supportsDshxVersion('0.8.0'), false)
+    assert.equal(supportsDshxVersion('0.9.0'), false)
+    assert.equal(supportsDshxVersion('0.9.0-rc.1'), false)
+    assert.equal(supportsDshxVersion('0.9.1'), true)
+    assert.equal(supportsDshxVersion('0.9.1+build.4'), true)
+    assert.equal(supportsDshxVersion('0.9.2'), true)
+    assert.equal(supportsDshxVersion('0.10.0'), false)
     assert.equal(supportsDshxVersion('invalid'), false)
   })
 
@@ -459,9 +464,9 @@ describe('Creator Bridge v2', () => {
   })
 
   it('resolves a compatible DSHX runtime and fails closed on drift', () => {
-    const compatible = harnessAt(temporaryDirectory('creator-mode-plus-compatible-'), '0.7.9')
+    const compatible = harnessAt(temporaryDirectory('creator-mode-plus-compatible-'), '0.9.1')
     const runtime = resolveDshxRuntime({ harnessRoot: compatible, loaderPath: '/fake/tsx-loader.mjs' })
-    assert.equal(runtime.dshxVersion, '0.7.9')
+    assert.equal(runtime.dshxVersion, '0.9.1')
     assert.equal(runtime.bridgeVersion, 2)
     assert.equal(runtime.loader, '/fake/tsx-loader.mjs')
     assert.equal(runtime.contractId, 'dshx-v0.7/creator-bridge-v2')
@@ -471,10 +476,10 @@ describe('Creator Bridge v2', () => {
     assert.equal(runtime.capabilities.includes('isolated-verify-home'), true)
     assert.equal(runtime.capabilities.includes('bounded-same-pid-server-hot-reload'), true)
 
-    const incompatible = harnessAt(temporaryDirectory('creator-mode-plus-incompatible-'), '0.8.0')
+    const incompatible = harnessAt(temporaryDirectory('creator-mode-plus-incompatible-'), '0.9.0')
     assert.throws(
       () => resolveDshxRuntime({ harnessRoot: incompatible, loaderPath: '/fake/tsx-loader.mjs' }),
-      /dshx 0\.8\.0 is incompatible/,
+      /dshx 0\.9\.0 is incompatible/,
     )
   })
 
@@ -488,8 +493,8 @@ describe('Creator Bridge v2', () => {
     )
   })
 
-  it('does not accept a version-only 0.7.9 checkout without hot-reload command, observer, and journal surfaces', () => {
-    const legacy = harnessAt(temporaryDirectory('creator-mode-plus-legacy-'), '0.7.9')
+  it('does not accept a version-only 0.9.1 checkout without hot-reload command, observer, and journal surfaces', () => {
+    const legacy = harnessAt(temporaryDirectory('creator-mode-plus-legacy-'), '0.9.1')
     rmSync(join(legacy, 'tools/dshx/src/commands/hot-reload.ts'))
     rmSync(join(legacy, 'tools/dshx/src/runtime/hot-reload-observer.mjs'))
     rmSync(join(legacy, 'tools/dshx/src/internal/hot-reload-journal.ts'))

@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.3.10 - 2026-09-24
+
+- Align Creator Mode+ with Harness `dsh-v0.1.7-rc.2` (SHA `477b4f420553e8a52c2fbccc464d7561b239c443`) and DSHX `>=0.9.1 <0.10.0`. Reject DSHX 0.9.0 and 0.7.9; those pins stay on `dsh-v0.1.7-rc.1`.
+- Keep the optional peer `@deepseek-ai/dsh` at `>=0.1.7-rc.1 <0.1.8`. That range accepts `0.1.7-rc.2`.
+- Keep the ten fixed tools. Read-only `dshx update plan` passes `--target dsh-v0.1.7-rc.2`. An omitted target on DSHX 0.9.1 stays on that tag and does not follow a later alpha.
+- Attest `DESK_HARNESS_TAG` and `DESK_HARNESS_SHA` before the bridge or installer mutates anything.
+
 ## 0.3.9 - 2026-09-23
 
 - Align Creator Mode+ with Harness `dsh-v0.1.7-rc.1` and DSHX `>=0.7.9 <0.8.0`. Declare optional peer `@deepseek-ai/dsh` `>=0.1.7-rc.1 <0.1.8`.
