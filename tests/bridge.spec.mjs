@@ -440,7 +440,12 @@ describe('Creator Bridge v2', () => {
     assert.equal(supportsDshxVersion('0.7.8'), false)
     assert.equal(supportsDshxVersion('0.7.9'), true)
     assert.equal(supportsDshxVersion('0.7.9+build.4'), true)
-    assert.equal(supportsDshxVersion('0.8.0'), false)
+    assert.equal(supportsDshxVersion('0.9.0'), true)
+    assert.equal(supportsDshxVersion('0.9.7'), true)
+    assert.equal(supportsDshxVersion('0.8.0'), true)
+    assert.equal(supportsDshxVersion('0.10.0'), false)
+    assert.equal(supportsDshxVersion('1.0.0'), false)
+    assert.equal(supportsDshxVersion('0.9.0-rc.1'), false)
     assert.equal(supportsDshxVersion('invalid'), false)
   })
 
@@ -471,10 +476,10 @@ describe('Creator Bridge v2', () => {
     assert.equal(runtime.capabilities.includes('isolated-verify-home'), true)
     assert.equal(runtime.capabilities.includes('bounded-same-pid-server-hot-reload'), true)
 
-    const incompatible = harnessAt(temporaryDirectory('creator-mode-plus-incompatible-'), '0.8.0')
+    const incompatible = harnessAt(temporaryDirectory('creator-mode-plus-incompatible-'), '0.10.0')
     assert.throws(
       () => resolveDshxRuntime({ harnessRoot: incompatible, loaderPath: '/fake/tsx-loader.mjs' }),
-      /dshx 0\.8\.0 is incompatible/,
+      /dshx 0\.10\.0 is incompatible/,
     )
   })
 

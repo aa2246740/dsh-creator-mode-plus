@@ -4,7 +4,7 @@
 
 在 DeepSeek Harness 的普通 Web 会话里选 Creator Mode+，用十个固定工具把一个文件化插件搭起来、检查、挂载，也能按安全顺序卸载。
 
-Creator Mode+ 0.3.9 配套 DSHX 0.7.9 和 Harness `dsh-v0.1.7-rc.1`。插件 peer 范围是 `>=0.1.7-rc.1 <0.1.8`。底层桥接兼容范围为 [DSHX](https://github.com/aa2246740/dsh-external-plugin-devkit) `>=0.7.9 <0.8.0`，并在使用前核对桌面钉、peer 范围和用户确认接管能力。会话恢复挂在 `agent/created` 上。
+Creator Mode+ 0.4.0 配套 DSHX 0.9.0 和 Harness `dsh-v0.1.7-rc.1`。插件 peer 范围是 `>=0.1.7-rc.1 <0.1.8`。底层桥接兼容范围为 [DSHX](https://github.com/aa2246740/dsh-external-plugin-devkit) `>=0.7.9 <0.10.0`，并在使用前核对桌面钉、peer 范围和用户确认接管能力。会话恢复挂在 `agent/created` 上。
 
 ![在官方 WebUI 里打开 Creator Mode+](docs/screenshots/mode-picker.gif)
 
