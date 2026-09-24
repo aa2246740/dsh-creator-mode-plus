@@ -4,7 +4,7 @@
 
 Pick Creator Mode+ in a normal DeepSeek Harness Web session. Ten fixed tools scaffold, check, mount, and uninstall a file-backed plugin in a safe order.
 
-Creator Mode+ 0.3.9 is paired with DSHX 0.7.9 and Harness `dsh-v0.1.7-rc.1`. The plugin peer range is `>=0.1.7-rc.1 <0.1.8`. The bridge compatibility range is [DSHX](https://github.com/aa2246740/dsh-external-plugin-devkit) `>=0.7.9 <0.8.0`; the desk pin, peer range, and human-confirmed takeover capability are checked before use. Session recovery listens on `agent/created`.
+Creator Mode+ 0.4.0 is paired with DSHX 0.9.0 and Harness `dsh-v0.1.7-rc.1`. The plugin peer range is `>=0.1.7-rc.1 <0.1.8`. The bridge compatibility range is [DSHX](https://github.com/aa2246740/dsh-external-plugin-devkit) `>=0.7.9 <0.10.0`; the desk pin, peer range, and human-confirmed takeover capability are checked before use. Session recovery listens on `agent/created`.
 
 ![Open Creator Mode+ in the official WebUI](docs/screenshots/mode-picker.gif)
 

@@ -1,19 +1,21 @@
 # DSHX v0.7 alignment
 
-Creator Mode+ 0.3.9 is aligned to stable DSHX `>=0.7.9 <0.8.0`, Creator Bridge
+Creator Mode+ 0.4.0 is aligned to stable DSHX `>=0.7.9 <0.10.0`, Creator Bridge
 v2, and the official browser WebUI lifecycle on Harness `dsh-v0.1.7-rc.1`.
 DSHX v0.7.5 makes same-Home
 ownership atomic across checkouts and binds PID, process start time, Home,
 profile, and root before lifecycle or update mutation. DSHX 0.7.9 pins omitted
 `update plan` targets to `dsh-v0.1.7-rc.1` and declares peer range
-`>=0.1.7-rc.1 <0.1.8`.
+`>=0.1.7-rc.1 <0.1.8`; DSHX 0.9.0 keeps that contract and carries the 0.7.9
+release content plus the rc.1 client-scaffold repair, compat-017 checks, and
+profile `link:` resolution.
 
 This is a contract alignment, not a version-number exception. Before the bridge
 or installer mutates anything, it verifies the DSHX package identity, stable
 version range, CLI and Creator/Guardian implementation, seven-surface activation
 contract, managed-shell gate, and transactional Harness Update Assistant.
 
-The 0.3.9 release requires DSHX 0.7.9 for the desk Harness pin, the `>=0.1.7-rc.1 <0.1.8` peer range, and Creator+ recovery on `agent/created`. It retains user-confirmed takeover from 0.3.8 / 0.7.8, plus the corrected client scaffolds, bounded import recovery, and external mixed-mount self-upgrades from 0.3.7 / 0.7.7.
+The 0.4.0 release accepts DSHX `>=0.7.9 <0.10.0` — the same v0.7 contract surfaces, attested per file — so it pairs with the released DSHX 0.9.0 line. The 0.3.9 release required DSHX 0.7.9 for the desk Harness pin, the `>=0.1.7-rc.1 <0.1.8` peer range, and Creator+ recovery on `agent/created`. It retains user-confirmed takeover from 0.3.8 / 0.7.8, plus the corrected client scaffolds, bounded import recovery, and external mixed-mount self-upgrades from 0.3.7 / 0.7.7.
 
 ## Ownership matrix
 

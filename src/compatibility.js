@@ -5,9 +5,9 @@ export const CREATOR_BRIDGE_VERSION = 2
 
 export const DSHX_CONTRACT = Object.freeze({
   id: 'dshx-v0.7/creator-bridge-v2',
-  release: 'v0.7.9',
+  release: 'v0.9.0',
   minimum: '0.7.9',
-  maximumExclusive: '0.8.0',
+  maximumExclusive: '0.10.0',
   capabilities: Object.freeze([
     'creator-session-claims',
     'human-confirmed-creator-takeover',

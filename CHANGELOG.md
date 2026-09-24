@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.4.0 - 2026-09-24
+
+- Accept stable DSHX `>=0.7.9 <0.10.0` so the preset pairs with the released DSHX 0.9.0 line (0.7.9 itself was never published; 0.9.0 carries its content plus the rc.1 client-scaffold repair, compat-017 checks, and profile `link:` resolution). The same `dshx-v0.7/creator-bridge-v2` surfaces are still attested per file before any mutation — a version string alone is never enough. Pre-release versions (e.g. `0.9.0-rc.1`) remain rejected.
+
 ## 0.3.9 - 2026-09-23
 
 - Align Creator Mode+ with Harness `dsh-v0.1.7-rc.1` and DSHX `>=0.7.9 <0.8.0`. Declare optional peer `@deepseek-ai/dsh` `>=0.1.7-rc.1 <0.1.8`.
