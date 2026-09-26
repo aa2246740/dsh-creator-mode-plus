@@ -1,4 +1,21 @@
+# Unreleased
+
+## Unreleased
+
+- Fix Creator shell guards reading sandbox policy and shell capabilities through undeclared Agent contexts. Resolve them through live injected service scopes and keep failing closed when dependencies disappear.
+- Report `CREATOR_SANDBOX_UNAVAILABLE` for unavailable policy wiring instead of mislabeling normal plugin commands as official-source writes.
+- Add native Agent + real sandbox Git commit/tag/push regression tests, including protected core writes, policy changes and dependency replacement.
+
+- Add user-confirmed plugin takeover in the current conversation, durable old-session fencing, owned job/terminal draining, and atomic DSHX ownership transfer.
+
 # Changelog
+
+## 0.3.10 - 2026-09-24
+
+- Align Creator Mode+ with Harness `dsh-v0.1.7-rc.2` (SHA `477b4f420553e8a52c2fbccc464d7561b239c443`) and DSHX `>=0.9.1 <0.10.0`. Reject DSHX 0.9.0 and 0.7.9; those pins stay on `dsh-v0.1.7-rc.1`.
+- Keep the optional peer `@deepseek-ai/dsh` at `>=0.1.7-rc.1 <0.1.8`. That range accepts `0.1.7-rc.2`.
+- Keep the ten fixed tools. Read-only `dshx update plan` passes `--target dsh-v0.1.7-rc.2`. An omitted target on DSHX 0.9.1 stays on that tag and does not follow a later alpha.
+- Attest `DESK_HARNESS_TAG` and `DESK_HARNESS_SHA` before the bridge or installer mutates anything.
 
 ## 0.3.9 - 2026-09-23
 
@@ -8,6 +25,11 @@
 - Keep managed upgrades stamp-stable when `agent.cordis.yml` bytes do not change. Read-only `dshx update plan` passes `--target dsh-v0.1.7-rc.1`.
 - Address background jobs by session id. Harness 0.1.7-rc.1 lists, kills, and waits with a session id, and a job view names its owner as `owner`.
 - Replace the official empty `[]` web profile patch with the Creator Mode+ include. A sequence item after that array is not a patch entry.
+## Unreleased — plugin-only boundary
+
+- Treat official DSH source, installed packages, worktrees and artifacts as read-only. Reject core targets, symlink escapes, Host patches and compiler output outside the plugin.
+- Enforce Creator filesystem/shell write guards after approval and add the rule to the runtime prompt. Keep normal plugin writes and read-only Host inspection.
+- Keep `update plan`; disable source-changing Harness update stages inside and outside DSHX.
 
 ## 0.3.8 - 2026-09-21
 
@@ -26,7 +48,7 @@
 - Continue checked server activation through an explicit HOT_RELOAD_READY state and fixed next action; preserve the original CLI code for old evidence-only plans.
 - Scope browser-adapter failures to verification and retain independent activation actions.
 - Rewrite the Agent workflow with branch references, persistent installation authorization and concrete feature acceptance.
-- Preserve the established fixed bridge and native approval guards for ordinary Creator sessions.
+- Keep the undeployed sealed execution integration opt-in while preserving the existing fixed bridge and native approval guards for ordinary Creator sessions.
 
 ## 0.3.6 - 2026-09-11
 

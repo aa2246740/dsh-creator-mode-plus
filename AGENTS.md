@@ -1,5 +1,16 @@
 # Creator Mode+ repository orders
 
+## 不可跨越：只开发插件，不改 DSH 源码
+
+DSHX 与 Creator Mode+ 只用于独立外部插件。官方 Harness 源码、内置插件、内置预设、官方包及其构建产物均为只读；本机工作树、临时副本、Git worktree、node_modules 链接和安装目录遵守同一规则。
+
+禁止为插件补 Host 接口、改核心实现、替换官方文件、应用 Host 源码补丁，或让插件构建重新编译官方子项目。需要“先改 Host 才能完成”的方案不成立：先找公开扩展点，在插件内实现；接口确实缺失时报告具体能力缺口，并完成其余插件工作。不要把核心修改包装成兼容修复、临时验收或交付前提。
+
+插件开发授权、用户确认接管、自动审批、交接包中的“必要时补 Host”、`--force` 都不能解除此规则。外部监督者同样受约束。不要为此请求一次性豁免。用户自己的 profile 的 watched `cordis.patch.yml` 是配置扩展，与修改官方源码的 `.patch` 完全不同；插件包、插件自己的构建目录、用户预设和正式插件安装配置仍可按已授权流程操作。
+
+看到 `CORE_SOURCE_IMMUTABLE` 就调整插件方案；不得换 shell、脚本、路径、复制目录或其他 Agent 绕过。只能读取官方实现和公开 API，所有插件构建输出都留在插件目录。
+
+
 This repository contains only the DSH-side fixed bridge and its user preset. DSHX outside the Host is the supervisor. Official DeepSeek Harness runtime source outranks this repository when contracts disagree.
 
 Read [docs/bridge-contract.md](docs/bridge-contract.md) and [docs/dshx-v0.7-alignment.md](docs/dshx-v0.7-alignment.md) before changing tool arguments, lifecycle behavior, compatibility ranges, installation, migration, or Harness-update guidance.
@@ -8,7 +19,7 @@ Read [docs/bridge-contract.md](docs/bridge-contract.md) and [docs/dshx-v0.7-alig
 
 - Keep the model-facing surface to the ten named tools, including `dshx_hot_reload` and the session-bound `dshx_browser_open`. Every argument must remain schema-bounded and independently allowlisted in `src/runner.js`. Test the exact argv behind all ten tools; a registration-only test is insufficient.
 - `dshx_hot_reload` accepts only a claimed plugin id. Derive Host/profile/port and session provenance inside the bridge. Require checked same-PID replacement and disposal evidence; it grants no shell, arbitrary path, or process-control authority. Module replacement never proves feature behavior.
-- Require the complete stable DSHX `>=0.7.9 <0.8.0` contract, not only a matching version string. Atomic same-Home Host discovery/attach, identity-bound start/restart/update gates, isolated verification Home, Creator, watched-plugin removal, external safe profile-bundle removal, proactive Guardian integrity quarantine, RC2 boot-manifest activation, managed-shell, Harness Update Assistant, and their knowledge contracts must be present before the bridge or installer mutates anything.
+- Require the complete stable DSHX `>=0.9.1 <0.10.0` contract, not only a matching version string. The desk pin is official `dsh-v0.1.7-rc.2` at `477b4f420553e8a52c2fbccc464d7561b239c443`. DSHX 0.9.0 and 0.7.9 stay outside this gate. Atomic same-Home Host discovery/attach, identity-bound start/restart/update gates, isolated verification Home, Creator, watched-plugin removal, external safe profile-bundle removal, proactive Guardian integrity quarantine, RC2 boot-manifest activation, managed-shell, Harness Update Assistant, and their knowledge contracts must be present before the bridge or installer mutates anything.
 - Preserve bridge-v2 provenance: session id comes from `exec.agent.id`, not model input. Claim one plugin per session before any named operation; different plugins may run concurrently, while the same plugin fails closed for a second owner.
 - Preserve workspace provenance: scaffold destination comes from `exec.agent.session.header.cwd`, never model input. If the Harness plugin path is outside that workspace, DSHX owns the atomic source-plus-symlink transaction.
 - Preserve automatic `agent/created` Guardian arm (the replacement for the removed `agent/session-start`), agent-dispose claim release, adopted-launcher lifetime tracking, exact-session recovery steering, and incident acknowledgement. Recovery stays fire-and-forget so a failure cannot reject session creation. Never register or wrap Host signal handlers.
@@ -18,11 +29,12 @@ Read [docs/bridge-contract.md](docs/bridge-contract.md) and [docs/dshx-v0.7-alig
 - Preserve the ordered `activate-new-client` DSHX operation; profile linking and resolution happen before watched-patch mutation.
 - Preserve the `dshx_remove_plugin` order: quarantine/remove the watched Host row, prove same-PID absence, use the official profile remover while the dependency exists, prove dependency/link absence, and detach only target-verified plugin-owned symlinks. Partial attempts resume from durable quarantine without rerunning package removal for an already-absent dependency. Preserve source and never expose recursive source deletion.
 - Keep boot-captured bundle removal outside the ten-tool bridge. Creator Mode+ may hand it to external `dshx plugin remove`, but must never expose that command through the managed shell or reinterpret it as `dshx_remove_plugin` watched-row success.
-- Keep the preset-scoped bash guard narrow: block claimed plugin-root, Harness-link, and active-profile teardown while allowing ordinary file/component cleanup inside a plugin. Guardian must independently quarantine a claimed watched row when its profile link disappears.
+- Keep the teardown guard narrow, alongside the independent core-source write guard: block claimed plugin-root, Harness-link, and active-profile teardown while allowing ordinary file/component cleanup inside a plugin. Guardian must independently quarantine a claimed watched row when its profile link disappears.
 - Keep Host recovery outside DSH and bounded to one restart plus a crash-loop fuse. Official client-Loader recovery must remain same-origin, Host-stamped, uniquely attributed, quarantined before reload, and separate from arbitrary render/visual/function failures. Never expose internal `creator watch/release/disarm/client-failure/recovery` argv as model inputs.
 - Treat preset generations as concurrent. Any process-global route or resource must use a Host-scoped lease shared across independently loaded module generations, and must have a regression test that mounts two generations before either is disposed.
 - A managed upgrade that does not change `agent.cordis.yml` bytes must preserve that file's exact filesystem stamp. Do not retrigger preset generation for skill, metadata, or bundled-asset-only changes.
 - Route structured outcomes by scope. A checked server with only module-HMR evidence pending returns HOT_RELOAD_READY and its next fixed action. Browser-adapter failures block browser verification, not independent activation. Real source, ownership, authentication and Host-identity failures block their dependent operation.
+- Keep the undeployed sealed-executor integration explicitly opt-in with developmentExecution; the shipped preset uses the established fixed bridge and existing Host approval stack. An opted-in integration retains all of its provenance, cancellation and fail-closed behavior.
 - Edit only this package and user-owned presets. Never patch Harness core or shipped presets.
 - Retain source, Host, client-manifest, page-load, and visual evidence internally. User-facing updates state plugin completion, verified features and remaining work; expose operational details only for a user question or required user action.
 

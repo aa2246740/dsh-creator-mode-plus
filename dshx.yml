@@ -7,10 +7,17 @@ profile: web
 hotReload:
   artifacts:
     - src/index.js
+    - src/desktop-profile.js
     - src/preset-015.js
     - src/runner.js
     - src/auth.js
     - src/delivery.js
     - src/compatibility.js
     - src/safety.js
+    - src/core-boundary.js
     - src/takeover.js
+    - src/development-execution.js
+    - src/development-tasks.js
+    - src/development-policy.js
+    - src/development-invocation.js
+    - src/development-target.js

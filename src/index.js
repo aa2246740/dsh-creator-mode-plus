@@ -1,3 +1,4 @@
+import { createDesktopProfileBridge } from './desktop-profile.js'
 import { installTakeoverFence, requestTakeover } from './takeover.js'
 /** Creator Mode+ model tools backed by fixed dshx operations. */
 
@@ -7,8 +8,13 @@ import {
   runClaimedDshx,
   runClientFailureDshx,
   runDshx,
+  resolveHarnessRoot,
 } from './runner.js'
 import { healCreatorPlusPresets } from './preset-015.js'
+import { createDevelopmentExecutionAuthority } from './development-execution.js'
+import { createDevelopmentTaskTracker } from './development-tasks.js'
+import { createDevelopmentPolicyTracker } from './development-policy.js'
+import { createDevelopmentInvocations } from './development-invocation.js'
 import {
   forgetCreatorClaim,
   installCreatorSafetyGuard,
@@ -22,7 +28,7 @@ export {
 } from './compatibility.js'
 
 export const name = 'dsh-creator-mode-plus'
-export const inject = ['tools', 'webServer', 'connection', 'agents', 'sessions', 'userQuestions']
+export const inject = ['tools', 'webServer', 'connection', 'agents', 'sessions', 'userQuestions', 'profileContext']
 
 const CLIENT_FAILURE_PATH = '/dsh-creator-mode-plus/client-failure'
 const MAX_CLIENT_FAILURE_BYTES = 16 * 1024
@@ -48,7 +54,14 @@ const output = {
   render: (_args, value) => [{ type: 'text', text: JSON.stringify(value, null, 2) }],
 }
 
-function isSameOrigin(req) {
+function isSameOrigin(req, options, port) {
+  // Electron checks dsh-app origin, then forwards an authenticated request
+  // without Origin. Require a script-only marker and the owned loopback route.
+  if (options.hostProfile === 'desktop' && req.headers.origin === undefined
+    && req.headers['x-dsh-creator-client'] === '1'
+    && req.headers['content-type'] === 'application/json'
+    && req.headers.host === `127.0.0.1:${port}`
+    && ['127.0.0.1', '::1', '::ffff:127.0.0.1'].includes(req.socket?.remoteAddress)) return true
   const origin = req.headers.origin
   const authority = req.headers.host
   if (typeof origin !== 'string' || typeof authority !== 'string') return false
@@ -97,7 +110,7 @@ function clientFailureHandler(webServer, options) {
         res.end()
         return
       }
-      if (!isSameOrigin(req)) {
+      if (!isSameOrigin(req, options, webServer.port)) {
         res.writeHead(403)
         res.end('forbidden')
         return
@@ -174,7 +187,7 @@ export function installClientFailureRoute(ctx, options = {}) {
 }
 
 /** Register file-backed Creator Mode+ operations for one preset scope. */
-export function apply(ctx) {
+export function apply(ctx, config = {}) {
   console.log('[dsh-creator-mode-plus] loaded')
   try {
     const healed = healCreatorPlusPresets()
@@ -184,11 +197,24 @@ export function apply(ctx) {
   } catch (error) {
     ctx.logger?.warn?.(`dsh-creator-mode-plus: persona heal failed: ${error instanceof Error ? error.message : String(error)}`)
   }
-  const authOptions = { getWebStartupUrl: port => typeof ctx.connection.authenticatedUrl === 'function' ? ctx.connection.authenticatedUrl(`http://127.0.0.1:${port}/`) : undefined }
+  const authOptions = { ...createDesktopProfileBridge(ctx), getWebStartupUrl: port => typeof ctx.connection.authenticatedUrl === 'function' ? ctx.connection.authenticatedUrl(`http://127.0.0.1:${port}/`) : undefined }
   installCreatorRecovery(ctx, authOptions)
   installClientFailureRoute(ctx, authOptions)
-  installCreatorSafetyGuard(ctx)
+  installCreatorSafetyGuard(ctx, () => resolveHarnessRoot())
   installTakeoverFence(ctx)
+
+  // The sealed executor is a separate, undeployed integration. Enable it only
+  // in an explicitly configured development preset; ordinary Creator sessions
+  // keep the reviewed fixed bridge and the Host's existing approval stack.
+  const developmentExecution = config.developmentExecution === true
+  const ownedDefinitions = new Map()
+  const tasks = developmentExecution ? createDevelopmentTaskTracker(ctx) : undefined
+  const policy = developmentExecution ? createDevelopmentPolicyTracker(ctx) : undefined
+  let authority, invocations
+  const registerOwned = definition => {
+    ownedDefinitions.set(definition.name, definition)
+    return ctx.tools.register(definition)
+  }
 
   ctx.tools.register({
     name: 'dshx_claim_plugin',
@@ -203,7 +229,7 @@ export function apply(ctx) {
     output,
     execute(args, exec) {
       const id = pluginId(args.name)
-      return runDshx(['creator', 'claim', id], exec, { ...authOptions, hostPort: currentWebPort() }).then((result) => {
+      return runDshx(['creator', 'claim', id], exec, { ...authOptions, hostPort: (authOptions.hostPort ?? currentWebPort()) }).then((result) => {
         if (result.exitCode === 0) rememberCreatorClaim(exec, id)
         return result
       })
@@ -217,7 +243,7 @@ export function apply(ctx) {
     parameters: { type: 'object', properties: { name: { type: 'string', pattern: '^[a-z][a-z0-9-]*$' } }, required: ['name'], additionalProperties: false },
     timeoutMs: 360_000,
     output,
-    execute: (args, exec) => requestTakeover(ctx, pluginId(args.name), exec, { ...authOptions, hostPort: currentWebPort() }),
+    execute: (args, exec) => requestTakeover(ctx, pluginId(args.name), exec, { ...authOptions, hostPort: (authOptions.hostPort ?? currentWebPort()) }),
     presentCall: args => ({ card: 'generic', title: `申请接管 ${args.name}`, kind: 'edit', rawInput: args.name }),
   })
 
@@ -239,12 +265,12 @@ export function apply(ctx) {
       const id = pluginId(args.name)
       return runClaimedDshx(id, [
         'creator', 'scaffold', id, choice(args.kind, KINDS, 'plugin kind'),
-      ], exec, { ...authOptions, hostPort: currentWebPort() })
+      ], exec, { ...authOptions, hostPort: (authOptions.hostPort ?? currentWebPort()) })
     },
     presentCall: args => ({ card: 'generic', title: `dshx scaffold ${args.name}`, kind: 'edit', rawInput: args }),
   })
 
-  ctx.tools.register({
+  registerOwned({
     name: 'dshx_check',
     description: 'Run DSHX v0.7 external-plugin checks, including client Cordis service injection and the built-client handoff. Passing proves SOURCE_BUILT only, not live activation.',
     parameters: {
@@ -255,14 +281,21 @@ export function apply(ctx) {
     },
     timeoutMs: 60_000,
     output,
-    execute(args, exec) {
-      const id = pluginId(args.name)
-      return runClaimedDshx(id, ['check', id], exec, { ...authOptions, hostPort: currentWebPort() })
+    async execute(args, exec) {
+      if (!developmentExecution) return runClaimedDshx(pluginId(args.name), ['check', pluginId(args.name)], exec, { ...authOptions, hostPort: (authOptions.hostPort ?? currentWebPort()) })
+      const owner = authority.enter(exec, args)
+      let call
+      try {
+        call = invocations.open(owner, exec, policy.capture(exec))
+        const id = pluginId(args.name)
+        if (call.route === 'sealed') return await call.invokeSealed()
+        return await runClaimedDshx(id, ['check', id], call.legacyExecution(), { ...authOptions, hostPort: (authOptions.hostPort ?? currentWebPort()) })
+      } finally { if (call) call.close(); else authority.revoke(owner) }
     },
     presentCall: args => ({ card: 'generic', title: `dshx check ${args.name}`, kind: 'read', rawInput: args.name }),
   })
 
-  ctx.tools.register({
+  registerOwned({
     name: 'dshx_activation_plan',
     description: 'Select the activation method for one changed component: patch, manifest, preset, client, new-client, server, or artifact.',
     parameters: {
@@ -276,16 +309,26 @@ export function apply(ctx) {
     },
     timeoutMs: 60_000,
     output,
-    execute(args, exec) {
-      const id = pluginId(args.name)
-      return runClaimedDshx(id, [
-        'activation-plan', id, '--change', choice(args.change, CHANGES, 'change surface'),
-      ], exec, { ...authOptions, hostPort: currentWebPort() })
+    async execute(args, exec) {
+      if (!developmentExecution) {
+        const id = pluginId(args.name)
+        return runClaimedDshx(id, ['activation-plan', id, '--change', choice(args.change, CHANGES, 'change surface')], exec, { ...authOptions, hostPort: (authOptions.hostPort ?? currentWebPort()) })
+      }
+      const owner = authority.enter(exec, args)
+      let call
+      try {
+        call = invocations.open(owner, exec, policy.capture(exec))
+        const id = pluginId(args.name)
+        if (call.route === 'sealed') return await call.invokeSealed()
+        return await runClaimedDshx(id, [
+          'activation-plan', id, '--change', choice(args.change, CHANGES, 'change surface'),
+        ], call.legacyExecution(), { ...authOptions, hostPort: (authOptions.hostPort ?? currentWebPort()) })
+      } finally { if (call) call.close(); else authority.revoke(owner) }
     },
     presentCall: args => ({ card: 'generic', title: `dshx plan ${args.change}`, kind: 'read', rawInput: args }),
   })
 
-  ctx.tools.register({
+  registerOwned({
     name: 'dshx_activate_new_client',
     description: 'Activate one checked my-plugins Web client in the DSHX v0.7 safe order: profile link, resolution proof, watched-patch transaction, then current-Host manifest proof.',
     parameters: {
@@ -296,12 +339,22 @@ export function apply(ctx) {
     },
     timeoutMs: 90_000,
     output,
-    execute(args, exec) {
-      const id = pluginId(args.name)
-      const port = currentWebPort()
-      return runClaimedDshx(id, [
-        'activate-new-client', id, '--profile', 'web', '--port', String(port),
-      ], exec, { ...authOptions, hostPort: port })
+    async execute(args, exec) {
+      if (!developmentExecution) {
+        const id = pluginId(args.name), port = (authOptions.hostPort ?? currentWebPort())
+        return runClaimedDshx(id, ['activate-new-client', id, '--profile', 'web', '--port', String(port)], exec, { ...authOptions, hostPort: port })
+      }
+      const owner = authority.enter(exec, args)
+      let call
+      try {
+        call = invocations.open(owner, exec, policy.capture(exec))
+        const id = pluginId(args.name)
+        if (call.route === 'sealed') return await call.invokeSealed()
+        const port = (authOptions.hostPort ?? currentWebPort())
+        return await runClaimedDshx(id, [
+          'activate-new-client', id, '--profile', 'web', '--port', String(port),
+        ], call.legacyExecution(), { ...authOptions, hostPort: port })
+      } finally { if (call) call.close(); else authority.revoke(owner) }
     },
     presentCall: args => ({ card: 'generic', title: `dshx activate ${args.name}`, kind: 'edit', rawInput: args.name }),
   })
@@ -319,7 +372,7 @@ export function apply(ctx) {
     output,
     async execute(args, exec) {
       const id = pluginId(args.name)
-      const port = currentWebPort()
+      const port = (authOptions.hostPort ?? currentWebPort())
       const result = await runClaimedDshx(id, ['creator', 'remove', id], exec, { ...authOptions, hostPort: port })
       if (result.exitCode === 0) forgetCreatorClaim(exec)
       return result
@@ -327,7 +380,7 @@ export function apply(ctx) {
     presentCall: args => ({ card: 'generic', title: `dshx remove ${args.name}`, kind: 'edit', rawInput: args.name }),
   })
 
-  ctx.tools.register({
+  registerOwned({
     name: 'dshx_hot_reload',
     description: 'Activate the code changes of one already-loaded, checked server plugin. The requested behavior remains RUNTIME_VERIFICATION_REQUIRED until exercised. Use the fixed plugin ID; runtime provenance and cleanup are checked internally.',
     parameters: {
@@ -338,15 +391,25 @@ export function apply(ctx) {
     },
     timeoutMs: 90_000,
     output,
-    execute(args, exec) {
+    async execute(args, exec) {
       const id = pluginId(args.name)
       if (HOT_RELOAD_INFRASTRUCTURE.has(id)) {
         throw new Error(`dshx_hot_reload cannot replace its executing infrastructure plugin: ${id}`)
       }
-      const port = currentWebPort()
-      return runClaimedDshx(id, [
-        'hot-reload', id, '--profile', 'web', '--port', String(port), '--json',
-      ], exec, { ...authOptions, hostPort: port })
+      if (!developmentExecution) {
+        const port = (authOptions.hostPort ?? currentWebPort())
+        return runClaimedDshx(id, ['hot-reload', id, '--profile', 'web', '--port', String(port), '--json'], exec, { ...authOptions, hostPort: port })
+      }
+      const owner = authority.enter(exec, args)
+      let call
+      try {
+        call = invocations.open(owner, exec, policy.capture(exec))
+        if (call.route === 'sealed') return await call.invokeSealed()
+        const port = (authOptions.hostPort ?? currentWebPort())
+        return await runClaimedDshx(id, [
+          'hot-reload', id, '--profile', 'web', '--port', String(port), '--json',
+        ], call.legacyExecution(), { ...authOptions, hostPort: port })
+      } finally { if (call) call.close(); else authority.revoke(owner) }
     },
     presentCall: args => ({ card: 'generic', title: `dshx hot reload ${args.name}`, kind: 'edit', rawInput: args.name }),
   })
@@ -358,7 +421,7 @@ export function apply(ctx) {
     timeoutMs: 60_000,
     output,
     execute(_args, exec) {
-      return runDshx(['browser', 'open', '--json'], exec, { ...authOptions, hostPort: currentWebPort() })
+      return runDshx(['browser', 'open', '--json'], exec, { ...authOptions, hostPort: (authOptions.hostPort ?? currentWebPort()) })
     },
     presentCall: () => ({ card: 'generic', title: 'Open authenticated DSH browser', kind: 'edit', rawInput: {} }),
   })
@@ -370,8 +433,12 @@ export function apply(ctx) {
     timeoutMs: 30_000,
     output,
     execute(_args, exec) {
-      return runDshx(['status'], exec, { ...authOptions, hostPort: currentWebPort() })
+      return runDshx(['status'], exec, { ...authOptions, hostPort: (authOptions.hostPort ?? currentWebPort()) })
     },
     presentCall: () => ({ card: 'generic', title: 'dshx status', kind: 'read' }),
   })
+  if (developmentExecution) {
+    authority = createDevelopmentExecutionAuthority(ctx, ownedDefinitions)
+    invocations = createDevelopmentInvocations(ctx, { authority, tasks, policy, getHarnessRoot: resolveHarnessRoot })
+  }
 }

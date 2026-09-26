@@ -38,11 +38,11 @@ describe('Creator Mode+ 0.3 package contract', () => {
     const manifest = read('dshx.yml')
     const verifier = read('scripts/verify-dshx.mjs')
 
-    assert.equal(metadata.version, '0.3.9')
+    assert.equal(metadata.version, '0.3.10')
     assert.equal(metadata.peerDependencies['@deepseek-ai/dsh'], '>=0.1.7-rc.1 <0.1.8')
     assert.equal(metadata.peerDependenciesMeta['@deepseek-ai/dsh'].optional, true)
-    assert.match(verifier, /DSHX_V079_COMPATIBILITY_PASS/)
-    assert.doesNotMatch(verifier, /DSHX_V072_COMPATIBILITY_PASS/)
+    assert.match(verifier, /DSHX_V091_COMPATIBILITY_PASS/)
+    assert.doesNotMatch(verifier, /DSHX_V079_COMPATIBILITY_PASS/)
     assert.equal(metadata.files.includes('dshx.yml'), true)
     assert.equal(metadata.files.includes('scripts'), true)
     assert.equal(metadata.files.includes('docs'), false)
@@ -81,8 +81,8 @@ describe('Creator Mode+ 0.3 package contract', () => {
       assert.match(source, /0\.7/, path)
     }
     const skill = ['SKILL.md','maintenance.md','verification-recovery.md'].map(name => read(`preset/skills/creator-mode-plus/${name}`)).join('\n')
-    assert.match(skill, /update plan → prepare → verify → apply/)
-    assert.match(skill, /prepare.*verify.*apply.*rollback.*external DSHX supervisor/s)
+    assert.match(skill, /Only `update plan` remains available/)
+    assert.match(skill, /prepare.*verify.*apply.*rollback.*may not be run.*external DSHX supervisor/s)
     assert.match(skill, /dshx_hot_reload/)
     assert.match(skill, /dshx_remove_plugin/)
     assert.match(skill, /dshx plugin remove/)
@@ -99,7 +99,7 @@ describe('Creator Mode+ 0.3 package contract', () => {
 
   it('declares only the exact server module set for external self-upgrade', () => {
     const files = [...read('dshx.yml').matchAll(/^    - (.+)$/gm)].map(match => match[1])
-    assert.deepEqual(files, ['src/index.js', 'src/preset-015.js', 'src/runner.js', 'src/auth.js', 'src/delivery.js', 'src/compatibility.js', 'src/safety.js', 'src/takeover.js'])
+    assert.deepEqual(files, ['src/index.js', 'src/desktop-profile.js', 'src/preset-015.js', 'src/runner.js', 'src/auth.js', 'src/delivery.js', 'src/compatibility.js', 'src/safety.js', 'src/core-boundary.js', 'src/takeover.js', 'src/development-execution.js', 'src/development-tasks.js', 'src/development-policy.js', 'src/development-invocation.js', 'src/development-target.js'])
     for (const file of files) {
       assert.doesNotThrow(() => read(file))
       for (const match of read(file).matchAll(/from ['"]\.\/([^'"]+)['"]/g)) {

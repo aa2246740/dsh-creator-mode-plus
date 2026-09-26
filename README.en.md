@@ -2,9 +2,11 @@
 
 [中文](README.md)
 
+**Plugin-only boundary:** official DSH source and artifacts are read-only, including copies and worktrees. Use public extension points; missing APIs never authorize a Host patch. Takeover, approval and `--force` cannot override `CORE_SOURCE_IMMUTABLE`.
+
 Pick Creator Mode+ in a normal DeepSeek Harness Web session. Ten fixed tools scaffold, check, mount, and uninstall a file-backed plugin in a safe order.
 
-Creator Mode+ 0.3.9 is paired with DSHX 0.7.9 and Harness `dsh-v0.1.7-rc.1`. The plugin peer range is `>=0.1.7-rc.1 <0.1.8`. The bridge compatibility range is [DSHX](https://github.com/aa2246740/dsh-external-plugin-devkit) `>=0.7.9 <0.8.0`; the desk pin, peer range, and human-confirmed takeover capability are checked before use. Session recovery listens on `agent/created`.
+Creator Mode+ 0.3.10 is paired with DSHX 0.9.1 and Harness `dsh-v0.1.7-rc.2` (SHA `477b4f420553e8a52c2fbccc464d7561b239c443`). The plugin peer range stays `>=0.1.7-rc.1 <0.1.8`, which accepts `0.1.7-rc.2`. The bridge compatibility range is [DSHX](https://github.com/aa2246740/dsh-external-plugin-devkit) `>=0.9.1 <0.10.0`; 0.9.0 and 0.7.9 are rejected. The desk pin, peer range, and human-confirmed takeover capability are checked before use. Session recovery listens on `agent/created`. The ten fixed tools are unchanged.
 
 ![Open Creator Mode+ in the official WebUI](docs/screenshots/mode-picker.gif)
 
@@ -55,7 +57,7 @@ Whole-plugin removal goes through `dshx_remove_plugin` only. Running the install
 
 ![Duplicate install refused](docs/screenshots/already-installed.png)
 
-Harness `update prepare` / `verify` / `apply` / `rollback` are not among the ten tools. They stay with an external DSHX supervisor. Inside the session, managed shell may only read `update plan`.
+Harness inventory is read-only through `update plan`. DSHX disables `prepare`, `verify`, `apply` and `rollback` for every caller, including the external supervisor.
 
 ## Upgrade
 

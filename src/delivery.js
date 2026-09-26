@@ -90,7 +90,7 @@ function validatedHotReload(result, pluginId, expectedPid, expectedPort) {
   }
   if (report?.command !== 'hot-reload' || report?.ok !== true
     || !evidence.includes('HOST_MODULE_RELOADED') || data?.hostRestart !== false || data?.behaviorVerified !== false
-    || value?.pluginId !== pluginId || value?.profile !== 'web'
+    || value?.pluginId !== pluginId || !['web', 'desktop'].includes(value?.profile)
     || value?.hostPid !== expectedPid || value?.hostPort !== expectedPort || value?.hostRestart !== false
     || typeof value?.transactionId !== 'string' || !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value.transactionId)
     || typeof value?.hmrEntryId !== 'string' || !/^dshx-hot-reload-hmr-[a-z0-9-]+$/.test(value.hmrEntryId)

@@ -1,6 +1,6 @@
 {
   "name": "dsh-creator-mode-plus",
-  "version": "0.3.9",
+  "version": "0.3.10",
   "description": "Develop, activate and verify DeepSeek Harness plugins from a Creator Mode+ conversation.",
   "type": "module",
   "license": "MIT",
@@ -16,12 +16,15 @@
       "inject": [],
       "platform": "web",
       "immediately": true
+    },
+    "bundle": {
+      "patch": "./cordis.patch.yml"
     }
   },
   "scripts": {
     "install:preset": "node scripts/install.mjs",
     "test": "node --experimental-vm-modules --test tests/*.spec.mjs",
-    "check": "node --check src/index.js && node --check src/preset-015.js && node --check src/runner.js && node --check src/auth.js && node --check src/delivery.js && node --check src/safety.js && node --check src/takeover.js && node --check src/compatibility.js && node --check src/client.js && node --check scripts/install.mjs && node --check scripts/verify-dshx.mjs && node --check scripts/verify-harness-install.mjs && npm test",
+    "check": "node --check src/index.js && node --check src/preset-015.js && node --check src/runner.js && node --check src/auth.js && node --check src/delivery.js && node --check src/safety.js && node --check src/core-boundary.js && node --check src/takeover.js && node --check src/compatibility.js && node --check src/client.js && node --check scripts/install.mjs && node --check scripts/verify-dshx.mjs && node --check scripts/verify-harness-install.mjs && npm test",
     "verify:dshx": "node scripts/verify-dshx.mjs",
     "verify:harness-install": "node scripts/verify-harness-install.mjs",
     "test:native": "node --experimental-vm-modules --test tests/native/*.spec.mjs"
@@ -33,7 +36,9 @@
     "yaml": "2.9.0"
   },
   "peerDependencies": {
-    "@deepseek-ai/dsh": ">=0.1.7-rc.1 <0.1.8"
+    "@deepseek-ai/dsh": ">=0.1.7-rc.1 <0.1.8",
+    "@deepseek-ai/dsh-app-boot": ">=0.1.7-rc.1 <0.1.8",
+    "@deepseek-ai/dsh-plugin-manager": ">=0.1.7-rc.1 <0.1.8"
   },
   "peerDependenciesMeta": {
     "@deepseek-ai/dsh": {
@@ -70,6 +75,7 @@
     "CHANGELOG.md",
     "LICENSE",
     "README.md",
-    "README.en.md"
+    "README.en.md",
+    "cordis.patch.yml"
   ]
 }

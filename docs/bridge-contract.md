@@ -1,12 +1,15 @@
 # Creator Bridge v2
 
+> 当前强制规则：DSH 官方源码与构建产物只读。插件工作不允许 Host patch、修改临时官方副本或重建官方子项目。`update prepare/verify/apply/rollback` 已禁用，仅保留 `update plan`；后文历史版本说明不解除该规则。
+
+
 Creator Mode+ is a user preset plus one DSH plugin. It brings ten fixed DSHX
 operations into an ordinary DSH session without giving that session control of
-its Host process. Stable DSHX `>=0.7.9 <0.8.0` supplies atomic single-Home Host
+its Host process. Stable DSHX `>=0.9.1 <0.10.0` supplies atomic single-Home Host
 discovery/attachment, temporary-Home cold-boot verification, workspace-aware
 scaffolding, source-preserving watched-plugin removal, external safe profile-bundle
 removal, proactive integrity quarantine, the external Guardian, durable recovery state, the seven-surface
-activation contract, and the transactional Harness Update Assistant.
+activation contract, and the read-only Harness version inventory and plugin-only source boundary.
 
 ## Roles
 
@@ -56,14 +59,7 @@ pull, and recovery acknowledgement argv. Tests must execute every row and every
 internal lifecycle shape through the allowlist; registering a tool name does not
 prove its child argv is reachable.
 
-DSHX v0.7.2 adds `dshx_remove_plugin` as the seventh Creator tool. `update prepare`, `verify`,
-`apply`, and `rollback` remain outside the bridge because they can replace or restore the process that owns the session,
-so the fixed bridge cannot expose them. Read-only `update plan` is available only
-through DSHX's managed-shell gate and remains inventory rather than activation.
-DSHX v0.7.3 adds the external `dshx plugin remove` transaction for boot-captured
-profile bundles. It also stays outside the fixed bridge: it requires current
-profile/port authority and may own a tombstone across App boots, so Creator
-sessions may hand off to it but never execute it as a bridge tool or raw shell.
+`dshx_remove_plugin` provides bounded source-preserving removal. Harness version inventory is read-only; source-changing update stages are disabled for every caller.
 
 DSHX v0.7.4 makes App, direct CLI, and dshx launchers for one long-lived Web
 Host per real `DSH_HOME`. `start` attaches to one existing Host, while duplicate
@@ -119,7 +115,7 @@ The standalone package does not accept `0.7.x` by string alone. Before any fixed
 operation or installer mutation it requires:
 
 - package identity `dsh-external-plugin-devkit` and stable version
-  `>=0.7.9 <0.8.0`;
+  `>=0.9.1 <0.10.0` (0.9.0 and 0.7.9 are rejected; the desk pin must be `dsh-v0.1.7-rc.2`);
 - same-Home Web Host discovery/attach, three-state PID/port probes, and
   temporary-Home verification teardown;
 - Creator claim/scaffold commands and Bridge v2 context validation;
@@ -127,7 +123,7 @@ operation or installer mutation it requires:
   removal, and proactive claimed-link integrity quarantine;
 - external Guardian and official Loader-failure recovery implementation;
 - check, activation-plan, and bounded new-client command surfaces;
-- the managed-shell gate and the transactional Harness Update Assistant;
+- the managed-shell gate and the read-only Harness version inventory and plugin-only source boundary;
 - Creator+, Guardian, live-activation, and Harness-update knowledge contracts.
 
 Missing or prerelease surfaces fail closed. Release verification also probes the
@@ -301,34 +297,15 @@ generation, and only the last lease unregisters the route. The installer also
 preserves the exact composition-file stamp when its bytes are unchanged so
 metadata-only upgrades do not manufacture a new generation.
 
-## Harness Update Assistant boundary
+## Harness version inventory boundary
 
-The v0.7 update state machine is `plan → prepare → verify → apply`; `rollback`
-requires an existing apply transaction. Creator Mode+ may inspect `plan` from a
-managed shell after `dshx_status` proves one checkout. All later stages are
-external-supervisor work.
-
-The evidence labels are deliberately non-transitive:
-
-- `plan` inventories tag/SHA, dirty state, and plugins; it proves no build.
-- `prepare` proves an isolated candidate installed and built; it does not update
-  the current checkout.
-- `verify` proves candidate static/cold-boot gates; it does not activate the
-  production Host or page.
-- `apply` updates local source and artifacts transactionally; it does not restart
-  or establish user-visible acceptance.
-- `rollback` restores the recorded checkout, dependencies, and artifacts; it
-  does not promise reversal of product-data migrations outside this contract.
-
-The update assistant never silently stops or restarts a production Host. Creator
-Mode+ must report candidate verified, applied locally, real runtime accepted, and
-production activated as separate states.
+Only `update plan` is available. It inventories versions, dirty state and plugins without proving a build or runtime behavior. DSHX rejects `prepare`, `verify`, `apply` and `rollback` with `CORE_SOURCE_IMMUTABLE` for every caller. The external supervisor has no exception. A plugin requiring a new Host API must report that capability gap or use another public extension point.
 
 ## Compatibility and evidence boundary
 
 Supported: the official DSH browser WebUI, public Cordis plugin forms, public
 client runtime, and public UI slots across the RC8 Creator/Guardian contract and
-the RC2 package/update line and the authenticated Web line through `dsh-v0.1.7-rc.1`. The plugin peer range is `>=0.1.7-rc.1 <0.1.8`. User presets are profile includes of an `@deepseek-ai/dsh-agent-preset` declaration derived from the shipped Standard patch; `$DSH_HOME/.agent-presets` is not read.
+the RC2 package/update line and the authenticated Web line through `dsh-v0.1.7-rc.2` (SHA `477b4f420553e8a52c2fbccc464d7561b239c443`). The plugin peer range stays `>=0.1.7-rc.1 <0.1.8` and accepts `0.1.7-rc.2`. User presets are profile includes of an `@deepseek-ai/dsh-agent-preset` declaration derived from the shipped Standard patch; `$DSH_HOME/.agent-presets` is not read.
 
 Outside acceptance: native menus, window chrome, App IPC, desktop bridges, and
 shell-specific refresh behavior. A wrapper may work when it embeds the same
@@ -415,8 +392,11 @@ action. Current-Host authentication errors still block dependent live proof.
 An already-authenticated, task-authorized UI or a plugin command/service can
 supply feature evidence without configuring this optional browser adapter.
 
-This release uses the ten fixed tools and the native approval/guard stack.
-Separate local sealed-executor experiments are not part of this package.
+The sealed executor code is a development integration, enabled only by an
+explicit `developmentExecution: true` composition. The ordinary preset keeps
+the established ten fixed tools and native approval/guard stack. Enabling the
+experimental path retains its strict executor/provenance requirements; absence
+of that optional service is not a default-mode prerequisite.
 
 ## 用户确认后接管
 
@@ -429,3 +409,10 @@ Separate local sealed-executor experiments are not part of this package.
 正在激活、持有者状态无法核实、停止失败、确认取消或超时，都不会授予新会话权限。已开始的停止操作不会被自动恢复。可用外部 `dshx creator inspect <plugin> --json` 查看原认领及待处理交接；不要手删 claims 或 session.lock。`creator takeover` 是固定桥内部提交协议，缺少一次性凭据会拒绝，不能通过 `--force` 调用。
 
 租约到期只表示认领需要重新核验，不再自动授权第二个写入者。正常 `agent/disposed` 仍释放认领；移交中的 dispose 不得破坏正在比较的原认领。
+
+
+## Official Desktop profile support (local compatibility update)
+
+The fixed bridge derives `desktop`, its port, Home, and runtime root from the public `profileContext`; none becomes model input. The CLI preserves Web behavior. For Desktop, a per-invocation private capability returns only config entry identities, or authorizes one install/remove for the current claimed plain plugin. The owning Host calls the public `@deepseek-ai/dsh-plugin-manager/operations` `runPluginCommand` with its bundled package manager and official profile lock. New bundle activation is disabled; the existing checked watched-patch transaction still owns activation and removal. Capabilities expire, are revoked at operation completion and generation disposal, and are never returned in tool text.
+
+Guardian validates the Electron child identity and monitors the Desktop Host. It may quarantine an attributed plugin failure, but never stops, replaces, or restarts the Desktop Host. Electron owns that recovery and normal quit. Desktop HMR binds the discovered application root independently of the plugin-development checkout. Package imports, checked artifacts, claims, same-PID proof, and feature acceptance remain required.

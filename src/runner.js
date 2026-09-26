@@ -63,7 +63,7 @@ function isAllowedArgs(args) {
   }
   if (args.length === 6 && args[0] === 'activate-new-client' && PLUGIN_ID.test(args[1])) {
     return args[2] === '--profile'
-      && args[3] === 'web'
+      && ['web', 'desktop'].includes(args[3])
       && args[4] === '--port'
       && /^\d{1,5}$/.test(args[5])
       && Number(args[5]) >= 1
@@ -71,7 +71,7 @@ function isAllowedArgs(args) {
   }
   if (args.length === 7 && args[0] === 'hot-reload' && PLUGIN_ID.test(args[1])) {
     return args[2] === '--profile'
-      && args[3] === 'web'
+      && ['web', 'desktop'].includes(args[3])
       && args[4] === '--port'
       && /^\d{1,5}$/.test(args[5])
       && Number(args[5]) >= 1
@@ -97,7 +97,7 @@ export function currentWebPort(argv = process.argv) {
   return value
 }
 
-function contextFromExecution(exec, hostPort) {
+function contextFromExecution(exec, hostPort, options = {}) {
   const sessionId = exec?.agent?.id
   if (typeof sessionId !== 'string' || sessionId.length === 0) {
     throw new Error('dsh-creator-mode-plus: bridge v2 requires the calling DSH session identity')
@@ -120,6 +120,7 @@ function contextFromExecution(exec, hostPort) {
     hostPid: process.pid,
     hostParentPid: process.ppid,
     hostPort,
+    ...(options.hostProfile === 'desktop' ? { hostProfile: 'desktop', hostRoot: options.hostRoot, hostHome: options.hostHome } : {}),
     bridgeVersion: CREATOR_BRIDGE_VERSION,
     ...workspaceRoot === undefined ? {} : { workspaceRoot: resolve(workspaceRoot) },
   }
@@ -232,14 +233,32 @@ function executeDshx(args, exec, options = {}) {
     throw new Error('dsh-creator-mode-plus: refusing an operation outside bridge v2')
   }
   const runtime = resolveDshxRuntime(options)
+  if (options.hostProfile === 'desktop') args = args.map((value, index) => index > 0 && args[index - 1] === '--profile' ? 'desktop' : value)
+  const signal = exec?.signal
+  const result = (code, stdout = '', stderr = '', startup = '') => ({
+    command: `dshx ${args.join(' ')}`,
+    exitCode: code ?? 1,
+    stdout: redactStartupOutput(stdout.trim(), startup),
+    stderr: redactStartupOutput(stderr.trim(), startup),
+    dshxVersion: runtime.dshxVersion,
+    creatorBridgeVersion: runtime.bridgeVersion,
+    dshxContract: runtime.contractId,
+    dshxCapabilities: runtime.capabilities,
+    ...((args[0] === 'activate-new-client' || args[0] === 'hot-reload')
+      ? { hostPid: process.pid, hostPort: Number(args[5]) }
+      : {}),
+  })
+  const aborted = () => result(1, '', 'dshx operation aborted before spawn')
+  // An already-cancelled invocation must never start a child, even briefly.
+  if (signal?.aborted) return Promise.resolve(aborted())
   const argv = ['--import', runtime.loader, runtime.cli, ...args, ...args[0] === 'activation-plan' ? ['--json'] : [], '--harness', runtime.root]
   const spawnProcess = options.spawnProcess ?? spawn
   const hostPort = options.hostPort ?? currentWebPort()
-  const creatorContext = contextFromExecution(exec, hostPort)
+  const creatorContext = contextFromExecution(exec, hostPort, options)
   const startup = privateStartupUrl(options.getWebStartupUrl, hostPort)
-  const signal = exec?.signal
+  const profileAccess = options.createProfileAccess?.(args, exec, runtime.root)
   return new Promise((resolveResult, reject) => {
-    const child = spawnProcess(process.execPath, argv, {
+    const spawnOptions = {
       cwd: runtime.root,
       env: {
         ...process.env,
@@ -247,9 +266,15 @@ function executeDshx(args, exec, options = {}) {
         DSHX_CREATOR_CONTEXT: JSON.stringify(creatorContext),
         DSHX_CREATOR_TAKEOVER_GRANT: args[0] === 'creator' && args[1] === 'takeover' && options.takeoverGrant ? JSON.stringify(options.takeoverGrant) : '',
         DSHX_WEB_STARTUP_URL: startup,
+        ...profileAccess?.env,
+        DSHX_DESKTOP_PLUGIN_ID: args[0] === 'creator' ? args[2] ?? '' : args[1] ?? '',
       },
       stdio: ['ignore', 'pipe', 'pipe'],
-    })
+    }
+    // Trusted option callbacks above can synchronously cancel the invocation.
+    if (signal?.aborted) { profileAccess?.dispose(); resolveResult(aborted()); return }
+    let child
+    try { child = spawnProcess(process.execPath, argv, spawnOptions) } catch (error) { profileAccess?.dispose(); reject(error); return }
     let stdout = ''
     let stderr = ''
     child.stdout.on('data', chunk => { stdout = appendBounded(stdout, chunk) })
@@ -258,22 +283,11 @@ function executeDshx(args, exec, options = {}) {
     const abort = () => { child.kill('SIGTERM') }
     if (signal?.aborted) abort()
     else signal?.addEventListener('abort', abort, { once: true })
-    child.once('error', reject)
+    child.once('error', error => { profileAccess?.dispose(); reject(error) })
     child.once('close', (code) => {
+      profileAccess?.dispose();
       signal?.removeEventListener('abort', abort)
-      resolveResult({
-        command: `dshx ${args.join(' ')}`,
-        exitCode: code ?? 1,
-        stdout: redactStartupOutput(stdout.trim(), startup),
-        stderr: redactStartupOutput(stderr.trim(), startup),
-        dshxVersion: runtime.dshxVersion,
-        creatorBridgeVersion: runtime.bridgeVersion,
-        dshxContract: runtime.contractId,
-        dshxCapabilities: runtime.capabilities,
-        ...((args[0] === 'activate-new-client' || args[0] === 'hot-reload')
-          ? { hostPid: process.pid, hostPort: Number(args[5]) }
-          : {}),
-      })
+      resolveResult(result(code, stdout, stderr, startup))
     })
   })
 }
@@ -292,7 +306,7 @@ export function runDshx(args, exec, options = {}) {
     const port = options.hostPort ?? currentWebPort()
     const receipt = readDelivery(root, exec.agent.id)
     const delivery = deliveryStatus(receipt, { port })
-    if (args[0] === 'status' && delivery?.state === 'RUNTIME_VERIFICATION_REQUIRED') {
+    if (!exec?.signal?.aborted && args[0] === 'status' && delivery?.state === 'RUNTIME_VERIFICATION_REQUIRED') {
       try { delivery.runtimeProof = await verifyDeliveryClient(receipt, port, options.getWebStartupUrl?.(port)) }
       catch { delivery.runtimeProof = { state: 'RUNTIME_PROOF_FAILED', behavior: 'UNVERIFIED' } }
     }
@@ -401,7 +415,7 @@ function pluginMessage(text) {
     id: randomUUID(),
     role: 'user',
     content: Object.freeze([{ type: 'text', text }]),
-    source: Object.freeze({ kind: 'plugin', plugin: 'dsh-creator-mode-plus' }),
+    source: Object.freeze({ kind: 'plugin:dsh-creator-mode-plus' }),
   })
 }
 

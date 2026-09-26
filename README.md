@@ -2,9 +2,11 @@
 
 [English](README.en.md)
 
+**插件开发红线：DSH 官方源码只读。** 不为插件修改 Host、内置包或官方构建产物，临时副本和 worktree 也不例外。缺少公开接口时调整插件方案；`CORE_SOURCE_IMMUTABLE` 不可通过接管、审批或 `--force` 绕过。
+
 在 DeepSeek Harness 的普通 Web 会话里选 Creator Mode+，用十个固定工具把一个文件化插件搭起来、检查、挂载，也能按安全顺序卸载。
 
-Creator Mode+ 0.3.9 配套 DSHX 0.7.9 和 Harness `dsh-v0.1.7-rc.1`。插件 peer 范围是 `>=0.1.7-rc.1 <0.1.8`。底层桥接兼容范围为 [DSHX](https://github.com/aa2246740/dsh-external-plugin-devkit) `>=0.7.9 <0.8.0`，并在使用前核对桌面钉、peer 范围和用户确认接管能力。会话恢复挂在 `agent/created` 上。
+Creator Mode+ 0.3.10 配套 DSHX 0.9.1 和 Harness `dsh-v0.1.7-rc.2`（SHA `477b4f420553e8a52c2fbccc464d7561b239c443`）。插件 peer 范围仍是 `>=0.1.7-rc.1 <0.1.8`，接受 `0.1.7-rc.2`。底层桥接兼容范围为 [DSHX](https://github.com/aa2246740/dsh-external-plugin-devkit) `>=0.9.1 <0.10.0`，拒绝 0.9.0 和 0.7.9。使用前核对桌面钉、peer 范围和用户确认接管能力。会话恢复挂在 `agent/created` 上。十个固定工具不变。
 
 ![在官方 WebUI 里打开 Creator Mode+](docs/screenshots/mode-picker.gif)
 
@@ -56,7 +58,7 @@ node tools/dsh-creator-mode-plus/scripts/install.mjs --harness "$PWD"
 
 ![重复安装被拒绝](docs/screenshots/already-installed.png)
 
-Harness 更新的 `prepare` / `verify` / `apply` / `rollback` 不在这十个工具里，交给外部 DSHX supervisor。会话内只允许通过 managed shell 读 `update plan`。
+Harness 更新只保留只读 `update plan`。`prepare` / `verify` / `apply` / `rollback` 已由 DSHX 禁用，外部 supervisor 也不能通过插件工具修改官方源码。
 
 ## 升级
 

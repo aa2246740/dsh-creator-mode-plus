@@ -5,11 +5,12 @@ export const CREATOR_BRIDGE_VERSION = 2
 
 export const DSHX_CONTRACT = Object.freeze({
   id: 'dshx-v0.7/creator-bridge-v2',
-  release: 'v0.7.9',
-  minimum: '0.7.9',
-  maximumExclusive: '0.8.0',
+  release: 'v0.9.1',
+  minimum: '0.9.1',
+  maximumExclusive: '0.10.0',
   capabilities: Object.freeze([
     'creator-session-claims',
+    'plugin-only-core-immutability',
     'human-confirmed-creator-takeover',
     'workspace-scaffold',
     'bounded-new-client-activation',
@@ -24,7 +25,7 @@ export const DSHX_CONTRACT = Object.freeze({
     'bounded-same-pid-server-hot-reload',
     'single-home-web-host',
     'isolated-verify-home',
-    'transactional-harness-update-assistant',
+    'read-only-harness-update-plan',
   ]),
 })
 
@@ -47,6 +48,7 @@ export const CREATOR_MODEL_TOOLS = Object.freeze([
 ])
 
 export const DSHX_SURFACE_MARKERS = Object.freeze({
+  'src/core-boundary.js': Object.freeze(['CORE_SOURCE_IMMUTABLE', 'assertPluginSource', 'creatorCoreMutationReason']),
   'src/internal/creator-claims.mjs': Object.freeze(['beginTakeover', 'commitTakeover', 'CREATOR_TAKEOVER_GRANT_REQUIRED', 'revocations']),
   'src/creator-plus/takeover.js': Object.freeze(['userQuestions', 'ensureTakeoverFence', 'CREATOR_OWNER_NOT_QUIESCENT']),
   'src/internal/browser-access.ts': Object.freeze(['bindBrowserAccess', 'assertSameBrowserHost', 'BROWSER_ADAPTER_REQUIRED', 'configureSessionBrowserAdapter', 'sessionBrowserAdapter']),
@@ -87,12 +89,15 @@ export const DSHX_SURFACE_MARKERS = Object.freeze({
     'PROFILE_DEPENDENCY_REMOVED',
   ]),
   'src/commands/update.ts': Object.freeze([
-    'dshx update plan|prepare|verify|apply|rollback',
-    "action === 'apply' || action === 'rollback'",
+    'dshx update plan',
+    "action !== 'plan'",
+    'CORE_SOURCE_IMMUTABLE',
   ]),
   'src/internal/types.ts': Object.freeze([
     'DESK_HARNESS_TAG',
-    'dsh-v0.1.7-rc.1',
+    'dsh-v0.1.7-rc.2',
+    'DESK_HARNESS_SHA',
+    '477b4f420553e8a52c2fbccc464d7561b239c443',
     'DSH_PEER_RANGE',
     '>=0.1.7-rc.1 <0.1.8',
   ]),
@@ -181,7 +186,7 @@ export const DSHX_SURFACE_MARKERS = Object.freeze({
     'activate-new-client',
   ]),
   'knowledge/contracts/creator-guardian.md': Object.freeze(['Creator+', 'crash-loop fuse', 'quarantine', 'plugin-integrity-failed']),
-  'knowledge/contracts/harness-update.md': Object.freeze(['plan → prepare → verify → apply', 'rollback']),
+  'knowledge/contracts/harness-update.md': Object.freeze(['dshx update plan', 'CORE_SOURCE_IMMUTABLE']),
   'knowledge/contracts/live-activation.md': Object.freeze(['SOURCE_BUILT', 'CLIENT_MANIFEST_PRESENT']),
   'knowledge/contracts/compat-0.1.5.md': Object.freeze(['MarkdownText', 'createDrafts', 'assistant/attempt.stream']),
   'src/internal/compat-015.ts': Object.freeze(['compat-015-message-text', 'compat-015-ctx-agent']),

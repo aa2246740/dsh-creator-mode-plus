@@ -20,19 +20,11 @@ marker cleanup alone does not justify a restart.
 Establish the specific missing Harness API/version or boot-captured change first.
 Ordinary client/server updates follow the main activation table.
 
-Read `dshx kb cat contracts/harness-update`. The sequence is
-`update plan → prepare → verify → apply`, with exact `rollback` available.
-The managed shell may run the read-only plan. Pass `--target dsh-v0.1.7-rc.1`.
-DSHX 0.7.9 keeps an omitted target on that desk tag and does not follow a later alpha.
-Preserve target tag/SHA, current
-checkout, local changes, plugin inventory, compatibility errors and rollback
-requirements. Finish authorized source preparation and independent checks.
-
-`prepare`, `verify`, `apply` and `rollback` belong to the external DSHX supervisor.
-The fixed bridge currently has no general update-job dispatcher. Keep handoff
-pending until an actual executor accepts it; naming a launcher or writing
-instructions does not submit a job. Preserve this conversation and its work for
-the result to return to it.
+Read `dshx kb cat contracts/plugin-only` and `contracts/harness-update`.
+Only `update plan` remains available. Source-changing stages are disabled: `prepare`, `verify`, `apply` and `rollback` may not be run
+by the external DSHX supervisor either. Preserve the API/version gap and current
+plugin source. Use a public plugin extension or report the unsupported feature;
+never make a Host patch or official-package rebuild part of plugin delivery.
 
 A launcher restart requires exact boot/recovery evidence and scope authorization.
 `facts.handoff` identifies the original launcher; it is not authorization. Existing
