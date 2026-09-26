@@ -24,7 +24,29 @@ The Agent creates source, builds, checks, selects activation and continues. Serv
 
 ## Install
 
-Do this outside an Agent session, in your Harness checkout:
+### DSH Studio desktop app (recommended)
+
+Open **Settings → Plugins → Add plugin** and enter this in “Package name or address”:
+
+```text
+github:aa2246740/dsh-creator-mode-plus#v0.3.10
+```
+
+The desktop plugin manager owns the Desktop profile and bundled package manager. This release includes built artifacts; normal use needs no clone, build, or DSHX installation. Follow the app if it asks you to reload or reopen after installation. Then choose Creator Mode+ in a new session.
+
+### Web CLI
+
+```sh
+dsh plugin --profile web add github:aa2246740/dsh-creator-mode-plus#v0.3.10
+```
+
+This official CLI command writes only the `web` profile; it cannot modify the Desktop App profile. For an already-running Web Host, reopen that Host once and reload the page.
+
+Creator Mode+ uses DSHX inside a conversation to develop, check, and activate **the user's own plugins**. That capability is not a prerequisite to install Creator Mode+, and it never permits modifying official DSH source.
+
+### Source-development install
+
+Only when editing this repository, use a local link and installer in a separate Harness checkout:
 
 ```sh
 cd /path/to/deepseek-harness
@@ -59,7 +81,7 @@ Whole-plugin removal goes through `dshx_remove_plugin` only. Running the install
 
 Harness inventory is read-only through `update plan`. DSHX disables `prepare`, `verify`, `apply` and `rollback` for every caller, including the external supervisor.
 
-## Upgrade
+## Source-development upgrade
 
 ```sh
 cd /path/to/deepseek-harness/tools/dsh-creator-mode-plus

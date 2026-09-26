@@ -24,7 +24,29 @@ Agent 会创建源码、构建检查、选择激活方式并继续执行。服�
 
 ## 安装
 
-在 Agent 会话外面做。进你的 Harness 仓库：
+### DSH Studio 桌面 App（推荐）
+
+打开 **设置 → 插件 → 添加插件**，在“包名或地址”中输入：
+
+```text
+github:aa2246740/dsh-creator-mode-plus#v0.3.10
+```
+
+桌面端插件管理器负责 Desktop profile 和内置包管理器。本发布已包含编译产物；普通使用不需要 clone、构建或安装 DSHX。若应用提示刷新或重新打开，请按提示完成。安装后在新会话中选择 Creator Mode+。
+
+### Web CLI
+
+```sh
+dsh plugin --profile web add github:aa2246740/dsh-creator-mode-plus#v0.3.10
+```
+
+这条官方 CLI 命令只写入 `web` profile，不能修改 Desktop App 的 profile。对于已经运行的 Web Host，请重新打开该 Host 一次，再刷新网页。
+
+Creator Mode+ 在对话中调用 DSHX 来开发、检查和激活**用户自己的插件**；这项功能不是安装 Creator Mode+ 的前置条件，也不允许它修改 DSH 官方源码。
+
+### 源码开发安装
+
+只有在编辑本仓库源码时，才在独立 Harness checkout 中使用本地链接和安装器：
 
 ```sh
 cd /path/to/deepseek-harness
@@ -60,7 +82,7 @@ node tools/dsh-creator-mode-plus/scripts/install.mjs --harness "$PWD"
 
 Harness 更新只保留只读 `update plan`。`prepare` / `verify` / `apply` / `rollback` 已由 DSHX 禁用，外部 supervisor 也不能通过插件工具修改官方源码。
 
-## 升级
+## 源码开发升级
 
 ```sh
 cd /path/to/deepseek-harness/tools/dsh-creator-mode-plus
