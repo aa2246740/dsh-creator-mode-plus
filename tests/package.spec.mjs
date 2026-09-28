@@ -7,6 +7,7 @@ import {
   CREATOR_MODEL_TOOLS,
   DSHX_CONTRACT,
 } from '../src/index.js'
+import { DSHX_SURFACE_MARKERS } from '../src/compatibility.js'
 
 const root = join(import.meta.dirname, '..')
 const read = path => readFileSync(join(root, path), 'utf8')
@@ -39,8 +40,18 @@ describe('Creator Mode+ 0.3 package contract', () => {
     const verifier = read('scripts/verify-dshx.mjs')
 
     assert.equal(metadata.version, '0.3.10')
-    assert.equal(metadata.peerDependencies['@deepseek-ai/dsh'], '>=0.1.7-rc.1 <0.1.8')
+    assert.equal(metadata.peerDependencies['@deepseek-ai/dsh'], '>=0.2.0-rc.1 <0.2.1')
+    assert.equal(metadata.peerDependencies['@deepseek-ai/dsh-app-boot'], '>=0.2.0-rc.1 <0.2.1')
+    assert.equal(metadata.peerDependencies['@deepseek-ai/dsh-plugin-manager'], '>=0.2.0-rc.1 <0.2.1')
     assert.equal(metadata.peerDependenciesMeta['@deepseek-ai/dsh'].optional, true)
+    assert.deepEqual(DSHX_SURFACE_MARKERS['src/internal/types.ts'], [
+      'DESK_HARNESS_TAG',
+      'dsh-v0.2.0-rc.1',
+      'DESK_HARNESS_SHA',
+      '4878cdabd87d4041bdaff61d04c966883b9fd07a',
+      'DSH_PEER_RANGE',
+      '>=0.2.0-rc.1 <0.2.1',
+    ])
     assert.match(verifier, /DSHX_V091_COMPATIBILITY_PASS/)
     assert.doesNotMatch(verifier, /DSHX_V079_COMPATIBILITY_PASS/)
     assert.equal(metadata.files.includes('dshx.yml'), true)

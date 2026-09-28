@@ -115,7 +115,7 @@ The standalone package does not accept `0.7.x` by string alone. Before any fixed
 operation or installer mutation it requires:
 
 - package identity `dsh-external-plugin-devkit` and stable version
-  `>=0.9.1 <0.10.0` (0.9.0 and 0.7.9 are rejected; the desk pin must be `dsh-v0.1.7-rc.2`);
+  `>=0.9.1 <0.10.0` (0.9.0 and 0.7.9 are rejected; 0.9.2 fits; the desk pin must be `dsh-v0.2.0-rc.1`, SHA `4878cdabd87d4041bdaff61d04c966883b9fd07a`);
 - same-Home Web Host discovery/attach, three-state PID/port probes, and
   temporary-Home verification teardown;
 - Creator claim/scaffold commands and Bridge v2 context validation;
@@ -305,7 +305,7 @@ Only `update plan` is available. It inventories versions, dirty state and plugin
 
 Supported: the official DSH browser WebUI, public Cordis plugin forms, public
 client runtime, and public UI slots across the RC8 Creator/Guardian contract and
-the RC2 package/update line and the authenticated Web line through `dsh-v0.1.7-rc.2` (SHA `477b4f420553e8a52c2fbccc464d7561b239c443`). The plugin peer range stays `>=0.1.7-rc.1 <0.1.8` and accepts `0.1.7-rc.2`. User presets are profile includes of an `@deepseek-ai/dsh-agent-preset` declaration derived from the shipped Standard patch; `$DSH_HOME/.agent-presets` is not read.
+the RC2 package/update line and the authenticated Web line through `dsh-v0.2.0-rc.1` (SHA `4878cdabd87d4041bdaff61d04c966883b9fd07a`). The plugin peer range is `>=0.2.0-rc.1 <0.2.1`. It accepts `0.2.0-rc.1` and stable `0.2.0`, rejects `0.2.0` alphas, and rejects `0.1.7-rc.2`. User presets are profile includes of an `@deepseek-ai/dsh-agent-preset` declaration derived from the shipped Standard patch; `$DSH_HOME/.agent-presets` is not read.
 
 Outside acceptance: native menus, window chrome, App IPC, desktop bridges, and
 shell-specific refresh behavior. A wrapper may work when it embeds the same
