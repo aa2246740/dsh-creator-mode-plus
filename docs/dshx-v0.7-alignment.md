@@ -4,20 +4,20 @@
 
 
 This source is aligned to stable DSHX `>=0.9.1 <0.10.0`, Creator Bridge
-v2, and the official browser WebUI lifecycle on Harness `dsh-v0.2.0-rc.1`
-(SHA `4878cdabd87d4041bdaff61d04c966883b9fd07a`).
+v2, and the official browser WebUI lifecycle on Harness `dsh-v0.2.0-rc.2`
+(SHA `639ed015397290b3745d163aafe02ffee4aa3f84`).
 DSHX v0.7.5 makes same-Home
 ownership atomic across checkouts and binds PID, process start time, Home,
 profile, and root before lifecycle or update mutation. DSHX 0.9.2 pins omitted
-`update plan` targets to `dsh-v0.2.0-rc.1` and peer range
-`>=0.2.0-rc.1 <0.2.1`. That range accepts `0.2.0-rc.1` and stable `0.2.0`, rejects `0.2.0` alphas, and rejects `0.1.7-rc.2`. DSHX 0.9.2 fits the existing floor. DSHX 0.9.0 still pins `dsh-v0.1.7-rc.1` and is outside this gate.
+`update plan` targets to `dsh-v0.2.0-rc.2` and peer range
+`>=0.2.0-rc.1 <0.2.1`. That range accepts `0.2.0-rc.2` and stable `0.2.0`, rejects `0.2.0` alphas, and rejects `0.1.7-rc.2`. DSHX 0.9.2 fits the existing floor. DSHX 0.9.0 still pins `dsh-v0.1.7-rc.1` and is outside this gate.
 
 This is a contract alignment, not a version-number exception. Before the bridge
 or installer mutates anything, it verifies the DSHX package identity, stable
 version range, CLI and Creator/Guardian implementation, seven-surface activation
 contract, managed-shell gate, and plugin-only source boundary.
 
-The 0.3.10 release required DSHX 0.9.1 for the earlier desk pin `dsh-v0.1.7-rc.2`. This tree keeps that DSHX floor `>=0.9.1 <0.10.0` and moves the desk pin to `dsh-v0.2.0-rc.1` with peer range `>=0.2.0-rc.1 <0.2.1`. It keeps the ten fixed tools from 0.3.9. It retains user-confirmed takeover from 0.3.8 / 0.7.8, plus the corrected client scaffolds, bounded import recovery, and external mixed-mount self-upgrades from 0.3.7 / 0.7.7. Creator+ recovery stays on `agent/created`.
+The 0.3.10 release required DSHX 0.9.1 for the earlier desk pin `dsh-v0.1.7-rc.2`. This tree keeps that DSHX floor `>=0.9.1 <0.10.0` and moves the desk pin to `dsh-v0.2.0-rc.2` with peer range `>=0.2.0-rc.1 <0.2.1`. It keeps the ten fixed tools from 0.3.9. It retains user-confirmed takeover from 0.3.8 / 0.7.8, plus the corrected client scaffolds, bounded import recovery, and external mixed-mount self-upgrades from 0.3.7 / 0.7.7. Creator+ recovery stays on `agent/created`.
 
 ## Ownership matrix
 
@@ -56,10 +56,10 @@ Creator receives status but never gains process or port input.
 ## Harness compatibility
 
 The source line covers the DSH `dsh-v0.1.0-rc.8` Creator/Guardian contracts and
-the DSHX v0.7 update path through `dsh-v0.1.1-rc.2`, `dsh-v0.1.2-rc.1`, `dsh-v0.1.5-rc.2`, and `dsh-v0.1.7-rc.2` to `dsh-v0.2.0-rc.1`.
+the DSHX v0.7 update path through `dsh-v0.1.1-rc.2`, `dsh-v0.1.2-rc.1`, `dsh-v0.1.5-rc.2`, and `dsh-v0.1.7-rc.2` to `dsh-v0.2.0-rc.2`.
 The RC1 line includes relocated Standard discovery and authenticated Host proof.
-`dsh-v0.2.0-rc.1` is the current authenticated Web line (SHA `4878cdabd87d4041bdaff61d04c966883b9fd07a`). Its peer range is `>=0.2.0-rc.1 <0.2.1`. That range accepts `0.2.0-rc.1` and stable `0.2.0`, rejects `0.2.0` alphas, and rejects `0.1.7-rc.2`. Shipped Standard is `packages/bundle/web-app/presets/standard.patch.yml`. The installer derives a user-owned `profiles/web/creator-mode-plus/agent.cordis.yml` and includes it from the web profile patch; it does not edit the shipped patch, and nothing reads `$DSH_HOME/.agent-presets`. External plugins must pass `dshx check` with no `compat-015-*`.
-Read-only `dshx update plan` must pass `--target dsh-v0.2.0-rc.1`. DSHX 0.9.2 uses that tag when `--target` is omitted and does not follow a later alpha.
+`dsh-v0.2.0-rc.2` is the current authenticated Web line (SHA `639ed015397290b3745d163aafe02ffee4aa3f84`). Its peer range is `>=0.2.0-rc.1 <0.2.1`. That range accepts `0.2.0-rc.2` and stable `0.2.0`, rejects `0.2.0` alphas, and rejects `0.1.7-rc.2`. Shipped Standard is `packages/bundle/web-app/presets/standard.patch.yml`. The installer derives a user-owned `profiles/web/creator-mode-plus/agent.cordis.yml` and includes it from the web profile patch; it does not edit the shipped patch, and nothing reads `$DSH_HOME/.agent-presets`. External plugins must pass `dshx check` with no `compat-015-*`.
+Read-only `dshx update plan` must pass `--target dsh-v0.2.0-rc.2`. DSHX 0.9.2 uses that tag when `--target` is omitted and does not follow a later alpha.
 Release verification against the selected checkout must include:
 
 ```sh

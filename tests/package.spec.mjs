@@ -39,16 +39,16 @@ describe('Creator Mode+ 0.3 package contract', () => {
     const manifest = read('dshx.yml')
     const verifier = read('scripts/verify-dshx.mjs')
 
-    assert.equal(metadata.version, '0.3.10')
+    assert.equal(metadata.version, '0.3.11')
     assert.equal(metadata.peerDependencies['@deepseek-ai/dsh'], '>=0.2.0-rc.1 <0.2.1')
     assert.equal(metadata.peerDependencies['@deepseek-ai/dsh-app-boot'], '>=0.2.0-rc.1 <0.2.1')
     assert.equal(metadata.peerDependencies['@deepseek-ai/dsh-plugin-manager'], '>=0.2.0-rc.1 <0.2.1')
     assert.equal(metadata.peerDependenciesMeta['@deepseek-ai/dsh'].optional, true)
     assert.deepEqual(DSHX_SURFACE_MARKERS['src/internal/types.ts'], [
       'DESK_HARNESS_TAG',
-      'dsh-v0.2.0-rc.1',
+      'dsh-v0.2.0-rc.2',
       'DESK_HARNESS_SHA',
-      '4878cdabd87d4041bdaff61d04c966883b9fd07a',
+      '639ed015397290b3745d163aafe02ffee4aa3f84',
       'DSH_PEER_RANGE',
       '>=0.2.0-rc.1 <0.2.1',
     ])

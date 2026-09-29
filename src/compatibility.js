@@ -95,9 +95,9 @@ export const DSHX_SURFACE_MARKERS = Object.freeze({
   ]),
   'src/internal/types.ts': Object.freeze([
     'DESK_HARNESS_TAG',
-    'dsh-v0.2.0-rc.1',
+    'dsh-v0.2.0-rc.2',
     'DESK_HARNESS_SHA',
-    '4878cdabd87d4041bdaff61d04c966883b9fd07a',
+    '639ed015397290b3745d163aafe02ffee4aa3f84',
     'DSH_PEER_RANGE',
     '>=0.2.0-rc.1 <0.2.1',
   ]),
