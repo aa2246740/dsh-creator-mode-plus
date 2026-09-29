@@ -21,8 +21,8 @@
 
 路径约定：
 
-- `R` = `/Users/wu/Documents/DeepSeekHarness/runtime`
-- `C` = `/Users/wu/Documents/DeepSeekHarness/plugins/dsh-creator-mode-plus`
+- `R` = `/path/to/DeepSeekHarness/runtime`
+- `C` = `/path/to/DeepSeekHarness/plugins/dsh-creator-mode-plus`
 
 以下判断依据本次实际读取的工作树；候选发布前必须在其锁定的 checkout 上复验，不能用旧安装依赖的接口代替。
 
