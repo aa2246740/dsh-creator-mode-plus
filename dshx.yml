@@ -15,6 +15,7 @@ hotReload:
     - src/compatibility.js
     - src/safety.js
     - src/core-boundary.js
+    - src/profile-lifecycle.js
     - src/takeover.js
     - src/development-execution.js
     - src/development-tasks.js
