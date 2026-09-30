@@ -163,7 +163,8 @@ scaffold -> implement/build -> dshx check / SOURCE_BUILT
   -> insert or semantically retrigger one watched-patch row
   -> poll the current Host manifest and served client.js
   -> HOST_TREE_ACTIVE + CLIENT_MANIFEST_PRESENT
-  -> browser reload remains separate
+  -> observe RC2 client graph sync on the current page
+  -> verify actual behavior; reload only if graph transport is unavailable
 ```
 
 The order is invariant. A failed new row is rolled back by DSHX. A nonzero

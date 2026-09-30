@@ -17,7 +17,10 @@ marker cleanup alone does not justify a restart.
 
 ## Harness and launcher maintenance
 
-Establish the specific missing Harness API/version or boot-captured change first.
+Establish the specific missing Harness API/version or runtime activation boundary first.
+RC2 profile HMR can reconcile new bundles on the same Host; client HMR can sync
+new entries on the current page. Use the actual manager result and capability
+evidence. Unknown capability does not authorize a restart.
 Ordinary client/server updates follow the main activation table.
 
 Read `dshx kb cat contracts/plugin-only` and `contracts/harness-update`.

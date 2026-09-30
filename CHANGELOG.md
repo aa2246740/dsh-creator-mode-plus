@@ -1,5 +1,12 @@
 # Unreleased
 
+## 0.3.12 — 2026-09-30
+
+- Align Creator+ guidance with DSHX 0.9.5 and RC2 profile/client graph HMR.
+- Explain local bundle installation without npm and preserve the claimed plain-plugin fixed-tool path for Web/Desktop.
+- Keep bridge arguments, claims, Desktop tickets and Guardian recovery unchanged; verify the existing fixed tools against DSHX 0.9.5.
+
+
 ## Unreleased
 
 - Align the desk pin with Harness `dsh-v0.2.0-rc.1` (SHA `4878cdabd87d4041bdaff61d04c966883b9fd07a`). Keep DSHX `>=0.9.1 <0.10.0`; 0.9.2 fits, and 0.9.0 and 0.7.9 stay rejected.

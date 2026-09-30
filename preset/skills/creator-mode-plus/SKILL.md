@@ -52,10 +52,10 @@ each changed runtime surface.
    |---|---|---|
    | Existing `server` | After build/check, call `dshx_hot_reload` for the ID | Same-PID replacement and temporary-resource cleanup |
    | Existing `client` | Rebuild its already-rostered client | Same-page HMR and changed behavior |
-   | `new-client` | `dshx_activate_new_client`, then reload/reopen the page | `HOST_TREE_ACTIVE`, `CLIENT_MANIFEST_PRESENT`, then actual page load |
+   | `new-client` | `dshx_activate_new_client`, then observe RC2 graph sync on the current page | `HOST_TREE_ACTIVE`, `CLIENT_MANIFEST_PRESENT`, then actual page load and behavior |
    | User `preset` | Follow the preset playbook; verify a new/blank session | Requested tools and behavior are present |
    | `patch` or `artifact` | Follow that branch's playbook | Its specified proof; artifact sync alone is not activation |
-   | Boot-captured `manifest` | Read [Maintenance](maintenance.md#harness-and-launcher-maintenance) | External activation and feature verification |
+   | Bundle `manifest` | External official bundle install/selection; read [Maintenance](maintenance.md#harness-and-launcher-maintenance) | RC2 manager `application: applied`, same Host, then feature verification |
 
    For a multi-file server, declare the runtime entry and changed helpers in
    `dshx.yml` under `hotReload.artifacts` before check. Require hashes for the
@@ -110,3 +110,9 @@ Host proofs required for activation are valid.
 如果 `dshx_claim_plugin` 或自动认领提示已有持有者，在当前对话调用 `dshx_request_takeover({name})`，让用户在原生选项卡里确认。工具自己查找实际持有者并负责停止、等待和转移。不要让用户先找旧对话，不要建议等 24 小时，不要手删认领或 session.lock。
 
 只能传插件 ID。不要传 `force`、`userApproved`、会话 ID、路径或令牌，也不要把聊天里的同意或自动审批结果冒充 UI 确认。取消、认领变化、停止失败时依照工具错误处理；成功后继续 check → 对应激活 → 行为验证。旧会话收到 `CREATOR_OWNERSHIP_REVOKED` 时停止开发；重新接手也要走同一个确认入口。
+
+## RC2 local installation routing
+
+Official Desktop accepts local bundles without npm. External Agents may use DSHX 0.9.5 `plugin add <absolute-directory> --profile desktop --port <current-port>` for a built package with `dsh.bundle.patch`. That public manager operation stays outside this session. Here, plain development plugins continue through claim → check → fixed `dshx_activate_new_client`; the bridge supplies the owning Web/Desktop context. Do not run external `plugin add` through the managed shell or borrow its private bridge ticket. Never mount a bundle again as a watched row.
+
+On RC2, first observe the current page after activation: client HMR syncs graph changes. Reload only when that transport is unavailable, and still verify actual behavior. Older DSHX may conservatively request reload; it is not proof of a Host restart requirement.
