@@ -1,21 +1,23 @@
 # DSHX v0.7 alignment
 
-Creator Mode+ 0.4.0 is aligned to stable DSHX `>=0.7.9 <0.10.0`, Creator Bridge
-v2, and the official browser WebUI lifecycle on Harness `dsh-v0.1.7-rc.1`.
+> 当前强制规则：DSH 官方源码与构建产物只读。插件工作不允许 Host patch、修改临时官方副本或重建官方子项目。`update prepare/verify/apply/rollback` 已禁用，仅保留 `update plan`；后文历史版本说明不解除该规则。
+
+
+This source is aligned to stable DSHX `>=0.7.9 <0.10.0`, Creator Bridge
+v2, and the official browser WebUI lifecycle on Harness `dsh-v0.2.0-rc.2`
+(SHA `639ed015397290b3745d163aafe02ffee4aa3f84`).
 DSHX v0.7.5 makes same-Home
 ownership atomic across checkouts and binds PID, process start time, Home,
-profile, and root before lifecycle or update mutation. DSHX 0.7.9 pins omitted
-`update plan` targets to `dsh-v0.1.7-rc.1` and declares peer range
-`>=0.1.7-rc.1 <0.1.8`; DSHX 0.9.0 keeps that contract and carries the 0.7.9
-release content plus the rc.1 client-scaffold repair, compat-017 checks, and
-profile `link:` resolution.
+profile, and root before lifecycle or update mutation. DSHX 0.9.2 pins omitted
+`update plan` targets to `dsh-v0.2.0-rc.2` and peer range
+`>=0.2.0-rc.1 <0.2.1`. That range accepts `0.2.0-rc.2` and stable `0.2.0`, rejects `0.2.0` alphas, and rejects `0.1.7-rc.2`. DSHX 0.9.2 fits the version range. Stock DSHX 0.9.0 still pins `dsh-v0.1.7-rc.1` and fails the RC2 contract checks despite passing the version gate.
 
 This is a contract alignment, not a version-number exception. Before the bridge
 or installer mutates anything, it verifies the DSHX package identity, stable
 version range, CLI and Creator/Guardian implementation, seven-surface activation
-contract, managed-shell gate, and transactional Harness Update Assistant.
+contract, managed-shell gate, and plugin-only source boundary.
 
-The 0.4.0 release accepts DSHX `>=0.7.9 <0.10.0` — the same v0.7 contract surfaces, attested per file — so it pairs with the released DSHX 0.9.0 line. The 0.3.9 release required DSHX 0.7.9 for the desk Harness pin, the `>=0.1.7-rc.1 <0.1.8` peer range, and Creator+ recovery on `agent/created`. It retains user-confirmed takeover from 0.3.8 / 0.7.8, plus the corrected client scaffolds, bounded import recovery, and external mixed-mount self-upgrades from 0.3.7 / 0.7.7.
+The 0.3.10 release required DSHX 0.9.1 for the earlier desk pin `dsh-v0.1.7-rc.2`. Creator Mode+ 0.4.0 widens the stable DSHX version range to `>=0.7.9 <0.10.0` and retains the current desk pin `dsh-v0.2.0-rc.2` with peer range `>=0.2.0-rc.1 <0.2.1`. It keeps the ten fixed tools from 0.3.9. It retains user-confirmed takeover from 0.3.8 / 0.7.8, plus the corrected client scaffolds, bounded import recovery, and external mixed-mount self-upgrades from 0.3.7 / 0.7.7. Creator+ recovery stays on `agent/created`.
 
 ## Ownership matrix
 
@@ -27,11 +29,11 @@ The 0.4.0 release accepts DSHX `>=0.7.9 <0.10.0` — the same v0.7 contract surf
 | Workspace scaffold | `dshx_scaffold` takes only id/kind; DSHX derives the immutable session workspace and owns any `my-plugins` link | Returned source path is the only edit target |
 | Static/client checks | `dshx_check` | Exit 0 proves `SOURCE_BUILT` only |
 | Seven activation surfaces | `dshx_activation_plan` selects exactly one of patch, manifest, preset, client, new-client, server, or artifact | Dependency installation is not activation |
-| New Web client | `dshx_activate_new_client` owns link → resolution → watched transaction → current manifest | Exit 0 reaches `CLIENT_MANIFEST_PRESENT`; the page still needs reload and observation |
+| New Web client | `dshx_activate_new_client` owns link → resolution → watched transaction → current manifest | Exit 0 reaches `CLIENT_MANIFEST_PRESENT`; observe the current page; RC2 graph sync can load the entry without reload |
 | Safe plugin removal | `dshx_remove_plugin` owns live-row quarantine → same-Host absence → official profile remove → target-verified symlink detach; partial RC8 removals resume from durable quarantine | Exit 0 reaches `HOST_TREE_INACTIVE` and `PROFILE_DEPENDENCY_REMOVED`; `detached-orphan-symlink` is bounded to this claim and source remains preserved |
 | External bundle removal | Creator stops at boot-captured bundle evidence and hands off to external `dshx plugin remove`; DSHX owns tombstone → same-PID absence → official remove → later-boot cleanup | External-only operation; current Host is not restarted and old pages may still need refresh |
 | Guardian | Session start arms external recovery; Host, official Loader, and claimed-link integrity failures use exact attribution and quarantine | Recovery does not prove render, visual, or functional correctness |
-| Harness Update Assistant | A managed shell may inspect read-only `dshx update plan`; `prepare`, `verify`, `apply`, and `rollback` stay outside DSH | Candidate verified, locally applied, live runtime accepted, and production activated are different states |
+| Harness Update Assistant | A managed shell may inspect read-only `dshx update plan`; `prepare`, `verify`, `apply`, and `rollback` are disabled for every caller | Version inventory is not build or runtime acceptance |
 
 ## Why the eighth tool is bounded
 
@@ -40,7 +42,7 @@ The approved eighth tool is `dshx_hot_reload`, not a Harness update or process c
 DSHX v0.7.2 adds one bounded tool because whole-plugin teardown previously let a
 Creator Agent delete source/profile links before removing the live watched row.
 `dshx_remove_plugin` closes that lifecycle gap without accepting paths, shell, or
-process control. The transactional Harness Update Assistant still does not widen
+process control. The read-only Harness version inventory does not widen
 Creator Bridge v2: Harness replacement and rollback can change the process that
 owns the current session, so they remain external-supervisor operations. Adding
 an `update` bridge tool would erase that authority boundary. Read-only
@@ -54,10 +56,10 @@ Creator receives status but never gains process or port input.
 ## Harness compatibility
 
 The source line covers the DSH `dsh-v0.1.0-rc.8` Creator/Guardian contracts and
-the DSHX v0.7 update path through `dsh-v0.1.1-rc.2`, `dsh-v0.1.2-rc.1`, and `dsh-v0.1.5-rc.2` to `dsh-v0.1.7-rc.1`.
+the DSHX v0.7 update path through `dsh-v0.1.1-rc.2`, `dsh-v0.1.2-rc.1`, `dsh-v0.1.5-rc.2`, and `dsh-v0.1.7-rc.2` to `dsh-v0.2.0-rc.2`.
 The RC1 line includes relocated Standard discovery and authenticated Host proof.
-`dsh-v0.1.7-rc.1` is the current authenticated Web line. Its peer range is `>=0.1.7-rc.1 <0.1.8` (`^0.1.5-rc.3` does not accept it). Shipped Standard is `packages/bundle/web-app/presets/standard.patch.yml`. The installer derives a user-owned `profiles/web/creator-mode-plus/agent.cordis.yml` and includes it from the web profile patch; it does not edit the shipped patch, and nothing reads `$DSH_HOME/.agent-presets`. External plugins must pass `dshx check` with no `compat-015-*`.
-Read-only `dshx update plan` must pass `--target dsh-v0.1.7-rc.1`. DSHX 0.7.9 uses that tag when `--target` is omitted and does not follow a later alpha.
+`dsh-v0.2.0-rc.2` is the current authenticated Web line (SHA `639ed015397290b3745d163aafe02ffee4aa3f84`). Its peer range is `>=0.2.0-rc.1 <0.2.1`. That range accepts `0.2.0-rc.2` and stable `0.2.0`, rejects `0.2.0` alphas, and rejects `0.1.7-rc.2`. Shipped Standard is `packages/bundle/web-app/presets/standard.patch.yml`. The installer derives a user-owned `profiles/web/creator-mode-plus/agent.cordis.yml` and includes it from the web profile patch; it does not edit the shipped patch, and nothing reads `$DSH_HOME/.agent-presets`. External plugins must pass `dshx check` with no `compat-015-*`.
+Read-only `dshx update plan` must pass `--target dsh-v0.2.0-rc.2`. DSHX 0.9.2 uses that tag when `--target` is omitted and does not follow a later alpha.
 Release verification against the selected checkout must include:
 
 ```sh
@@ -112,3 +114,10 @@ adapter snapshot support. Browser authentication runs privately; Host/process
 control, arbitrary paths and credentials remain outside model input.
 
 `dshx_request_takeover({name})` asks through the current conversation’s user-question UI, then drains old work and atomically transfers ownership. This requires the `human-confirmed-creator-takeover` capability in addition to the version range.
+
+
+## Official Desktop profile support (local compatibility update)
+
+The fixed bridge derives `desktop`, its port, Home, and runtime root from the public `profileContext`; none becomes model input. The CLI preserves Web behavior. For Desktop, a per-invocation private capability returns only config entry identities, or authorizes one install/remove for the current claimed plain plugin. The owning Host calls the public `@deepseek-ai/dsh-plugin-manager/operations` `runPluginCommand` with its bundled package manager and official profile lock. New bundle activation is disabled; the existing checked watched-patch transaction still owns activation and removal. Capabilities expire, are revoked at operation completion and generation disposal, and are never returned in tool text.
+
+Guardian validates the Electron child identity and monitors the Desktop Host. It may quarantine an attributed plugin failure, but never stops, replaces, or restarts the Desktop Host. Electron owns that recovery and normal quit. Desktop HMR binds the discovered application root independently of the plugin-development checkout. Package imports, checked artifacts, claims, same-PID proof, and feature acceptance remain required.

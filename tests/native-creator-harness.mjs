@@ -1,4 +1,4 @@
-import * as desktopProfile from '../../src/desktop-profile.js'
+import * as desktopProfile from '../src/desktop-profile.js'
 /** Actual current C apply/execute closures in actual current Cordis/native core.
  * Main-realm closed linker; only runner, profile heal, browser and LLM transport
  * are inert. No production apply, DSHX, browser request or profile writes. */
@@ -8,12 +8,12 @@ import { readFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import vm from 'node:vm'
-import * as compatibility from '../../src/compatibility.js'
-import * as safety from '../../src/safety.js'
-import * as execution from '../../src/development-execution.js'
-import * as tasks from '../../src/development-tasks.js'
-import * as policy from '../../src/development-policy.js'
-import * as invocation from '../../src/development-invocation.js'
+import * as compatibility from '../src/compatibility.js'
+import * as safety from '../src/safety.js'
+import * as execution from '../src/development-execution.js'
+import * as tasks from '../src/development-tasks.js'
+import * as policy from '../src/development-policy.js'
+import * as invocation from '../src/development-invocation.js'
 import { resolveSourceCheckout } from './source-checkout.mjs'
 export const CHECKOUT = resolveSourceCheckout()
 const url = path => pathToFileURL(resolve(CHECKOUT, path)).href
@@ -35,7 +35,7 @@ const { default: Shell } = await import(url('packages/shell/shell/src/index.ts')
 const { default: Llm, createUserMessage } = await import(url('packages/llm/llm/src/index.ts'))
 export const { MockAdapter, textResponse, toolCallResponse } = await import(url('packages/core/agent-loop/tests/mock-adapter.ts'))
 export const TimeoutPolicy = await import(url('packages/guard/timeout-policy/src/index.ts'))
-const source = await readFile(new URL('../../src/index.js', import.meta.url), 'utf8')
+const source = await readFile(new URL('../src/index.js', import.meta.url), 'utf8')
 export const call = (name = 'dshx_check', args = { name: 'demo' }, id = 'call') => toolCallResponse(id, name, args)
 export const done = () => textResponse('done')
 class InertShell extends Shell {
@@ -45,7 +45,7 @@ class InertShell extends Shell {
   run() { throw new Error('shell runner disabled in source wiring fixture') }
   start() { throw new Error('shell runner disabled in source wiring fixture') }
 }
-export async function nativeCreatorHarness(t, { script = [call(), done()], harnessRoot, extraPresets = {}, runLegacy, beforeCreator } = {}) {
+export async function nativeCreatorHarness(t, { script = [call(), done()], harnessRoot, extraPresets = {}, runLegacy, beforeCreator, developmentExecution = true } = {}) {
   const ctx = new Context(), runs = [], errors = [], results = [], observed = [], holds = []
   t.after(async () => {
     for (const hold of holds) hold.resolve()
@@ -72,8 +72,8 @@ export async function nativeCreatorHarness(t, { script = [call(), done()], harne
     './desktop-profile.js': desktopProfile,
     './runner.js': { currentWebPort: () => 43127, installCreatorRecovery() {},
       runDshx: run, runClaimedDshx: (_name, args, exec, opts) => run(args, exec, opts), runClientFailureDshx: run,
-      resolveHarnessRoot: () => { if (!harnessRoot) throw new Error('native fixture requires an explicit test Host root'); return harnessRoot } },
-    './takeover.js': { installTakeoverFence() {}, requestTakeover() { throw new Error('takeover is exercised directly with the isolated test root') } },
+      resolveHarnessRoot: () => { if (!harnessRoot) throw new Error('sealed fixture requires an explicit test Host root'); return harnessRoot } },
+    './takeover.js': { installTakeoverFence() {}, requestTakeover() { throw new Error('takeover not in sealed executor fixture') } },
     './preset-015.js': { healCreatorPlusPresets: () => [] }, './safety.js': safety, './compatibility.js': compatibility,
     './development-execution.js': execution, './development-tasks.js': tasks,
     './development-policy.js': policy, './development-invocation.js': invocation,
@@ -86,7 +86,7 @@ export async function nativeCreatorHarness(t, { script = [call(), done()], harne
   })
   await entry.evaluate()
   await beforeCreator?.(ctx)
-  const creator = await ctx.plugin(entry.namespace)
+  const creator = await ctx.plugin(entry.namespace, { developmentExecution })
   await ctx.plugin(AgentLoop, { agents: [] })
   ctx.llm.registerAdapter(['mock'], new MockAdapter(script))
   ctx.on('agent/error', ({ error }) => errors.push(error))

@@ -49,7 +49,7 @@ window.__ModuleLoader__.load({
         try {
           const response = await fetch(endpoint, {
             method: 'POST',
-            headers: { 'content-type': 'application/json' },
+            headers: { 'content-type': 'application/json', 'x-dsh-creator-client': '1' },
             body: JSON.stringify({ failedIds, message: String(message || '').slice(0, 8000) }),
           })
           const result = await response.json()

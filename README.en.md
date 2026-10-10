@@ -2,9 +2,11 @@
 
 [中文](README.md)
 
+**Plugin-only boundary:** official DSH source and artifacts are read-only, including copies and worktrees. Use public extension points; missing APIs never authorize a Host patch. Takeover, approval and `--force` cannot override `CORE_SOURCE_IMMUTABLE`.
+
 Pick Creator Mode+ in a normal DeepSeek Harness Web session. Ten fixed tools scaffold, check, mount, and uninstall a file-backed plugin in a safe order.
 
-Creator Mode+ 0.4.0 is paired with DSHX 0.9.0 and Harness `dsh-v0.1.7-rc.1`. The plugin peer range is `>=0.1.7-rc.1 <0.1.8`. The bridge compatibility range is [DSHX](https://github.com/aa2246740/dsh-external-plugin-devkit) `>=0.7.9 <0.10.0`; the desk pin, peer range, and human-confirmed takeover capability are checked before use. Session recovery listens on `agent/created`.
+This source is paired with Harness `dsh-v0.2.0-rc.2` (SHA `639ed015397290b3745d163aafe02ffee4aa3f84`). The plugin peer range is `>=0.2.0-rc.1 <0.2.1`. It accepts `0.2.0-rc.2` and stable `0.2.0`, rejects `0.2.0` alphas, and rejects `0.1.7-rc.2`. The bridge compatibility range is [DSHX](https://github.com/aa2246740/dsh-external-plugin-devkit) `>=0.7.9 <0.10.0`. Stable 0.7.9, 0.8.x, and 0.9.x pass the version gate and must also pass every RC2 contract check. The desk pin, peer range, and human-confirmed takeover capability are checked before use. Session recovery listens on `agent/created`. The ten fixed tools are unchanged.
 
 ![Open Creator Mode+ in the official WebUI](docs/screenshots/mode-picker.gif)
 
@@ -22,7 +24,29 @@ The Agent creates source, builds, checks, selects activation and continues. Serv
 
 ## Install
 
-Do this outside an Agent session, in your Harness checkout:
+### DSH Studio desktop app (recommended)
+
+Open **Settings → Plugins → Add plugin** and enter this in “Package name or address”:
+
+```text
+github:aa2246740/dsh-creator-mode-plus#v0.3.10
+```
+
+The desktop plugin manager owns the Desktop profile and bundled package manager. This release includes built artifacts; normal use needs no clone, build, or DSHX installation. Follow the app if it asks you to reload or reopen after installation. Then choose Creator Mode+ in a new session.
+
+### Web CLI
+
+```sh
+dsh plugin --profile web add github:aa2246740/dsh-creator-mode-plus#v0.3.10
+```
+
+This official CLI command writes only the `web` profile; it cannot modify the Desktop App profile. For an already-running Web Host, reopen that Host once and reload the page.
+
+Creator Mode+ uses DSHX inside a conversation to develop, check, and activate **the user's own plugins**. That capability is not a prerequisite to install Creator Mode+, and it never permits modifying official DSH source.
+
+### Source-development install
+
+Only when editing this repository, use a local link and installer in a separate Harness checkout:
 
 ```sh
 cd /path/to/deepseek-harness
@@ -55,9 +79,9 @@ Whole-plugin removal goes through `dshx_remove_plugin` only. Running the install
 
 ![Duplicate install refused](docs/screenshots/already-installed.png)
 
-Harness `update prepare` / `verify` / `apply` / `rollback` are not among the ten tools. They stay with an external DSHX supervisor. Inside the session, managed shell may only read `update plan`.
+Harness inventory is read-only through `update plan`. DSHX disables `prepare`, `verify`, `apply` and `rollback` for every caller, including the external supervisor.
 
-## Upgrade
+## Source-development upgrade
 
 ```sh
 cd /path/to/deepseek-harness/tools/dsh-creator-mode-plus

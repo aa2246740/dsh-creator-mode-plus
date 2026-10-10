@@ -5,7 +5,19 @@ import { runDshx } from '../src/runner.js'
 
 test('Creator exposes a no-argument browser handoff without a shell, URL or adapter path', () => {
   const tools = []
-  apply({tools:{register(tool){tools.push(tool)}},webServer:{port:43127,register(){return()=>{}}},effect(){}})
+  apply({
+    root: {},
+    tools: { guard() { return () => {} }, register(tool) { tools.push(tool) }, get() {} },
+    webServer: { port: 43127, register() { return () => {} } },
+    connection: {},
+    logger: { info() {}, warn() {} },
+    on() { return () => {} },
+    inject() { return { dispose() {} } },
+    fiber: { assertActive() {} },
+    agents: { get() {}, list() { return [] } },
+    sessions: { get() {}, list() { return [] } },
+    effect() {},
+  })
   const tool = tools.find(tool => tool.name === 'dshx_browser_open')
   assert.ok(tool, 'private browser handoff is ready but no fixed execution entry exists')
   assert.deepEqual(tool.parameters.properties, {})
