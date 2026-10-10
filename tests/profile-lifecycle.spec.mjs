@@ -206,4 +206,19 @@ describe('profile lifecycle write boundary', () => {
     ]) denied(creatorProfileMutationReason(exec('bash', { command }), roots, undefined, { DSH_HOME: dshHome }))
   })
 
+  it('allows shell dollars that are not mutation targets or paths', () => {
+    const env = { HOME: workspace }
+    for (const command of [
+      `grep -E 'foo$' src/index.js`,
+      `awk '{print $1}' package.json`,
+      `sed -n '1,$p' README.md`,
+      `for f in src/*.js; do node --check "$f"; done`,
+      `echo $UNSET_VAR`,
+    ]) assert.equal(creatorProfileMutationReason(exec('bash', { command }), roots, undefined, env), undefined, command)
+    for (const command of [
+      `echo x > "$UNSET_VAR/cordis.patch.yml"`,
+      `rm -rf "$UNSET_VAR/profiles/web"`,
+    ]) assert.match(creatorProfileMutationReason(exec('bash', { command }), roots, undefined, env) ?? '', /cannot resolve a dynamic mutation target/, command)
+  })
+
 })

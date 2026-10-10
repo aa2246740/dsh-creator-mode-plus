@@ -16,6 +16,9 @@ const deny = detail => `${CREATOR_LIFECYCLE_ONLY}: ${detail}; ${ROUTE}.`
 /** Watched configuration names anywhere under the DSH home root. */
 const WATCHED_BASENAMES = /^(?:cordis\.patch\.yml$|agent\.cordis\.yml$|\.agent-presets(?:\.|$))/
 
+// `$` or a substitution glued to `/`. Bare field refs and end anchors do not match.
+const DYNAMIC_PATH = /(?:\$\{?\w+\}?|`[^`]*`|\$\()[^\s'"]*\/|\/[^\s'"]*(?:\$[{(\w]|`)/
+
 /** DSH home roots whose `profiles/` trees and watched files are protected.
  * Both the effective `DSH_HOME` and the default `~/.dsh` are covered: either
  * can carry a live watched profile on this machine. */
@@ -143,8 +146,10 @@ export function creatorProfileMutationReason(exec, roots, cwd, env = process.env
     }
     for (const [index, token] of targets.entries()) {
       const expanded = expand(token)
-      if ((classified || index < mutationTargets) && /[*?{}]/.test(expanded)) return deny('cannot resolve an expanded mutation target')
-      if (/\$|`/.test(expanded)) return deny('cannot resolve a dynamic mutation target')
+      const target = classified || index < mutationTargets
+      if (target && /[*?{}]/.test(expanded)) return deny('cannot resolve an expanded mutation target')
+      // Dynamic text is unresolved only on a mutation target or a path-shaped token.
+      if ((target || DYNAMIC_PATH.test(expanded)) && /\$|`/.test(expanded)) return deny('cannot resolve a dynamic mutation target')
       const candidates = [expanded.replace(/^[\w$]+=/, '')]
       for (const match of expanded.matchAll(/"([^"\n]+)"|'([^'\n]+)'/g)) candidates.push(match[1] ?? match[2])
       for (const match of expanded.matchAll(/(?:^|[\s'"(=,])((?:\/|\.\.?\/)[^\s'"()<>;,]+)/g)) candidates.push(match[1])
