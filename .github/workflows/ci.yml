@@ -21,5 +21,10 @@ jobs:
         with:
           node-version: ${{ matrix.node }}
       - run: npm install --ignore-scripts --no-package-lock
-      - run: npm run check
+      - name: Syntax and Harness-independent tests (blocking)
+        run: npm run check:ci
+      # These eight specs need a local Harness checkout with tsx and approver source.
+      - name: Harness-runtime tests (non-blocking in CI)
+        run: npm run check:harness
+        continue-on-error: true
       - run: npm pack --dry-run

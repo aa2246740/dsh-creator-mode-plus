@@ -24,10 +24,13 @@
   "scripts": {
     "install:preset": "node scripts/install.mjs",
     "test": "node --experimental-vm-modules --test tests/*.spec.mjs",
-    "check": "node --check src/index.js && node --check src/preset-015.js && node --check src/runner.js && node --check src/auth.js && node --check src/delivery.js && node --check src/safety.js && node --check src/core-boundary.js && node --check src/takeover.js && node --check src/compatibility.js && node --check src/client.js && node --check scripts/install.mjs && node --check scripts/verify-dshx.mjs && node --check scripts/verify-harness-install.mjs && npm test",
+    "check": "npm run check:syntax && npm test",
     "verify:dshx": "node scripts/verify-dshx.mjs",
     "verify:harness-install": "node scripts/verify-harness-install.mjs",
-    "test:native": "node --experimental-vm-modules --test tests/native/*.spec.mjs"
+    "test:native": "node --experimental-vm-modules --test tests/native/*.spec.mjs",
+    "check:syntax": "node --check src/index.js && node --check src/preset-015.js && node --check src/runner.js && node --check src/auth.js && node --check src/delivery.js && node --check src/safety.js && node --check src/core-boundary.js && node --check src/takeover.js && node --check src/compatibility.js && node --check src/client.js && node --check scripts/install.mjs && node --check scripts/verify-dshx.mjs && node --check scripts/verify-harness-install.mjs && node --check src/profile-lifecycle.js && node --check scripts/test-subset.mjs",
+    "check:ci": "npm run check:syntax && node scripts/test-subset.mjs ci",
+    "check:harness": "node scripts/test-subset.mjs harness"
   },
   "engines": {
     "node": "^22.19.0 || >=24.0.0"

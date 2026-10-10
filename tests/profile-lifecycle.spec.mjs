@@ -134,6 +134,8 @@ describe('profile lifecycle write boundary', () => {
     const link = join(dshHome, 'profiles', 'web', 'external.yml')
     symlinkSync(outside, link)
     denied(profileWriteReason(link, roots))
+    denied(creatorProfileMutationReason(exec('bash', { command: `cp /tmp/x "${alias}/new.yml"` }), roots))
+    denied(creatorProfileMutationReason(exec('bash', { command: `echo x > "${link}"` }), roots))
     const linkedHome = join(temp, 'linked-home')
     mkdirSync(linkedHome)
     symlinkSync(join(dshHome, 'profiles'), join(linkedHome, 'profiles'))
@@ -154,6 +156,54 @@ describe('profile lifecycle write boundary', () => {
     const file = join(home, 'cordis.patch.yml')
     denied(creatorProfileMutationReason(exec('bash', { command: `python -c 'open("${file}", "w").write("x")'` }), [home]))
     denied(creatorProfileMutationReason(exec('bash', { command: `node -e 'require("fs").writeFileSync("${file}", "x")'` }), [home]))
+  })
+
+  it('allows read pipelines, jq and environment-based reads, including a profile cwd', () => {
+    const file = join(dshHome, 'profiles', 'web', 'cordis.patch.yml')
+    for (const command of [
+      `cat "${file}" | head -n 1`,
+      `jq . "${dshHome}/profiles/web/package.json"`,
+      `jq 'select(.enabled)' "${dshHome}/profiles/web/package.json" | head`,
+      `rg insert "${file}" | head -n 1`,
+      `git diff -- "${file}" | head`,
+      `ls "${dshHome}/profiles"; head "${file}"`,
+      'cat "$DSH_HOME/profiles/web/cordis.patch.yml"',
+      'cat "${DSH_HOME}/profiles/web/cordis.patch.yml" | head',
+      'cat cordis.patch.yml | head',
+      `cat "${file}" > "${workspace}/inspection.txt"`,
+    ]) assert.equal(creatorProfileMutationReason(exec('bash', { command }, join(dshHome, 'profiles', 'web')),
+      roots, undefined, { DSH_HOME: dshHome }), undefined, command)
+  })
+
+  it('allows shell copies out of profiles but checks every destination form', () => {
+    const file = join(dshHome, 'profiles', 'web', 'cordis.patch.yml')
+    for (const command of [
+      `cp "${file}" "${workspace}/backup.yml"`,
+      `cp -a "${file}" "${workspace}/"`,
+      `cp -t "${workspace}" "${file}"`,
+      `cp --target-directory="${workspace}" "${file}"`,
+      `cp -- "${file}" "${workspace}/backup.yml"`,
+      `cp "$DSH_HOME/profiles/web/cordis.patch.yml" "${workspace}/backup.yml"`,
+    ]) assert.equal(creatorProfileMutationReason(exec('bash', { command }), roots, undefined,
+      { DSH_HOME: dshHome }), undefined, command)
+    for (const command of [
+      `cp -t "${dshHome}/profiles/web" "${workspace}/backup.yml"`,
+      `cp --target-directory="${dshHome}/profiles/web" "${workspace}/backup.yml"`,
+      `cp "${workspace}/backup.yml" "$DSH_HOME/profiles/web/cordis.patch.yml"`,
+      `mv "${file}" "${workspace}/backup.yml"`,
+      `"${workspace}/cp" "${file}" "${workspace}/backup.yml"`,
+      `"${workspace}/cat" "${file}"`,
+      `cat "${file}" | tee "${file}"`,
+      `jq . "${file}" > "${file}"`,
+      `cat "${file}"; echo x >> "${file}"`,
+      `cat "${file}" | sh -c 'cat > "${file}"'`,
+      `rg --pre="touch ${file}" insert "${file}"`,
+      'cp /tmp/x "$UNKNOWN_TARGET"',
+      `cp /tmp/x ${dshHome}/pro*/web/cordis.patch.yml`,
+      `echo x > ${dshHome}/profiles/web/*.yml`,
+      'echo x > "$(printf target)"',
+      `cp /tmp/x "${dshHome}"/pro'files'/web/cordis.patch.yml`,
+    ]) denied(creatorProfileMutationReason(exec('bash', { command }), roots, undefined, { DSH_HOME: dshHome }))
   })
 
 })
