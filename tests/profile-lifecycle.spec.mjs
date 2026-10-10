@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
+import { mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import {
@@ -99,4 +99,61 @@ describe('profile lifecycle write boundary', () => {
     denied(profileWriteReason(join(dshHome, 'profiles', 'web', 'cordis.patch.yml'), roots))
     assert.equal(profileWriteReason(join(workspace, 'src', 'index.ts'), roots), undefined)
   })
+  it('denies literal script paths, shell wrappers, heredocs, and file utilities', () => {
+    const file = join(dshHome, 'profiles', 'web', 'cordis.patch.yml')
+    for (const command of [
+      `python -c 'open("${file}", "w").write("x")'`,
+      `node -e 'require("fs").writeFileSync("${file}", "x")'`,
+      `sh -c 'echo x > "${file}"'`,
+      `python <<'PY'\nopen("${file}", "w").write("x")\nPY`,
+      `dd if=/tmp/x of="${file}"`,
+      `install /tmp/x "${file}"`,
+      `ln -sf /tmp/x "${file}"`,
+      `echo x > "${dshHome}"/profiles/web/cordis.patch.yml`,
+      `echo x > ${file.replace('cordis', 'cor\\dis')}`,
+      `echo x > "$DSH_HOME/profiles/web/cordis.patch.yml"`,
+      `echo x > "${'${DSH_HOME}'}/profiles/web/cordis.patch.yml"`,
+    ]) denied(creatorProfileMutationReason(exec('bash', { command }), roots, undefined, { DSH_HOME: dshHome }))
+  })
+
+  it('uses shell workdir and blocks unqualified writes in a profile cwd', () => {
+    const cwd = join(dshHome, 'profiles', 'web')
+    denied(creatorProfileMutationReason(exec('bash', { command: 'touch new.yml', cwd: 'profiles/web' }, dshHome), roots))
+    for (const key of ['cwd', 'workdir']) {
+      denied(creatorProfileMutationReason(exec('bash', { command: 'echo x > cordis.patch.yml', [key]: cwd }), roots))
+      denied(creatorProfileMutationReason(exec('bash', { command: 'touch new.yml', [key]: cwd }), roots))
+    }
+  })
+
+  it('protects aliases into profiles and symlinks out of profiles', () => {
+    const alias = join(workspace, 'profile-alias')
+    symlinkSync(join(dshHome, 'profiles', 'web'), alias)
+    denied(profileWriteReason(join(alias, 'new.yml'), roots))
+    const outside = join(workspace, 'external.yml')
+    writeFileSync(outside, 'x')
+    const link = join(dshHome, 'profiles', 'web', 'external.yml')
+    symlinkSync(outside, link)
+    denied(profileWriteReason(link, roots))
+    const linkedHome = join(temp, 'linked-home')
+    mkdirSync(linkedHome)
+    symlinkSync(join(dshHome, 'profiles'), join(linkedHome, 'profiles'))
+    denied(profileWriteReason(join(dshHome, 'profiles', 'web', 'new.yml'), [linkedHome]))
+    denied(profileWriteReason(alias + '/..' + '/web/new.yml', roots))
+  })
+
+  it('allows copying a protected source out and bounds watched basenames exactly', () => {
+    const source = join(dshHome, 'profiles', 'web', 'cordis.patch.yml')
+    assert.equal(creatorProfileMutationReason(exec('copy_file', { source, destination: join(workspace, 'backup.yml') }), roots), undefined)
+    denied(creatorProfileMutationReason(exec('copy_file', { source: join(workspace, 'backup.yml'), destination: source }), roots))
+    assert.equal(profileWriteReason(join(dshHome, 'scratch', 'cordis.patch.yml.notes'), roots), undefined)
+  })
+
+  it('keeps spaces in paths inside quoted interpreter arguments', () => {
+    const home = join(temp, 'home with spaces')
+    mkdirSync(join(home, 'profiles'), { recursive: true })
+    const file = join(home, 'cordis.patch.yml')
+    denied(creatorProfileMutationReason(exec('bash', { command: `python -c 'open("${file}", "w").write("x")'` }), [home]))
+    denied(creatorProfileMutationReason(exec('bash', { command: `node -e 'require("fs").writeFileSync("${file}", "x")'` }), [home]))
+  })
+
 })

@@ -6,7 +6,7 @@
  * bypassing activation journaling, Guardian quarantine, same-PID checks and
  * the claim fence, not editing core. */
 import { homedir } from 'node:os'
-import { basename, isAbsolute, sep } from 'node:path'
+import { basename, isAbsolute, resolve, sep } from 'node:path'
 import { canonicalTarget, readOnlyShellCommand, under } from './core-boundary.js'
 
 export const CREATOR_LIFECYCLE_ONLY = 'CREATOR_LIFECYCLE_ONLY'
@@ -14,7 +14,7 @@ const ROUTE = 'route through the fixed tools: dshx_activation_plan, dshx_activat
 const deny = detail => `${CREATOR_LIFECYCLE_ONLY}: ${detail}; ${ROUTE}.`
 
 /** Watched configuration names anywhere under the DSH home root. */
-const WATCHED_BASENAMES = /^(?:cordis\.patch\.yml|agent\.cordis\.yml|\.agent-presets(?:\.|$))/
+const WATCHED_BASENAMES = /^(?:cordis\.patch\.yml$|agent\.cordis\.yml$|\.agent-presets(?:\.|$))/
 
 /** DSH home roots whose `profiles/` trees and watched files are protected.
  * Both the effective `DSH_HOME` and the default `~/.dsh` are covered: either
@@ -31,13 +31,18 @@ export function profileHomeRoots(env = process.env, home = homedir()) {
 
 /** Reason when `target` lands inside a protected profile surface; else undefined. */
 export function profileWriteReason(target, roots, cwd = process.cwd()) {
-  const resolved = canonicalTarget(target, cwd)
+  // Keep the lexical location too: replacing a profile symlink is a lifecycle
+  // mutation even when its current referent lives outside the Home.
+  const targets = [resolve(cwd, target), canonicalTarget(target, cwd)]
   for (const dshHome of roots) {
-    if (under(`${dshHome}${sep}profiles`, resolved)) {
-      return deny(`watched profile surface ${resolved}`)
-    }
-    if (under(dshHome, resolved) && WATCHED_BASENAMES.test(basename(resolved))) {
-      return deny(`watched profile file ${resolved}`)
+    const profiles = `${dshHome}${sep}profiles`
+    for (const resolved of targets) {
+      if (under(profiles, resolved) || under(canonicalTarget(profiles), resolved)) {
+        return deny(`watched profile surface ${resolved}`)
+      }
+      if (under(dshHome, resolved) && WATCHED_BASENAMES.test(basename(resolved))) {
+        return deny(`watched profile file ${resolved}`)
+      }
     }
   }
   return undefined
@@ -47,17 +52,18 @@ const FILE_TOOLS = ['write', 'edit', 'write_file', 'edit_file', 'delete_file', '
 const SHELL_TOOLS = ['bash', 'terminal_open', 'terminal_send']
 
 /**
- * Deny model-initiated writes to the watched profile surface across every
- * supported mutation route: file tools, apply_patch and shell/script paths.
+ * Deny file-tool mutations and direct shell/script references to watched paths.
+ * This is not an interpreter sandbox: computed paths, hard links and races
+ * require filesystem confinement; token inspection cannot prove isolation.
  * Read-only shell commands stay available (status verification is normal
  * work), and ordinary writes outside the profile surface are untouched —
  * plugin source editing keeps working.
  */
-export function creatorProfileMutationReason(exec, roots, cwd) {
+export function creatorProfileMutationReason(exec, roots, cwd, env = process.env) {
   const args = exec?.arguments ?? {}
   const base = typeof cwd === 'string' ? cwd : exec?.agent?.session?.header?.cwd ?? process.cwd()
   if (FILE_TOOLS.includes(exec?.name)) {
-    for (const key of ['file_path', 'path', 'destination', 'source', 'target']) {
+    for (const key of ['file_path', 'path', 'destination', ...(exec.name === 'copy_file' ? [] : ['source']), 'target']) {
       if (typeof args[key] === 'string') {
         const reason = profileWriteReason(args[key], roots, base)
         if (reason) return reason
@@ -76,18 +82,50 @@ export function creatorProfileMutationReason(exec, roots, cwd) {
   if (!SHELL_TOOLS.includes(exec?.name)) return undefined
   const command = args.command ?? args.text ?? ''
   if (!command || readOnlyShellCommand(command)) return undefined
-  // A mutating command that even references a protected path fails closed:
-  // redirection targets, copies into the profile tree, in-place editors and
-  // script-borne writes all travel through the same token surface. Commands
-  // assembled to hide the path dynamically remain the Host sandbox's job.
-  for (const match of command.matchAll(/"([^"\n]+)"|'([^'\n]+)'|([^\s;|&()<>`]+)/g)) {
-    const token = match[1] ?? match[2] ?? match[3]
-    const candidate = token.replace(/^[\w$]+=/, '').replace(/^[>|]+/, '')
-    if (!candidate || candidate === '-') continue
-    const looksPath = candidate.includes('/') || WATCHED_BASENAMES.test(basename(candidate))
-    if (!looksPath || candidate.includes('://')) continue
-    const reason = profileWriteReason(candidate, roots, base)
-    if (reason) return reason
+  const workdir = args.workdir ?? args.cwd ?? base
+  const atProfile = profileWriteReason(workdir, roots, base)
+  if (atProfile) return atProfile
+  // Decode shell words without executing expansions. Inspect nested quoted
+  // script text separately, since an interpreter receives it as one argument.
+  for (const token of shellWords(command)) {
+    const expanded = token.replace(/\$(?:\{([A-Za-z_]\w*)\}|([A-Za-z_]\w*))/g,
+      (match, braced, bare) => env[braced ?? bare] ?? match)
+      .replace(/^~(?=\/)/, env.HOME ?? homedir())
+    const candidates = [expanded.replace(/^[\w$]+=/, '')]
+    for (const match of expanded.matchAll(/"([^"\n]+)"|'([^'\n]+)'/g)) candidates.push(match[1] ?? match[2])
+    for (const match of expanded.matchAll(/(?:^|[\s'"(=,])((?:\/|\.\.?\/)[^\s'"()<>;,]+)/g)) candidates.push(match[1])
+    for (const candidate of candidates) {
+      if (!candidate || candidate === '-' || candidate.includes('://')) continue
+      if (!candidate.includes('/') && !WATCHED_BASENAMES.test(basename(candidate))) continue
+      const reason = profileWriteReason(candidate, roots, canonicalTarget(workdir, base))
+      if (reason) return reason
+    }
   }
   return undefined
+}
+
+function shellWords(command) {
+  const words = []
+  let word = '', quote
+  for (let i = 0; i < command.length; i++) {
+    const char = command[i]
+    if (char === "\\" && quote !== "'") {
+      const next = command[i + 1]
+      if (next !== undefined && (!quote || /["\\$`\n]/.test(next))) {
+        if (next !== '\n') word += next
+        i++
+        continue
+      }
+    }
+    if (quote) {
+      if (char === quote) quote = undefined
+      else word += char
+    } else if (char === '"' || char === "'") quote = char
+    else if (/[\s;|&()<>`]/.test(char)) {
+      if (word) words.push(word)
+      word = ''
+    } else word += char
+  }
+  if (word) words.push(word)
+  return words
 }

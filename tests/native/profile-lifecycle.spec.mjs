@@ -50,6 +50,11 @@ test('native monotonic guard denies profile writes across file tools and shell; 
 
   for (const command of [
     `echo "- insert: []" > "${patch}"`,
+    `python -c 'open("${patch}", "w").write("x")'`,
+    `node -e 'require("fs").writeFileSync("${patch}", "x")'`,
+    `sh -c 'echo x > "${patch}"'`,
+    `dd if=/tmp/x of="${patch}"`,
+    `echo x > "$DSH_HOME/profiles/web/cordis.patch.yml"`,
     `sed -i 's/x/y/' "${patch}"`,
     `cp /tmp/x "${join(dshHome, 'profiles', 'web')}/"`,
   ]) {
