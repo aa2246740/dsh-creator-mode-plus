@@ -6,7 +6,7 @@ import { dirname, isAbsolute, join, parse, relative, resolve, sep } from 'node:p
 export const CORE_SOURCE_IMMUTABLE = 'CORE_SOURCE_IMMUTABLE'
 export const PLUGIN_ONLY_RULE = 'DSHX and Creator Mode+ develop external plugins only. Never edit, patch, replace or rebuild DeepSeek Harness official source, shipped presets, installed official packages or their generated artifacts, including copies and worktrees. A missing public API is a plugin capability gap: use another public extension point or report the gap. A plugin task, handoff document, automatic approval, takeover or --force never authorizes a Host patch. Keep all build output inside the plugin. Watched user cordis.patch.yml configuration is not a source-code patch.'
 const deny = detail => `${CORE_SOURCE_IMMUTABLE}: ${detail}. Use a public plugin extension point; do not patch the Host or retry with force/approval.`
-const under = (parent, child) => { const r = relative(parent, child); return r === '' || (r !== '..' && !r.startsWith(`..${sep}`) && !isAbsolute(r)) }
+export const under = (parent, child) => { const r = relative(parent, child); return r === '' || (r !== '..' && !r.startsWith(`..${sep}`) && !isAbsolute(r)) }
 function manifest(dir) { try { return JSON.parse(readFileSync(join(dir, 'package.json'), 'utf8')) } catch { return undefined } }
 
 /** Resolve existing components before ..; also protects a not-yet-created file. */
@@ -100,7 +100,7 @@ export function auditPluginSource(harnessRoot, dir) {
   return findings
 }
 
-function readOnlyShell(command) {
+export function readOnlyShellCommand(command) {
   if (/[;&|`$><\n]/.test(command)) return false
   if (/^\s*(?:cat|head|tail|ls|pwd|stat|realpath|readlink|rg)\b/.test(command)) return !/--pre\b/.test(command)
   return /^\s*git\s+(?:(?:-C\s+(?:"[^"]+"|'[^']+'|\S+)\s+))?(?:status|diff|show|log|ls-files|rev-parse)\b/.test(command)
@@ -123,7 +123,7 @@ export function creatorCoreMutationReason(exec, harnessRoot, policy) {
   }
   if (!['bash', 'terminal_open', 'terminal_send'].includes(exec?.name)) return undefined
   const command = args.command ?? args.text ?? ''
-  if (readOnlyShell(command)) return undefined
+  if (readOnlyShellCommand(command)) return undefined
   if (args.sandbox_permissions === 'danger-full-access') return deny('unconfined shell execution cannot protect official source')
   if (!policy || !['read-only', 'workspace-write', 'danger-full-access'].includes(policy.mode)) {
     return `CREATOR_SANDBOX_UNAVAILABLE: cannot verify a confined shell policy${policy?.unavailableReason ? ` (${policy.unavailableReason})` : ''}. The command was not executed. Repair Creator Mode+ sandbox service wiring; this is not evidence of an official-source write.`

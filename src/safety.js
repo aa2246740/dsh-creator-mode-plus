@@ -1,4 +1,5 @@
 import { CORE_SOURCE_IMMUTABLE, PLUGIN_ONLY_RULE, creatorCoreMutationReason } from './core-boundary.js'
+import { creatorProfileMutationReason, profileHomeRoots } from './profile-lifecycle.js'
 /** Creator Mode+ claim tracking and last-mile destructive-shell guard. */
 
 const claimedPlugins = new WeakMap()
@@ -101,6 +102,8 @@ export function installCreatorSafetyGuard(ctx, resolveHarness = () => process.en
   ctx.tools.guard(exec => {
     const destructive = creatorDestructiveCommandReason(exec)
     if (destructive) return destructive
+    const profile = creatorProfileMutationReason(exec, profileHomeRoots())
+    if (profile) return profile
     if (!['write', 'edit', 'write_file', 'edit_file', 'delete_file', 'move_file', 'copy_file', 'apply_patch', 'bash', 'terminal_open', 'terminal_send'].includes(exec?.name)) return undefined
     try {
       const root = resolveHarness()

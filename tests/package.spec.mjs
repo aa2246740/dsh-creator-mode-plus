@@ -110,7 +110,7 @@ describe('Creator Mode+ 0.3 package contract', () => {
 
   it('declares only the exact server module set for external self-upgrade', () => {
     const files = [...read('dshx.yml').matchAll(/^    - (.+)$/gm)].map(match => match[1])
-    assert.deepEqual(files, ['src/index.js', 'src/desktop-profile.js', 'src/preset-015.js', 'src/runner.js', 'src/auth.js', 'src/delivery.js', 'src/compatibility.js', 'src/safety.js', 'src/core-boundary.js', 'src/takeover.js', 'src/development-execution.js', 'src/development-tasks.js', 'src/development-policy.js', 'src/development-invocation.js', 'src/development-target.js'])
+    assert.deepEqual(files, ['src/index.js', 'src/desktop-profile.js', 'src/preset-015.js', 'src/runner.js', 'src/auth.js', 'src/delivery.js', 'src/compatibility.js', 'src/safety.js', 'src/core-boundary.js', 'src/profile-lifecycle.js', 'src/takeover.js', 'src/development-execution.js', 'src/development-tasks.js', 'src/development-policy.js', 'src/development-invocation.js', 'src/development-target.js'])
     for (const file of files) {
       assert.doesNotThrow(() => read(file))
       for (const match of read(file).matchAll(/from ['"]\.\/([^'"]+)['"]/g)) {
