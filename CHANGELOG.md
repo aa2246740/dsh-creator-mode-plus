@@ -9,9 +9,10 @@
 
 ## Unreleased
 
-- Align the desk pin with Harness `dsh-v0.2.0-rc.1` (SHA `4878cdabd87d4041bdaff61d04c966883b9fd07a`). Keep DSHX `>=0.9.1 <0.10.0`; 0.9.2 fits, and 0.9.0 and 0.7.9 stay rejected.
-- Set `@deepseek-ai/dsh`, `@deepseek-ai/dsh-app-boot`, and `@deepseek-ai/dsh-plugin-manager` peers to `>=0.2.0-rc.1 <0.2.1`. That range accepts `0.2.0-rc.1` and stable `0.2.0`, rejects `0.2.0` alphas, and rejects `0.1.7-rc.2`.
-- Keep the ten fixed tools and the runner allowlist. Package version stays 0.3.10 until a release.
+- Align the desk pin with Harness `dsh-v0.2.1-rc.2` (SHA `687f282e8625c6b8d11ff58211a90524be2e4317`). Keep DSHX `>=0.9.1 <0.10.0`; 0.9.7 fits, and 0.9.0 and 0.7.9 stay rejected.
+- Set `@deepseek-ai/dsh`, `@deepseek-ai/dsh-app-boot`, and `@deepseek-ai/dsh-plugin-manager` peers and `engines.dsh` to `>=0.2.1-rc.1 <0.2.2`. That range accepts `0.2.1-rc.1`, `0.2.1-rc.2`, and stable `0.2.1`, rejects `0.2.1` alphas, and rejects the `0.2.0` series.
+- Keep the ten fixed tools and the runner allowlist. Package version stays 0.3.13 until a release.
+- Prior unreleased desk pin was `dsh-v0.2.0-rc.1` / peer `>=0.2.0-rc.1 <0.2.1` (superseded by this line).
 - Fix Creator shell guards reading sandbox policy and shell capabilities through undeclared Agent contexts. Resolve them through live injected service scopes and keep failing closed when dependencies disappear.
 - Report `CREATOR_SANDBOX_UNAVAILABLE` for unavailable policy wiring instead of mislabeling normal plugin commands as official-source writes.
 - Add native Agent + real sandbox Git commit/tag/push regression tests, including protected core writes, policy changes and dependency replacement.
