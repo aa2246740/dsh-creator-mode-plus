@@ -26,6 +26,7 @@ const { default: Subprocess } = await imp('packages/subprocess/subprocess-local/
 const { default: Bash } = await imp('packages/shell/bash-sandbox/src/index.ts')
 const ShellEnv = await imp('packages/shell/shell-env/src/index.ts')
 const ToolBash = await imp('packages/shell/tool-bash/src/index.ts')
+const { provideWorkingDirectoryFixture } = await imp('packages/test-support/agent-loop-testkit/src/working-directory-fixture.ts')
 const { default: Llm } = await imp('packages/llm/llm/src/index.ts')
 const safetyPath = process.env.CREATOR_GUARD_TEST_SOURCE ?? fileURLToPath(new URL('../../src/safety.js', import.meta.url))
 const { installCreatorSafetyGuard } = await import(pathToFileURL(safetyPath).href)
@@ -40,6 +41,8 @@ async function harness(t) {
   const ctx = new Context()
   t.after(async () => { await ctx.fiber.dispose(); rmSync(temp, { recursive: true, force: true }) })
   for (const plugin of [Llm,Sessions,Projections,SystemPrompt,Tools,Approval,Agents,Provider,Subprocess,ShellEnv]) await ctx.plugin(plugin)
+  // 0.2.1 tool-bash injects workingDirectory; supply the official test collaborator.
+  provideWorkingDirectoryFixture(ctx, workspace)
   let policyFiber = await ctx.plugin(Policy, { mode: 'workspace-write', workspaceRoot: workspace })
   await ctx.plugin(Bash, { cwd: workspace, timeoutMs: 10_000 })
   await ctx.plugin(ToolBash, { enableRunInBackground: false })

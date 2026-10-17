@@ -33,15 +33,16 @@
     "check:harness": "node scripts/test-subset.mjs harness"
   },
   "engines": {
-    "node": "^22.19.0 || >=24.0.0"
+    "node": "^22.19.0 || >=24.0.0",
+    "dsh": ">=0.2.1-rc.1 <0.2.2"
   },
   "dependencies": {
     "yaml": "2.9.0"
   },
   "peerDependencies": {
-    "@deepseek-ai/dsh": ">=0.2.0-rc.1 <0.2.1",
-    "@deepseek-ai/dsh-app-boot": ">=0.2.0-rc.1 <0.2.1",
-    "@deepseek-ai/dsh-plugin-manager": ">=0.2.0-rc.1 <0.2.1"
+    "@deepseek-ai/dsh": ">=0.2.1-rc.1 <0.2.2",
+    "@deepseek-ai/dsh-app-boot": ">=0.2.1-rc.1 <0.2.2",
+    "@deepseek-ai/dsh-plugin-manager": ">=0.2.1-rc.1 <0.2.2"
   },
   "peerDependenciesMeta": {
     "@deepseek-ai/dsh": {
