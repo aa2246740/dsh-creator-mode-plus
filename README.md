@@ -1,3 +1,10 @@
+> [!WARNING]
+> **DEPRECATED / 已废弃**
+>
+> Official DeepSeek Harness Creator Mode is stable in 0.2.1 and later. This external plugin is retired; use the built-in Creator Mode.
+>
+> DeepSeek Harness 0.2.1 起官方 Creator Mode 已稳定。本外部插件已退役，请使用内置 Creator Mode。
+
 # Creator Mode+
 
 [English](README.en.md)
